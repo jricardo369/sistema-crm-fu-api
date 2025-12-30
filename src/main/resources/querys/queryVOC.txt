@@ -1,0 +1,30 @@
+ 
+SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.telefono,s.email, s.docusign,s.abogado,s.email_abogado,s.firma_de_abogados,s.numero_de_caso,s.id_tipo_solicitud, s.id_estatus_solicitud,s.id_estatus_pago,s.fecha_nacimiento,
+s.adicional,s.idioma,s.direccion,s.estado,s.apellidos,s.parelegal_name,s.parelegal_emails,s.parelegal_telefonos, s.importante,s.num_sesiones,s.num_schedules,s.sesiones_pendientes,s.documento_1,s.fecha_doc_1,
+s.documento_2,s.fecha_doc_2,s.terapeuta,s.usuario_revisando,s.code, ts.nombre tsNombre,ep.descripcion as esDesc,es.descripcion as esolDesc,ut.nombre,s.sexo,s.purpose_treatament,s.participation,s.recommendations,
+
+-- Subconsulta para contar citas y notas
+    (
+       SELECT SUM(CASE WHEN c.dos_citas = 1 THEN 2 ELSE 1 END) AS total_contado
+FROM nota_cita nc 
+INNER JOIN cita c ON nc.id_cita = c.id_cita
+WHERE c.id_solicitud = s.id_solicitud 
+  AND c.no_show = 0
+    ) AS total_contado,
+    
+-- Subconsulta para contar citas sin nota 
+    (
+         SELECT SUM(CASE WHEN c.dos_citas = 1 THEN 2 ELSE 1 END) AS citassinnota
+FROM cita c
+LEFT JOIN nota_cita nc ON c.id_cita = nc.id_cita
+WHERE c.id_solicitud = s.id_solicitud 
+  AND nc.id_cita IS NULL
+  AND c.no_show = 0 
+  AND c.fecha < CURDATE()
+    ) AS citassinnota
+
+FROM request_evaluation.solicitud_voc s 
+LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud 
+LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago 
+LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud 
+LEFT JOIN usuario ut ON ut.id_usuario = s.terapeuta 

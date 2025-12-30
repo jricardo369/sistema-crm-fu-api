@@ -1,0 +1,28 @@
+	 SELECT 
+	   s.id_solicitud,
+		s.fecha_inicio,
+		CONCAT(s.cliente, ' ', s.apellidos),
+		s.telefono,
+		s.email,
+		s.amount AS monto_solicitado,
+		COALESCE(p.total_pagos, 0) AS total_pagos,
+		s.amount - COALESCE(p.total_pagos, 0) AS deuda
+	FROM solicitud s
+	LEFT JOIN (
+		SELECT 
+			id_solicitud,
+			SUM(monto) AS total_pagos
+		FROM movimiento
+		GROUP BY id_solicitud
+	) p ON s.id_solicitud = p.id_solicitud
+	$whereAdicional
+	s.id_estatus_solicitud NOT IN(11)
+	AND NOT EXISTS (
+		  SELECT 1
+		  FROM evento_solicitud es
+		  WHERE es.id_solicitud = s.id_solicitud
+			AND LOWER(es.descripcion) LIKE '%lost%'
+	  )
+	  
+	HAVING deuda > 0
+	ORDER BY s.fecha_inicio DESC

@@ -1,0 +1,49 @@
+# IntelliJ IDEA
+.idea/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VSCode
+.vscode/
+
+# Maven
+target/
+*.iml
+
+# Gradle
+.gradle/
+build/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# JAR files
+*.jar
+*.war
+*.ear
+
+# Tmux
+.tmux.conf
+
+# H2 database
+*.h2.db
+
+# Spring Boot specific files
+spring-boot-devtools/
+
+# Dependencias locales de Maven (si usas Maven)
+.m2/
+
+# Dependencias locales de Gradle (si usas Gradle)
+.gradle/
+
+# Archivos de configuración de base de datos
+*.db
+*.sql

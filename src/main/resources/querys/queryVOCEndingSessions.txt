@@ -1,0 +1,26 @@
+SELECT 
+    s.id_solicitud,
+    s.fecha_inicio,
+    s.cliente,
+    s.telefono,
+    s.email,
+    s.terapeuta,
+    ut.nombre,
+    ut.correo_electronico,
+    s.num_sesiones,
+    COALESCE(total.sesiones_contadas, 0) AS sesiones_contadas,
+    s.num_sesiones - COALESCE(total.sesiones_contadas, 0) AS sesiones_pendientes
+FROM request_evaluation.solicitud_voc s
+LEFT JOIN usuario ut ON ut.id_usuario = s.terapeuta
+LEFT JOIN (
+    SELECT 
+        c.id_solicitud,
+        SUM(CASE WHEN c.dos_citas = 1 THEN 2 ELSE 1 END) AS sesiones_contadas
+    FROM nota_cita nc
+    INNER JOIN cita c ON nc.id_cita = c.id_cita
+    WHERE c.no_show = 0
+    GROUP BY c.id_solicitud
+) total ON total.id_solicitud = s.id_solicitud
+WHERE s.id_estatus_solicitud != 11
+HAVING sesiones_pendientes <= 10 AND num_sesiones > 0
+ORDER BY s.cliente ASC;

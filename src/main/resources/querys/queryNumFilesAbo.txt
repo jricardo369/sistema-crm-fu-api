@@ -1,0 +1,69 @@
+
+-- Parte 1: Abogados con nombre y firma válidos (no nulos ni vacíos)
+SELECT  
+    a.id_abogado, 
+    a.nombre,  
+    a.firma, 
+    COUNT(DISTINCT s.id_solicitud) AS numero_de_files,
+    GROUP_CONCAT(DISTINCT ea.email ORDER BY ea.email SEPARATOR ', ') AS emails_abogado
+FROM abogado a
+INNER JOIN solicitud s ON a.id_abogado = s.id_abogado
+LEFT JOIN email_abogado ea ON ea.id_abogado = a.id_abogado
+WHERE  
+    s.fecha_inicio BETWEEN '$fechai' AND '$fechaf' 
+    AND (a.nombre IS NOT NULL AND a.nombre != '') 
+    AND (a.firma IS NOT NULL AND a.firma != '') 
+GROUP BY a.id_abogado, a.nombre, a.firma
+
+UNION ALL
+
+-- Parte 2: Abogados con firma NULL pero nombre NO NULL
+
+SELECT  
+    a.id_abogado, 
+    a.nombre,  
+    a.firma, 
+     COUNT(DISTINCT s.id_solicitud) AS numero_de_files,
+    GROUP_CONCAT(DISTINCT ea.email ORDER BY ea.email SEPARATOR ', ') AS emails_abogado
+FROM abogado a
+INNER JOIN solicitud s ON a.id_abogado = s.id_abogado
+LEFT JOIN email_abogado ea ON ea.id_abogado = a.id_abogado
+WHERE  
+    s.fecha_inicio BETWEEN '$fechai' AND '$fechaf'
+    AND a.firma IS NULL 
+    AND a.nombre IS NOT NULL
+GROUP BY a.id_abogado, a.nombre, a.firma
+
+UNION ALL
+
+-- Parte 3: Abogados con nombre NULL (¡nueva parte solicitada!)
+
+SELECT  
+    a.id_abogado, 
+    a.nombre,  
+    a.firma, 
+     COUNT(DISTINCT s.id_solicitud) AS numero_de_files,
+    GROUP_CONCAT(DISTINCT ea.email ORDER BY ea.email SEPARATOR ', ') AS emails_abogado
+FROM abogado a
+INNER JOIN solicitud s ON a.id_abogado = s.id_abogado
+LEFT JOIN email_abogado ea ON ea.id_abogado = a.id_abogado
+WHERE  
+    s.fecha_inicio BETWEEN '$fechai' AND '$fechaf'
+    AND a.nombre IS NULL
+GROUP BY a.id_abogado, a.nombre, a.firma
+
+
+UNION ALL
+
+-- Parte 4: Firmas desde solicitud (pero ¡cuidado con la condición!)
+SELECT  
+    NULL AS id_abogado,
+    'Without asociated lawyer'  AS nombre,
+    s.firma_de_abogados AS firma,
+    COUNT(*) AS numero_de_files,
+    NULL AS emails_abogado
+FROM solicitud s
+WHERE  
+    s.fecha_inicio BETWEEN '$fechai' AND '$fechaf'
+    AND id_abogado = 0
+GROUP BY s.firma_de_abogados

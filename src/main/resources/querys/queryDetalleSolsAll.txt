@@ -1,0 +1,31 @@
+SELECT
+    DATE(s.fecha_inicio) AS fecha,
+    CAST(COUNT(*) AS SIGNED) AS numero_solicitudes,
+    CAST(COUNT(CASE WHEN s.id_estatus_solicitud IN (1,2,3,10) THEN 1 END) AS SIGNED) AS activas,
+    CAST(COUNT(CASE WHEN s.id_estatus_solicitud = 11 AND rl.id_solicitud IS NULL THEN 1 END) AS SIGNED) AS cerradas,
+    CAST(COUNT(DISTINCT CASE WHEN lost_events.id_solicitud IS NOT NULL THEN lost_events.id_solicitud END) AS SIGNED) AS lost,
+    CAST(COUNT(DISTINCT CASE WHEN noshow.id_solicitud IS NOT NULL THEN noshow.id_solicitud END) AS SIGNED) AS noshow
+FROM solicitud s
+LEFT JOIN (
+    SELECT DISTINCT s1.id_solicitud, DATE(s1.fecha_inicio) as fecha
+    FROM evento_solicitud e 
+    JOIN solicitud s1 ON s1.id_solicitud = e.id_solicitud 
+    WHERE s1.id_estatus_solicitud IN (11) 
+      AND e.descripcion LIKE '%Request Lost%'
+) rl ON s.id_solicitud = rl.id_solicitud AND DATE(s.fecha_inicio) = rl.fecha
+LEFT JOIN (
+    SELECT DISTINCT s3.id_solicitud, DATE(s3.fecha_inicio) as fecha
+    FROM evento_solicitud e 
+    JOIN solicitud s3 ON s3.id_solicitud = e.id_solicitud 
+    WHERE s3.id_estatus_solicitud IN (11) 
+      AND e.descripcion LIKE '%Lost%'
+) lost_events ON s.id_solicitud = lost_events.id_solicitud AND DATE(s.fecha_inicio) = lost_events.fecha
+LEFT JOIN (
+    SELECT DISTINCT s3.id_solicitud, DATE(s3.fecha_inicio) as fecha
+    FROM evento_solicitud e 
+    JOIN solicitud s3 ON s3.id_solicitud = e.id_solicitud 
+    WHERE e.descripcion LIKE '%No show%'
+) noshow ON s.id_solicitud = noshow.id_solicitud AND DATE(s.fecha_inicio) = noshow.fecha
+WHERE s.fecha_inicio BETWEEN '$fechai' AND '$fechaf'
+GROUP BY DATE(s.fecha_inicio)
+ORDER BY fecha;
