@@ -69,7 +69,6 @@ public class AbogadoController {
 	public void eliminarAbogado(@PathVariable("idAbogado") int idAbogado) {
 		aboUseCase.eliminarAbogado(idAbogado);
 	}
-	
 
 	@GetMapping("excel")
 	public ResponseEntity<byte[]> filesFirmaAbogadosExcel() { 

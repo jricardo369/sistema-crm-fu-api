@@ -1,0 +1,24 @@
+SELECT 
+    YEAR(e.fecha_schedule)  AS anio,
+    LPAD(MONTH(e.fecha_schedule), 2, '0') AS mes,
+    LPAD(DAY(e.fecha_schedule),   2, '0') AS dia,
+    LPAD(HOUR(e.hora_schedule),   2, '0') AS hora,
+    LPAD(MINUTE(e.hora_schedule), 2, '0') AS minuto,
+    e.tipo_schedule,
+    e.id_solicitud,
+    e.id_evento
+    
+FROM evento_solicitud e 
+JOIN usuario u ON u.id_usuario = e.usuario_schedule 
+LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud 
+LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud 
+WHERE e.tipo = 'Schedule' 
+  AND YEARWEEK(e.fecha_schedule, 1) = YEARWEEK(:fecha, 1) 
+  AND e.estatus_schedule = 1
+  AND e.fin_schedule = 0
+  AND u.id_usuario = :usuario
+GROUP BY 
+    e.fecha_schedule, e.hora_schedule, e.tipo_schedule, e.id_solicitud, 
+    e.usuario_schedule, e.fin_schedule, es.descripcion, es.id_estatus_solicitud, e.id_evento 
+ORDER BY 
+    e.fecha_schedule ASC, e.tipo_schedule ASC, e.hora_schedule ASC;

@@ -1,14 +1,18 @@
 package com.cargosyabonos.adapter.out.sql;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.UtilidadesAdapter;
@@ -17,6 +21,7 @@ import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.application.port.out.jpa.EventoSolicitudJpa;
 import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitasUsuario;
+import com.cargosyabonos.domain.EventoRecordatorioCita;
 import com.cargosyabonos.domain.EventoSolicitud;
 import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.cargosyabonos.domain.ReporteSolsDeUsuario;
@@ -27,6 +32,12 @@ import com.cargosyabonos.domain.UsuarioEntity;
 
 @Service
 public class EventoRepository implements EventoSolicitudPort {
+
+	@Value("classpath:/querys/queryCitasInterviewers.txt")
+    private Resource queryCitasInterviewers;
+
+	@Value("classpath:/querys/queryRecordatoriosCitasDeUsuario.txt")
+    private Resource queryRecordatoriosCitasDeUsuario;
 
 	@Autowired
 	EventoSolicitudJpa eSolJpa;
@@ -203,10 +214,10 @@ public class EventoRepository implements EventoSolicitudPort {
 	}
 	
 	@Override
-	public List<Cita> obtenerCitasInterviewer(String fecha,int idUsuario,String estatusCita) {
+	public List<Cita> obtenerCitasInterviewer(String fecha,int idUsuario,String estatusCita,String estado) {
 
 		List<Cita> result = null;
-		List<Object[]> rows = obtenerCitasInterviewers(fecha,idUsuario,estatusCita);
+		List<Object[]> rows = obtenerCitasInterviewers(fecha,idUsuario,estatusCita,estado);
 		result = new ArrayList<>(rows.size());
 
 		for (Object[] row : rows) {
@@ -232,45 +243,114 @@ public class EventoRepository implements EventoSolicitudPort {
 		o.setDescEst((String) row[8]);
 		o.setIdEstaSol((Integer) row[9]);
 		o.setImportante((String) row[10]);
+		o.setIdEvento((Integer) row[11]);
 		
 		return o;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Object[]> obtenerCitasInterviewers(String fecha, int idUsuario,String estatusCita) {
+	public List<Object[]> obtenerCitasInterviewers(String fecha, int idUsuario,String estatusCita,String estado) {
 
 		StringBuilder sb = new StringBuilder();
+		StringBuilder sbAnds = new StringBuilder();
 
-		sb.append("SELECT  DATE_FORMAT(e.fecha_schedule,'%Y-%m-%d') as fecha, e.hora_schedule as hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,"+"\n"
-			+ "e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud as estSol,s.importante  "+"\n"
-			+ "FROM evento_solicitud e " +"\n"
-			+ "JOIN usuario u ON u.id_usuario = usuario_schedule "+"\n"
-			+ "LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud "+"\n"
-			+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "+"\n"
-			+ "WHERE e.tipo = 'Schedule' and YEARWEEK(`fecha_schedule`,1) = YEARWEEK(:fecha,1) "+"\n"
-			+ "AND e.estatus_schedule = 1  "+"\n");
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryCitasInterviewers.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
 
 		if (idUsuario != 0) {
-			sb.append(" AND id_usuario  = " + idUsuario +"\n" );
+			sbAnds.append(" AND u.id_usuario  = " + idUsuario +"\n" );
 		}
 
 		if (!estatusCita.equals("")) {
 			if(estatusCita.equals("Attended")){
-				sb.append(" AND e.fin_schedule  = 1" + "\n" );
+				sbAnds.append(" AND e.fin_schedule  = 1" + "\n" );
 			}
 			if(estatusCita.equals("Not Attended")){
-				sb.append(" AND e.fin_schedule   = 0" + "\n" );
+				sbAnds.append(" AND e.fin_schedule   = 0" + "\n" );
 			}
 			
 		}
 
-		sb.append("ORDER BY e.fecha_schedule asc, e.tipo_schedule asc, e.hora_schedule ASC "+"\n");
+		if (!estado.equals("")) {
+			sbAnds.append(" AND eu.estado = '" + estado + "' " + "\n" );
+		}
+		
+		if(sbAnds.length() > 0) {
+			queryS = queryS.replace("$andsAdicionales", sbAnds.toString());
+		}else{
+			queryS = queryS.replace("$andsAdicionales", "");
+		}
+
+		sb.append(queryS);
 
 		UtilidadesAdapter.pintarLog("query:"+"\n"  + sb.toString());
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
 	    query.setParameter("fecha", fecha);
+	    
+	    List<Object[]> rows = query.getResultList();
+		return rows;
+
+	}
+
+	@Override
+	public List<EventoRecordatorioCita> obtenerRecordatoriosCitasDeUsuario(String fecha,int idUsuario) {
+
+		List<EventoRecordatorioCita> result = null;
+		List<Object[]> rows = obtenerRecordatoriosCitasDeUsuarioQuery(fecha,idUsuario);
+		result = new ArrayList<>(rows.size());
+
+		for (Object[] row : rows) {
+			EventoRecordatorioCita du = convertirAEventoRecordatorio(row);
+			result.add(du);
+		}
+
+		return result;
+	}
+
+	private EventoRecordatorioCita convertirAEventoRecordatorio(Object[] row){
+
+		EventoRecordatorioCita o = new EventoRecordatorioCita();
+
+		o.setAnio((String) row[0]);
+		o.setMes((String) row[1]);
+		o.setDia((String) row[2]);
+		o.setHora((String) row[3]);
+		o.setMinutos((String) row[4]);
+		o.setTipo((String) row[5]);
+		o.setIdSolicitud((Integer) row[6]);
+		o.setIdEvento((Integer) row[7]);
+		
+		return o;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerRecordatoriosCitasDeUsuarioQuery(String fecha, int idUsuario) {
+
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryRecordatoriosCitasDeUsuario.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:"+"\n"  + sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+
+	    query.setParameter("fecha", fecha);
+		query.setParameter("usuario", idUsuario);
 	    
 	    List<Object[]> rows = query.getResultList();
 		return rows;
@@ -312,24 +392,33 @@ public class EventoRepository implements EventoSolicitudPort {
 		if(usuario > 0){
 			
 			UsuarioEntity usE = uPort.buscarPorId(usuario);
-			if(usE.getRol().equals("4")){
-				byUsuario = " u.id_usuario = "+usuario+" ";
-			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
-				byUsuario = " u.id_usuario = "+usuario+" ";
-			}
-			if(usE.getRol().equals("7")){
-				byUsuario = " u.id_usuario = "+usuario+" ";
-			}
-			if(usE.getRol().equals("8")){
-				byUsuario = " u.id_usuario = "+usuario+" ";
+			
+			if (tileDash != 7) {
+
+				if(usE.getRol().equals("4")){
+					byUsuario = " u.id_usuario = "+usuario+" ";
+				}
+				if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+					byUsuario = " u.id_usuario = "+usuario+" ";
+				}
+				if(usE.getRol().equals("7")){
+					byUsuario = " u.id_usuario = "+usuario+" ";
+				}
+				if(usE.getRol().equals("8")){
+					byUsuario = " u.id_usuario = "+usuario+" ";
+				}
+
+			}else{
+				byUsuario = " e.usuario = '"+usE.getUsuario()+"' ";
 			}
 			
 		}
 
+		String joinSolicitudes = tileDash == 7 ? "LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud " : "" ;
+
 		sb.append("SELECT DATE_FORMAT(e.fecha, '%Y-%m-%d') AS fecha,u.usuario,e.id_solicitud,e.descripcion,ec.usuario AS usuario_creacion "
 				+ "FROM evento_solicitud e "
-				+ "LEFT JOIN usuario u on u.usuario = e.usuario "
+				+ "LEFT JOIN usuario u on u.usuario = e.usuario " + joinSolicitudes
 				+ "LEFT JOIN evento_solicitud ec "
 			    + "ON ec.id_solicitud = e.id_solicitud "
 			    + "AND ec.evento = 'Request creation' ");
@@ -358,6 +447,13 @@ public class EventoRepository implements EventoSolicitudPort {
 			if (sbW.length() != 0)
 				sbW.append(" AND ");
 			sbW.append(" e.evento = 'Update' AND e.tipo = 'Reject file' AND e.descripcion NOT LIKE '%re-scheduled%' AND e.descripcion NOT LIKE '%was changed%' AND e.descripcion NOT LIKE '%is changed%' \n");
+
+		}
+
+		if (tileDash == 7) {
+			if (sbW.length() != 0)
+				sbW.append(" AND ");
+			sbW.append(" e.descripcion = 'The request was created' AND  s.id_estatus_solicitud IN (1,2,3,10)  \n");
 
 		}
 		

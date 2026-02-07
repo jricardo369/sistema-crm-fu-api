@@ -70,7 +70,7 @@ public class UsuarioEntity {
 	
 	@Column(name = "resumen", length = 200)
 	private String resumen;
-	
+
 	private boolean ausencia;
 	
 	private boolean revisor;

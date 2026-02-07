@@ -1,0 +1,25 @@
+SELECT  DATE_FORMAT(e.fecha_schedule,'%Y-%m-%d') as fecha, e.hora_schedule as hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,
+e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud as estSol,
+  CASE 
+    WHEN EXISTS (
+      SELECT 1
+      FROM evento_solicitud ei
+      WHERE ei.tipo IN ('Important','Suicide')
+        AND ei.id_solicitud = e.id_solicitud
+    )
+    THEN 'x' ELSE ''
+  END AS tieneImportant,
+    e.id_evento
+
+FROM evento_solicitud e 
+JOIN usuario u ON u.id_usuario = usuario_schedule 
+LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud 
+LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud 
+LEFT JOIN estado_usuario eu ON eu.id_usuario = u.id_usuario 
+WHERE e.tipo = 'Schedule' and YEARWEEK(`fecha_schedule`,1) = YEARWEEK(:fecha,1) 
+AND e.estatus_schedule = 1
+
+$andsAdicionales
+
+GROUP BY e.fecha_schedule, e.hora_schedule, e.tipo_schedule, e.id_solicitud, e.usuario_schedule, u.nombre, u.color, e.fin_schedule, es.descripcion, es.id_estatus_solicitud, e.id_evento 
+ORDER BY e.fecha_schedule asc, e.tipo_schedule asc, e.hora_schedule ASC 

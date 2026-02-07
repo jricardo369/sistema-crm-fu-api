@@ -44,10 +44,15 @@ public class DisponibilidadUsuariosController {
 	
 	@GetMapping("/de-dia/{fecha}")
 	public List<DisponibilidadUsuario> obtenerDisponibilidadDeUsuariosPorFecha(@PathVariable("fecha") String fecha,
-			@RequestParam("rol") int rol,@RequestParam(required = false) boolean fechaAnterior,@RequestParam(required = false) String idSolicitud,
-			@RequestParam(required = false) boolean clinician) { 
+			@RequestParam("rol") String rol,@RequestParam(required = false) boolean fechaAnterior,@RequestParam(required = false) String idSolicitud,
+			@RequestParam(required = false) boolean clinician,@RequestParam(required = false) String estado) { 
+
 		int idSol = idSolicitud == null ? 0 : Integer.valueOf(idSolicitud);
-		return dCase.obtenerDisponibilidadUsuarioPorFecha(fecha,rol,fechaAnterior,idSol,clinician);
+		estado = estado == null ? "" : estado;
+		estado = estado.equals("All") ? "" : estado;
+		int idRol = rol == null || "".equals(rol) ? 0 : Integer.valueOf(rol);
+
+		return dCase.obtenerDisponibilidadUsuarioPorFecha(fecha,idRol,fechaAnterior,idSol,estado);
 	}
 	
 	@GetMapping("/todo-usuario/{idUsuario}")

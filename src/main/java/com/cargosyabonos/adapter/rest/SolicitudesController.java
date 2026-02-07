@@ -35,15 +35,12 @@ public class SolicitudesController {
 			@RequestParam(required = false) String orden,@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,
 			@RequestParam(required = false) boolean myFiles,@RequestParam(required = false) String cerradas,@RequestParam(required = false) boolean primeraVez) {
 		
-		int e = 0;
 		fechai = fechai == null ? "": fechai;
 		fechaf = fechaf == null ? "": fechaf;
 		ordenarPor = ordenarPor == null ? "": ordenarPor;
 		UtilidadesAdapter.pintarLog("Estatus:" + estatus+"|Fechai:"+fechai+"|Fechaf:"+fechaf+"|OrdenarPor:"+ordenarPor+"|Campo:"+campo+"|Valor:"+valor+"|Cerradas:"+cerradas+"|PrimeraVez:"+primeraVez);
 		
-		if (estatus != null) {
-			e = Integer.valueOf(estatus);
-		}
+		int e = (estatus == null || estatus.isEmpty()) ? 0 : Integer.parseInt(estatus);
 		
 		return oCase.obtenerSolicitudesV2(idUsuario, e, fechai, fechaf, ordenarPor, orden, campo, valor, myFiles, cerradas, primeraVez,0);
 		
@@ -157,6 +154,11 @@ public class SolicitudesController {
 		oCase.envioInterviewerClinician(idSolicitud, idUsuarioCambio, idDisp,fechaAnterior);
 		
 	}
+
+	@PutMapping("envio-template/{idSolicitud}/{idUsuario}")
+	public void envioTemplate(@PathVariable("idUsuario") int idUsuario,@PathVariable("idSolicitud") int idSolicitud,@RequestParam("idUsuarioEnvio") int idUsuarioEnvio) {
+		oCase.envioTemplate(idUsuario, idSolicitud, idUsuarioEnvio);
+	}
 	
 	@PutMapping("envio-fin-entrevista-case-manager/{idSolicitud}")
 	public void envioFinEntrevistaCasemanager(@PathVariable("idSolicitud") int idSolicitud,
@@ -196,9 +198,9 @@ public class SolicitudesController {
 		oCase.envioReadyOnDraft(idSolicitud, idUsuario);
 	}
 	
-	@PutMapping("/reasignar/{idSolicitud}/{idUsuario}")
-	public void reasginar( @PathVariable("idUsuario") int idUsuario,@PathVariable("idSolicitud") int idSolicitud,@RequestParam("idUsuarioEnvio") int idUsuarioEnvio,@RequestParam(required = false) String motivo) {
-		oCase.reasginar(idUsuario, motivo, idSolicitud, idUsuarioEnvio);
+	@PutMapping("/reject/{idSolicitud}/{idUsuario}")
+	public void rejectSolicitud( @PathVariable("idUsuario") int idUsuario,@PathVariable("idSolicitud") int idSolicitud,@RequestParam("idUsuarioEnvio") int idUsuarioEnvio,@RequestParam(required = false) String motivo) {
+		oCase.rejectSolicitud(idUsuario, motivo, idSolicitud, idUsuarioEnvio);
 	}
 	
 	@PutMapping("/cancel-template/{idSolicitud}/{idUsuario}")

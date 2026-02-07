@@ -28,11 +28,11 @@ public interface EventoSolicitudJpa extends CrudRepository<EventoSolicitudEntity
 	@Query(value = "SELECT * FROM evento_solicitud WHERE id_solicitud = ?1 ORDER BY id_evento DESC", nativeQuery = true)
 	public List<EventoSolicitudEntity> obtenerEventosDesolicitud(int idSolicitud);
 
-	@Query(value = "SELECT * FROM evento_solicitud WHERE evento NOT LIKE '%Pay%' AND id_solicitud = ?1 ORDER BY fecha DESC", nativeQuery = true)
+	@Query(value = "SELECT * FROM evento_solicitud WHERE evento NOT LIKE '%Payment registration%' AND id_solicitud = ?1 ORDER BY fecha DESC", nativeQuery = true)
 	public List<EventoSolicitudEntity> obtenerEventosDesolicitudSinPagos(int idSolicitud);
 
 	@Query(value = "SELECT * FROM evento_solicitud where tipo = 'Schedule' "
-			+ "AND id_solicitud = ?1 AND estatus_schedule = ?2 ORDER BY id_evento AND descripcion NOT LIKE '%Scheduled scales%' DESC LIMIT 1", nativeQuery = true)
+			+ "AND id_solicitud = ?1 AND estatus_schedule = ?2 ORDER BY id_evento AND descripcion LIKE '%Scheduled appointment%' DESC LIMIT 1", nativeQuery = true)
 	public EventoSolicitudEntity obtenerUltimoScheduleInt(int idSolicitud, String estatus);
 	
 	@Query(value = "SELECT * FROM evento_solicitud WHERE tipo = 'Schedule' "
@@ -110,7 +110,8 @@ public interface EventoSolicitudJpa extends CrudRepository<EventoSolicitudEntity
 	@Query(value = "SELECT e.id_evento as idEvento,e.usuario_schedule as idUsuario, u.nombre as nombreUsuario,r.nombre as rol,CONCAT(e.fecha_schedule,' ',e.hora_schedule,' ',e.tipo_schedule) AS fecha "
 			+ "FROM evento_solicitud e " + "JOIN usuario u on u.id_usuario = e.usuario_schedule "
 			+ "JOIN rol r on r.id_rol = u.id_rol "
-			+ "WHERE e.tipo = 'Schedule' AND e.estatus_schedule = 1 AND e.id_solicitud = ?1 ORDER BY  id_solicitud,fecha DESC ", nativeQuery = true)
+			+ "WHERE e.tipo = 'Schedule' AND e.estatus_schedule = 1 AND e.id_solicitud = ?1 AND e.fin_schedule = 0 "
+			+ "ORDER BY  id_solicitud,fecha DESC ", nativeQuery = true)
 	public List<SchedulersActivasDeSolicitud> obtenerSchedulesActivasDeSolicitud(int idSolicitud);
 	
 	@Query(value = "SELECT e.id_evento as idEvento,e.usuario_schedule as idUsuario, u.nombre as nombreUsuario,r.nombre as rol,CONCAT(e.fecha_schedule,' ',e.hora_schedule,' ',e.tipo_schedule) AS fecha "
@@ -118,26 +119,6 @@ public interface EventoSolicitudJpa extends CrudRepository<EventoSolicitudEntity
 			+ "JOIN rol r on r.id_rol = u.id_rol "
 			+ "WHERE e.tipo = 'Schedule' AND e.estatus_schedule = 1 AND e.usuario_schedule = ?1 AND e.id_solicitud = ?2 ORDER BY  id_solicitud,fecha DESC ", nativeQuery = true)
 	public List<SchedulersActivasDeSolicitud> obtenerSchedulesActivasDeUsuario(int idUsuario,int idSolicitud);
-
-	/*@Query(value = "SELECT  e.fecha_schedule as fecha, e.hora_schedule as hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,"
-			+ "e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud as estSol,s.importante  "
-			+ "FROM evento_solicitud e " 
-			+ "JOIN usuario u ON u.id_usuario = usuario_schedule "
-			+ "LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud "
-			+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
-			+ "WHERE e.tipo = 'Schedule' and yearweek(`fecha_schedule`,1) = yearweek(?1,1) AND e.estatus_schedule = 1 "
-			+ "ORDER BY e.fecha_schedule asc, e.tipo_schedule asc, e.hora_schedule ASC ", nativeQuery = true)
-	public List<CitaEntrevista> obtenerCitasInterviewers(String fecha);
-
-	@Query(value = "SELECT  e.fecha_schedule as fecha, e.hora_schedule as hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,"
-			+ "e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud as estSol,s.importante  "
-			+ "FROM evento_solicitud e " 
-			+ "JOIN usuario u ON u.id_usuario = usuario_schedule "
-			+ "LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud "
-			+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
-			+ "WHERE e.tipo = 'Schedule' and yearweek(`fecha_schedule`,1) = yearweek(?1,1) AND e.estatus_schedule = 1 AND id_usuario = ?2 "
-			+ "ORDER BY e.fecha_schedule asc, e.tipo_schedule asc, e.hora_schedule ASC ", nativeQuery = true)
-	public List<CitaEntrevista> obtenerCitasInterviewer(String fecha, int idUsuario);*/
 	
 	@Transactional
 	@Query(value = "UPDATE evento_solicitud SET fin_schedule = ?1 WHERE id_evento = ?2", nativeQuery = true)

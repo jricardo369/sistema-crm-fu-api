@@ -157,7 +157,7 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 								msgPort.envioMensaje(a.gettelefono(),
 										"Dear " + a.getcliente() + ",you have an overdue balance of $" + monto
 												+ " USD for the " + a.gettipo()
-												+ " Psychological evaluation with Familias Unidas. Please reach out to us to settle your balance. You can contact us at: 323-430-4200",
+												+ " Psychological evaluation with Mental Health Evaluation Group by Familias Unidas. Please reach out to us to settle your balance. You can contact us at: 877-958-6432",
 										s, false);
 
 							}

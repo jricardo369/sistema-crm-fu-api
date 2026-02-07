@@ -427,6 +427,31 @@ public class SolicitudRepository implements SolicitudPort {
 			result = convertirAReporteDash(v);
 		}
 
+		if(usuario > 0){
+
+			UsuarioEntity objUsuario = new UsuarioEntity();
+			objUsuario = uPort.buscarPorId(usuario);
+
+			if(objUsuario.getRol().equals("4")||objUsuario.getRol().equals("3")){
+
+				if(!objUsuario.isRevisor()){
+					String use = objUsuario.getUsuario();
+					int ventas = obtenerDashVentas(fechai, fechaf, use);
+					result.setVentas(ventas);
+					result.setVerVentas(true);
+				}else{
+					result.setVentas(0);
+					result.setVerVentas(false);
+				}
+
+			}	
+
+		}else{
+			result.setVerVentas(false);
+			result.setVentas(0);
+		}	
+
+
 		return result;
 		
 	}
@@ -518,49 +543,48 @@ public class SolicitudRepository implements SolicitudPort {
 		s.setAbogado((String) row[13]);
 		s.setEmail((String) row[14]);
 		s.setAdicional((String) row[15]);
-		s.setImportante((String) row[16]);
-		s.setIdEstatusPago((Integer) row[17]);
-		s.setEstatusPago((String) row[18]);
-		s.setIdEstatusSolicitud((int) row[19]);
-		s.setEstatusSolicitud((String) row[20]);
-		s.setWaiver(Integer.valueOf(row[21].toString()) == 0 ? false : true);
-		s.setInterviewMaster(Integer.valueOf(row[22].toString()) == 0 ? false : true);
-		s.setExternal(Integer.valueOf(row[23].toString()) == 0 ? false : true);
-		s.setAsignacionTemplate(Integer.valueOf(row[24].toString()) == 0 ? false : true);
-		s.setAsignacionIntSc(Integer.valueOf(row[25].toString()) == 0 ? false : true);
-		s.setDueDate((String) row[26]);
-		s.setNumeroEntrevistas((Integer) row[27]);
-		s.setUsuarioIntSc(Integer.valueOf(row[28].toString()));
-		s.setUsuarioIntScNombre(s.getUsuarioIntSc() == 0 ? "Unassigned" : (String) row[29]);
-		s.setIdUsuarioRevisor((Integer) row[30]);
-		s.setUsuarioRevisandoNombre((String) row[31]);
-		s.setUsuarioRevisor((String) row[32]);
-		s.setIdUsuarioRevisando(Integer.valueOf(row[33].toString()));
-		s.setUsuarioRevisandoNombre((String) row[34]);
-		s.setUsuarioRevisando((String) row[35]);
-		s.setIdUsuarioTemplate(Integer.valueOf(row[36].toString()));
-		s.setUsuarioTemplate(s.getIdUsuarioTemplate() == 0 ? "Unassigned" : (String) row[37]);
-		s.setIdUsuarioExternal(Integer.valueOf(row[38].toString()));
-		s.setUsuarioExternal((Integer) row[39] == null ? 0 : (Integer) row[39]);
-		s.setFecha_schedule((String) row[40] == null ? "" : (String) row[40]);
-		s.setFecha_schedule_scales((String) row[41] == null ? "" : (String) row[41]);
-		s.setTieneScale(Integer.valueOf(row[42].toString()) == 0 ? false : true);
-		s.setNumeroDeCaso((String) row[43] == null ? "" : (String) row[43]);
-		s.setDocusign((String) row[44] == null ? "" : (String) row[44]);
-		s.setEmail_abogado((String) row[45] == null ? "" : (String) row[45]);
-		s.setFirmaAbogados((String) row[46] == null ? "" : (String) row[46]);
-		s.setFechaNacimiento((String) row[47] == null ? "" : (String) row[47]);
-		s.setTipoEntrevista((String) row[48] == null ? "" : (String) row[48]);
-		s.setParalegalName((String) row[49] == null ? "" : (String) row[49]);
-		s.setParalegalEmails((String) row[50] == null ? "" : (String) row[50]);
-		s.setParalegalTelefonos((String) row[51] == null ? "" : (String) row[51]);
+		s.setIdEstatusPago((Integer) row[16]);
+		s.setEstatusPago((String) row[17]);
+		s.setIdEstatusSolicitud((int) row[18]);
+		s.setEstatusSolicitud((String) row[19]);
+		s.setWaiver(Integer.valueOf(row[20].toString()) == 0 ? false : true);
+		s.setInterviewMaster(Integer.valueOf(row[21].toString()) == 0 ? false : true);
+		s.setExternal(Integer.valueOf(row[22].toString()) == 0 ? false : true);
+		s.setAsignacionTemplate(Integer.valueOf(row[23].toString()) == 0 ? false : true);
+		s.setAsignacionIntSc(Integer.valueOf(row[24].toString()) == 0 ? false : true);
+		s.setDueDate((String) row[25]);
+		s.setNumeroEntrevistas((Integer) row[26]);
+		s.setUsuarioIntSc(Integer.valueOf(row[27].toString()));
+		s.setUsuarioIntScNombre(s.getUsuarioIntSc() == 0 ? "Unassigned" : (String) row[28]);
+		s.setIdUsuarioRevisor((Integer) row[29]);
+		s.setUsuarioRevisandoNombre((String) row[30]);
+		s.setUsuarioRevisor((String) row[31]);
+		s.setIdUsuarioRevisando(Integer.valueOf(row[32].toString()));
+		s.setUsuarioRevisandoNombre((String) row[33]);
+		s.setUsuarioRevisando((String) row[34]);
+		s.setIdUsuarioTemplate(Integer.valueOf(row[35].toString()));
+		s.setUsuarioTemplate(s.getIdUsuarioTemplate() == 0 ? "Unassigned" : (String) row[36]);
+		s.setIdUsuarioExternal(Integer.valueOf(row[37].toString()));
+		s.setUsuarioExternal((Integer) row[38] == null ? 0 : (Integer) row[38]);
+		s.setFecha_schedule((String) row[39] == null ? "" : (String) row[39]);
+		s.setFecha_schedule_scales((String) row[40] == null ? "" : (String) row[40]);
+		s.setTieneScale(Integer.valueOf(row[41].toString()) == 0 ? false : true);
+		s.setNumeroDeCaso((String) row[42] == null ? "" : (String) row[42]);
+		s.setDocusign((String) row[43] == null ? "" : (String) row[43]);
+		s.setEmail_abogado((String) row[44] == null ? "" : (String) row[44]);
+		s.setFirmaAbogados((String) row[45] == null ? "" : (String) row[45]);
+		s.setFechaNacimiento((String) row[46] == null ? "" : (String) row[46]);
+		s.setTipoEntrevista((String) row[47] == null ? "" : (String) row[47]);
+		s.setParalegalName((String) row[48] == null ? "" : (String) row[48]);
+		s.setParalegalEmails((String) row[49] == null ? "" : (String) row[49]);
+		s.setParalegalTelefonos((String) row[50] == null ? "" : (String) row[50]);
 
 		if (soloUno) {
 
 			if (s.getAmount() != null) {
 				BigDecimal pending = BigDecimal.ZERO;
 				if (s.getAmount().compareTo(BigDecimal.ZERO) == 1) {
-					BigDecimal sm = (BigDecimal) row[52];
+					BigDecimal sm = (BigDecimal) row[51];
 					if (sm == null) {
 						s.setAdeudo("$0 paid, $" + s.getAmount() + " pending");
 					} else {
@@ -577,28 +601,30 @@ public class SolicitudRepository implements SolicitudPort {
 
 		} else {
 			
-			BigDecimal sm = (BigDecimal) row[52];
+			BigDecimal sm = (BigDecimal) row[51];
 			s.setPagos(sm);
 			s.setCliente(s.getCliente() + " " + this.getApellidosSinNull(s.getApellidos()));
 
 		}
 		
-		s.setUsuarioInterview(Integer.valueOf(row[53].toString()));
-		s.setUsuarioInterviewNombre(s.getUsuarioInterview() == 0 ? "Unassigned" : (String) row[54]);
-		s.setFinIntIni(Integer.valueOf(row[55].toString()) == 0 ? false : true);
-		s.setFinIntSc(Integer.valueOf(row[56].toString()) == 0 ? false : true);
-		s.setAssignedClinician(Integer.valueOf(row[57].toString()));
-		s.setIdAbogado(Integer.valueOf(row[58].toString()));
-		s.setFinAsgTmp(Integer.valueOf(row[59].toString()) == 0 ? false : true);
-		s.setEmailAboSel((String) row[60] == null ? "" : (String) row[60]);
-		s.setLostFile(row[61] == null ? false : row[61].toString().equals("x") ? true : false);
-		s.setConCupon(row[62] !=  null ? Integer.valueOf(row[62].toString()) == 0 ? false : true : false);
-		s.setFechaCupon(row[63] != null ? (String) row[63] == null ? "" : (String) row[63] :  "");
-		s.setSexo((String) row[64] == null ? "" : (String) row[64]);
-		s.setUsuarioClinicianNombre(s.getAssignedClinician() == 0 ? "Unassigned" : (String) row[65]);
-		s.setIdRolUsInt(row[66] == null ? 0 : Integer.valueOf(row[66].toString()));
-		s.setFinAsgClnc(Integer.valueOf(row[67].toString()) == 0 ? false : true);
-		s.setFechaClinicianAppo((String) row[68] == null ? "" : (String) row[68]);
+		s.setUsuarioInterview(Integer.valueOf(row[52].toString()));
+		s.setUsuarioInterviewNombre(s.getUsuarioInterview() == 0 ? "Unassigned" : (String) row[53]);
+		s.setFinIntIni(Integer.valueOf(row[54].toString()) == 0 ? false : true);
+		s.setFinIntSc(Integer.valueOf(row[55].toString()) == 0 ? false : true);
+		s.setAssignedClinician(Integer.valueOf(row[56].toString()));
+		s.setIdAbogado(Integer.valueOf(row[57].toString()));
+		s.setFinAsgTmp(Integer.valueOf(row[58].toString()) == 0 ? false : true);
+		s.setEmailAboSel((String) row[59] == null ? "" : (String) row[59]);
+		s.setLostFile(row[60] == null ? false : row[60].toString().equals("x") ? true : false);
+		s.setConCupon(row[61] !=  null ? Integer.valueOf(row[61].toString()) == 0 ? false : true : false);
+		s.setFechaCupon(row[62] != null ? (String) row[62] == null ? "" : (String) row[63] :  "");
+		s.setSexo((String) row[63] == null ? "" : (String) row[63]);
+		s.setUsuarioClinicianNombre(s.getAssignedClinician() == 0 ? "Unassigned" : (String) row[64]);
+		s.setIdRolUsInt(row[65] == null ? 0 : Integer.valueOf(row[65].toString()));
+		s.setFinAsgClnc(Integer.valueOf(row[66].toString()) == 0 ? false : true);
+		s.setFechaClinicianAppo((String) row[67] == null ? "" : (String) row[67]);
+		s.setImportantNotes((String) row[68] == null ? "" : (String) row[68]);
+		s.setSignedClnc(Integer.valueOf(row[69].toString()) == 0 ? false : true);
 		
 
 		return s;
@@ -745,11 +771,15 @@ public class SolicitudRepository implements SolicitudPort {
 					UtilidadesAdapter.pintarLog("Busqueda por usuario entrevistador:" + valor);
 					if (sbW.length() != 0)
 						sbW.append(" AND ");
-					sbW.append(" uri.nombre like '%"+valor+"%' " 
+					sbW.append(" us.nombre like '%"+valor+"%' " 
 					+"OR uri.nombre like '%"+valor+"%' " 
 					+"OR ucl.nombre like '%"+valor+"%' ");
-					
-
+					break;
+				case "Editor User":
+					UtilidadesAdapter.pintarLog("Busqueda por usuario editor:" + valor);
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" urt.nombre like '%"+valor+"%' ");
 					break;
 				case "Waiver":
 					if (sbW.length() != 0)
@@ -781,7 +811,7 @@ public class SolicitudRepository implements SolicitudPort {
 				case "State":
 					if (sbW.length() != 0)
 						sbW.append(" AND ");
-					sbW.append(" estado = '" + valor + "' ");
+					sbW.append(" s.estado = '" + valor + "' ");
 					break;
 				default:
 					/*
@@ -820,8 +850,9 @@ public class SolicitudRepository implements SolicitudPort {
 							if (isRevisor) {
 								if (sbW.length() != 0)
 									sbW.append(" AND ");
-								sbW.append(" s.usuario_revisando = :idUsuario AND s.id_solicitud "
-										+ "NOT IN( SELECT id_solicitud FROM solicitud su WHERE su.usuario_revisando = :idUsuario AND su.id_estatus_pago =1 AND su.id_estatus_solicitud = 10 ) ");
+								/*sbW.append(" s.usuario_revisando = :idUsuario AND s.id_solicitud "
+										+ "NOT IN( SELECT id_solicitud FROM solicitud su WHERE su.usuario_revisando = :idUsuario AND su.id_estatus_pago =1 AND su.id_estatus_solicitud = 10 ) ");*/
+								sbW.append(" s.usuario_revisando = :idUsuario AND ( s.usuario_template = 0 || s.id_estatus_solicitud = 10) ");
 							} else {
 								if (sbW.length() != 0)
 									sbW.append(" AND ");
@@ -1108,15 +1139,6 @@ public class SolicitudRepository implements SolicitudPort {
 			}
 			
 		}
-
-		/*sb.append("SELECT s.todas,s.activas, s.completas, s.lost,e.noshow,  e.rejectFile ");
-		sb.append("FROM (SELECT "); 
-		
-		sb.append(" COUNT(s.id_solicitud) AS todas, ");
-		sb.append("COUNT(CASE WHEN s.id_estatus_solicitud IN (1, 2, 3,10) "+byUsuario+" THEN 1 END) AS activas, ");
-		sb.append("COUNT(CASE WHEN s.id_estatus_solicitud IN (11) "+byUsuario+" THEN 1 END) AS completas ");
-		
-		sb.append("FROM solicitud s WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf) s ");*/
 		
 		sb.append("SELECT a.todas,s.activas,s1.cerradas,s2.lost,e.noshow,  e.rejectFile,e.cancelSchedules ");sb.append("\n "); 
 		sb.append("FROM ( ");   sb.append("\n "); 
@@ -1184,6 +1206,36 @@ public class SolicitudRepository implements SolicitudPort {
 		List<Object[]> rows = query.getResultList();
 		UtilidadesAdapter.pintarLog("registros encontrados:" + rows.size());
 		return rows;
+		
+	}
+
+	public int obtenerDashVentas(String fechai, String fechaf,String usuario) {
+
+		
+		fechai = fechai + " 00:00:00";
+		fechaf = fechaf + " 23:59:59";
+
+		UtilidadesAdapter.pintarLog("ejecutando query dash ventas");
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("SELECT count(e.id_solicitud) as ventas FROM evento_solicitud e  ");sb.append("\n "); 
+		sb.append("JOIN solicitud s ON s.id_solicitud = e.id_solicitud  ");   sb.append("\n "); 
+		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf  AND  s.id_estatus_solicitud IN (1,2,3,10) ");sb.append("\n "); 
+		sb.append("AND e.descripcion = 'The request was created' and usuario = :usuario  ");
+		
+
+		UtilidadesAdapter.pintarLog("query:\n" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'").replace(":usuario", "'"+usuario+"'"));
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+		query.setParameter("usuario", usuario);
+
+		Number count = (Number) query.getSingleResult();
+		int ventas = count != null ? count.intValue() : 0;
+		UtilidadesAdapter.pintarLog("ventas encontrados:" + ventas);
+		return ventas;
 		
 	}
 	
@@ -1313,7 +1365,7 @@ public class SolicitudRepository implements SolicitudPort {
 		s.setAbogado((String) row[12]);
 		s.setEmail((String) row[13]);
 		s.setAdicional((String) row[14]);
-		s.setImportante((String) row[15]);
+		s.setImportantNotes((String) row[15]);
 		s.setIdEstatusPago((Integer) row[16]);
 		s.setEstatusPago((String) row[17]);
 		s.setIdEstatusSolicitud((int) row[18]);
@@ -1364,7 +1416,17 @@ public class SolicitudRepository implements SolicitudPort {
 		
 		if (dash == 1) {
 			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,s.importante,ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
+					+ "s.amount,s.abogado,s.email,s.adicional,"
+					+" CASE \n" + //
+												"    WHEN EXISTS (\n" + //
+												"      SELECT 1\n" + //
+												"      FROM evento_solicitud ei\n" + //
+												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
+												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
+												"    )\n" + //
+												"    THEN 'x' ELSE ''\n" + //
+												"  END AS tieneImportant,"
+					+"ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
 					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
 					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
 					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled app%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaint, "
@@ -1385,7 +1447,17 @@ public class SolicitudRepository implements SolicitudPort {
 					+ "AND e.descripcion = 'Request Lost' group by e.id_solicitud ) ;");
 		} else if (dash == 2) {
 			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,s.importante,ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
+					+ "s.amount,s.abogado,s.email,s.adicional,"
+					+" CASE \n" + //
+												"    WHEN EXISTS (\n" + //
+												"      SELECT 1\n" + //
+												"      FROM evento_solicitud ei\n" + //
+												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
+												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
+												"    )\n" + //
+												"    THEN 'x' ELSE ''\n" + //
+												"  END AS tieneImportant,"
+					+ "ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
 					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
 					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
 					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled app%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaint, "
@@ -1405,7 +1477,17 @@ public class SolicitudRepository implements SolicitudPort {
 					+ byUsuario + "AND e.descripcion = 'Request Lost' group by e.id_solicitud " + ") ;");
 		} else if (dash == 3) {
 			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,s.importante,ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date,e.descripcion,ec.usuario AS usuario_creacion "
+					+ "s.amount,s.abogado,s.email,s.adicional,"
+					+" CASE \n" + //
+												"    WHEN EXISTS (\n" + //
+												"      SELECT 1\n" + //
+												"      FROM evento_solicitud ei\n" + //
+												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
+												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
+												"    )\n" + //
+												"    THEN 'x' ELSE ''\n" + //
+												"  END AS tieneImportant,"
+					+"ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date,e.descripcion,ec.usuario AS usuario_creacion "
 					+ "FROM solicitud s "
 					+ "LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud "
 					+ "LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago "

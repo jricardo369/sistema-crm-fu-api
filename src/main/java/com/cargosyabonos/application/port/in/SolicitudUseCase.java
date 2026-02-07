@@ -36,11 +36,14 @@ public interface SolicitudUseCase {
 	public void envioInterviewerClinician(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,boolean fechaAnterior);
 	public void envioFinEntrevistaCaseManager(int idSolicitud,int idUsuarioCambio);
 	public void envioFinEntrevistaClinician(int idSolicitud,int idUsuarioCambio);
+
+	public void envioTemplate(int idUsuario,int idSolicitud,int idUsuarioEnvio);
+
 	public void parcheFinEntrevistaClinician(int idSolicitud,int idUsuarioCambio);
 	public void envioFinEntrevistaScales(int idSolicitud,int idUsuarioCambio);
 	public void envioReadyOnDraft(int idSolicitud,int idUsuario);
 	public String cargarExcel(MultipartFile archivo);
-	public void reasginar(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
+	public void rejectSolicitud(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
 	public void noShow(String motivo,int idSolicitud,int idUsuarioEnvio);
 	public void cancelTemplate(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
 	public List<TelefonosSolicitudes> obtenerSolicitudesDeTelefono(String telefono);

@@ -10,8 +10,21 @@ public class ReporteDash {
 	private int lost;
 	private int rejectFile;
 	private int cancelSchedules;
+	private int ventas;
+	private boolean verVentas;
 	
-	
+	public boolean isVerVentas() {
+		return verVentas;
+	}
+	public void setVerVentas(boolean verVentas) {
+		this.verVentas = verVentas;
+	}
+	public void setVentas(int ventas) {
+		this.ventas = ventas;
+	}
+	public int getVentas() {
+		return ventas;
+	}
 	public int getTodas() {
 		return todas;
 	}

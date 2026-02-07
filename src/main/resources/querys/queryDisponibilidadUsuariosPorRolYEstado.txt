@@ -1,0 +1,10 @@
+SELECT d.id_disponibilidad, d.fecha, d.hora,tipo,d.id_usuario,d.zona_horaria,r.nombre,u.resumen,u.nombre as nombreUsuario 
+FROM disponibilidad_usuario d 
+JOIN usuario u on u.id_usuario = d.id_usuario 
+$joinestado
+JOIN rol r on u.id_rol = r.id_rol 
+ WHERE  fecha = :fecha AND u.estatus NOT IN(4) AND d.id_usuario NOT IN
+(SELECT e.usuario_schedule FROM evento_solicitud e where e.fecha_schedule =  d.fecha 
+AND e.hora_schedule = d.hora AND e.tipo_schedule = d.tipo and e.estatus_schedule != 0) 
+ $andestado $androl
+ ORDER BY fecha ASC, tipo ASC, hora ASC 

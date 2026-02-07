@@ -15,8 +15,8 @@ public interface EnviarCorreoPort {
 	public void enviarCorreoInvoice(String email,Map<String, Object> params,int idSolicitud);
 	public void enviarCorreoDeLayout(String email,String titulo,Map<String, Object> params,String layout);
 	public void enviarCorreoDeLayoutCalendar(String email,String titulo,Map<String, Object> params,String layout,String formatoFecha);
-	
+	public void enviarCorreoDeLayoutCalendarWithInvite(String email,String titulo,Map<String, Object> params,String layout);
+	public void enviarCorreoSincronizacionCitas(String layout,String fecha,int idUsuario,String formatoFecha);
 	public void testMail(String mail,String tipo,String fecha,String hora,String tipoH,String estado,String zonaHoraria);
-	
 
 }

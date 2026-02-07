@@ -70,6 +70,17 @@ public class EventoSolicitudEntity {
 	@Column(name = "timezone_schedule", length = 3)
 	private String timeZoneSchedule;
 
+	@Column(name = "fin_schedule")
+	private boolean finSchedule;
+
+	public boolean isFinSchedule() {
+		return finSchedule;
+	}
+
+	public void setFinSchedule(boolean finSchedule) {
+		this.finSchedule = finSchedule;
+	}
+
 	public int getIdEvento() {
 		return idEvento;
 	}

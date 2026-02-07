@@ -54,31 +54,25 @@ public class CitaController {
 	
 	@GetMapping("/citas-de-usuario/{idUsuario}")
 	public List<Cita> obtenerCitasDeUsuarioPorFecha(@PathVariable("idUsuario") String idUsuario,@RequestParam("fecha") String fecha) {
-		int idUs = 0;
-		if (idUsuario != null) {
-			if (!"".equals(idUsuario)) {
-				idUs = Integer.valueOf(idUsuario);
-			}
-		}
+		
+		int idUs = (idUsuario == null || idUsuario.isEmpty()) ? 0 : Integer.parseInt(idUsuario);
+
 		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"|fecha:"+fecha);
 		return citaUseCase.obtenerCitasDeUsuarioPorFecha(idUs, fecha);
 	}
 	
 	@GetMapping("/citas-de-usuario-semana/{idUsuario}")
 	public List<Cita> obtenerCitasDeUsuarioPorSemana(@PathVariable("idUsuario") String idUsuario,@RequestParam("fecha") String fecha,@RequestParam(required = false) String filtro,
-			@RequestParam(required = false) boolean disponibilidad,@RequestParam(required = false) String idRol,@RequestParam(required = false) String estatusCita) {
+			@RequestParam(required = false) boolean disponibilidad,@RequestParam(required = false) String idRol,@RequestParam(required = false) String estatusCita,
+			@RequestParam(required = false) String estado) {
 		
-		int idUs = 0;
-		if (idUsuario != null) {
-			if (!"".equals(idUsuario)) {
-				idUs = Integer.valueOf(idUsuario);
-			}
-		}
-		if(filtro == null){
-			filtro = "";
-		}
+		int idUs = (idUsuario == null || idUsuario.isEmpty()) ? 0 : Integer.parseInt(idUsuario);
+		filtro = (filtro == null) ? "" : filtro;
+		estado = (estado == null) ? "" : estado;
+		estado = estado.equals("All") ? "" : estado;
+
 		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"|fecha:"+fecha+"|filtro:"+filtro+"|disponibilidad:"+disponibilidad+"|idRol:"+idRol+"|estatusCita:"+estatusCita);
-		return citaUseCase.obtenerCitasDeUsuarioPorSemana(idUs, fecha,filtro,disponibilidad,idRol,estatusCita);
+		return citaUseCase.obtenerCitasDeUsuarioPorSemana(idUs, fecha,filtro,disponibilidad,idRol,estatusCita,estado);
 	}
 	
 	@PutMapping("/no-show/{idCita}")
@@ -145,6 +139,18 @@ public class CitaController {
 	@DeleteMapping("{idCita}")
 	public void eliminarCita(@PathVariable("idCita") int idCita,@RequestParam("idUsuario") int idUsuario) {
 		citaUseCase.eliminarCita(idCita,idUsuario);
+	}
+
+	@GetMapping("/recordatorio/{idEvento}")
+	public boolean envioRecordatorio(@PathVariable("idEvento") int idEvento) {
+		UtilidadesAdapter.pintarLog("idEvento:"+idEvento);
+		return citaUseCase.envioRecordatorio(idEvento);
+	}
+
+	@GetMapping("/recordatorios/{fecha}")
+	public boolean envioRecordatorios(@PathVariable("fecha") String fecha,@RequestParam("idUsuario") int idUsuario) {
+		UtilidadesAdapter.pintarLog("fecha:"+fecha+"|idUsuario:"+idUsuario);
+		return citaUseCase.envioRecordatorios(fecha, idUsuario);
 	}
 
 }

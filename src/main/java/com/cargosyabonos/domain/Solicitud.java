@@ -36,7 +36,6 @@ public class Solicitud {
 	private String usuarioRevisorNombre;
 	private String usuarioRevisando;
 	private String usuarioRevisandoNombre;
-	private String importante;
 	private String comentario;
 	private String fechaNacimiento;
 	private String adicional;
@@ -90,7 +89,23 @@ public class Solicitud {
 	private int idRolUsInt;
 	
 	private boolean finAsgClnc;
-	
+
+	private String importantNotes;
+
+	private boolean signedClnc;
+
+	public boolean isSignedClnc() {
+		return signedClnc;
+	}
+	public void setSignedClnc(boolean signedClnc) {
+		this.signedClnc = signedClnc;
+	}
+	public String getImportantNotes() {
+		return importantNotes;
+	}
+	public void setImportantNotes(String importantNotes) {
+		this.importantNotes = importantNotes;
+	}
 	public int getIdSolicitud() {
 		return idSolicitud;
 	}
@@ -228,12 +243,6 @@ public class Solicitud {
 	}
 	public void setIdUsuarioRevisando(int idUusuarioRevisando) {
 		this.idUusuarioRevisando = idUusuarioRevisando;
-	}
-	public String getImportante() {
-		return importante;
-	}
-	public void setImportante(String importante) {
-		this.importante = importante;
 	}
 	public String getComentario() {
 		return comentario;

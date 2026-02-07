@@ -3,13 +3,13 @@ package com.cargosyabonos.adapter.out.sql;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.application.port.out.jpa.UsuarioJpa;
 import com.cargosyabonos.domain.UsuarioEntity;
 
-@Service
+@Repository
 public class UsuarioRepository implements UsuariosPort {
 
 	@Autowired

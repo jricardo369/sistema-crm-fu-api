@@ -13,6 +13,7 @@ public interface CorreoElectronicoUseCase {
 	public void enviarCorreoNuevaSolicitudCliente(int idUsuario,SolicitudEntity solicitud,boolean isMensaje,boolean isMail);
 	public void enviarCorreoNotifNuevaSolAAbogado(int idUsuario,SolicitudEntity solicitud,boolean isMensaje,boolean isMail);
 	public void enviarCorreoCita(String nombre,String fecha,String hora,String tipo,String email,int idSolicitud,String formatoFecha);
+	public void enviarCorreoRecordatoriosCitas(String fecha,int idUsuario,String formatoFecha);
 	public void enviarCorreoCitaVoc(String nombre,String fecha,String hora,String tipo,String email,int idSolicitud);
 	public void enviarCorreoSaldoVencido(SolicitudEntity solicitud,boolean isMensaje,boolean isMail);
 	public void enviarCorreoAAbogadoPorFinSolicitud(SolicitudEntity solicitud);

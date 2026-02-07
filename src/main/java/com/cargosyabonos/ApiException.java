@@ -8,9 +8,5 @@ public class ApiException extends RuntimeException {
 		super(""+entity);
 	}
 	
-	
-	
-
-	
 
 }

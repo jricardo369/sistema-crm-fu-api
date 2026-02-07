@@ -1,28 +1,90 @@
 SELECT 
-s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,ts.nombre,s.estado,s.referencia,s.idioma,s.direccion,
-s.amount,s.abogado, s.email,s.adicional,s.importante, ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,
-s.waiver,s.interview_master,s.external,s.asignacion_template,s.asignacion_int_sc, s.due_date as dueDate,s.numero_entrevistas,
-IFNULL(us.id_usuario,0) as idUsuarioSc,us.nombre as usuarioSc, 
-ur.id_usuario as idUsuarioRevisor,ur.nombre as usuarioRevisorNombre, ur.usuario as usuarioRevisor, 
-ure.id_usuario as idUsuarioRevisando,ure.nombre as usuarioRevisandoNombre, ure.nombre as usuarioRevisando, 
-IFNULL(urt.id_usuario,0) as idUsuarioTemplate,urt.nombre as usuarioTemplate, 
-IFNULL(urex.id_usuario,0) as idUsuarioExternal,urex.nombre as usuarioExternal, (SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) FROM evento_solicitud  
-WHERE tipo = 'Schedule' AND estatus_schedule = 1  
-AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled app%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaint, 
-(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) FROM evento_solicitud  
-WHERE tipo = 'Schedule' AND estatus_schedule = 1  
-AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled scales%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechascale, 
-(SELECT count(scale) FROM request_evaluation.scale where id_solicitud = s.id_solicitud)  as tieneScale, 
-s.numero_de_caso as numeroDeCaso,s.docusign,s.email_abogado,s.firma_de_abogados,s.fecha_nacimiento,s.tipo_entrevista,s.parelegal_name,s.parelegal_emails,s.parelegal_telefonos, 
-(SELECT COALESCE(sum(monto) ,0) FROM movimiento WHERE tipo in( 'Payment') AND id_solicitud = s.id_solicitud) as pagos, 
-IFNULL(uri.id_usuario,0) as idUsuarioInterview,uri.nombre as usuarioInterview, 
-s.fin_int_ini,s.fin_int_sc,s.assigned_clinician,s.id_abogado,s.fin_asg_tmp,s.email_abo_sel, 
-MAX(CASE WHEN e.descripcion = 'Request Lost' THEN 'x' ELSE NULL END) AS requestLost, a.cupon,a.fecha_cupon,s.sexo, 
-ucl.nombre as usuarioClinician,uri.id_rol,s.fin_asg_clnc,(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) 
+s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,
+ts.id_tipo_solicitud,ts.nombre tipoSolicitud,ts.nombre,
+s.estado,s.referencia,s.idioma,s.direccion,
+s.amount,s.abogado, s.email,s.adicional,
+ep.id_estatus_pago,ep.descripcion as descEstPago,
+es.id_estatus_solicitud,es.descripcion as descEstSol,
+s.waiver,s.interview_master,s.external,
+s.asignacion_template,s.asignacion_int_sc, 
+s.due_date as dueDate,s.numero_entrevistas,
 
-FROM evento_solicitud  
-WHERE tipo = 'Schedule' AND estatus_schedule = 1  
-AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled clinician%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaClinician 
+IFNULL(us.id_usuario,0) as idUsuarioSc,us.nombre as usuarioSc, 
+ur.id_usuario as idUsuarioRevisor,
+ur.nombre as usuarioRevisorNombre, 
+ur.usuario as usuarioRevisor, 
+ure.id_usuario as idUsuarioRevisando,
+ure.nombre as usuarioRevisandoNombre, 
+ure.nombre as usuarioRevisando, 
+
+IFNULL(urt.id_usuario,0) as idUsuarioTemplate,
+urt.nombre as usuarioTemplate, 
+IFNULL(urex.id_usuario,0) as idUsuarioExternal,
+urex.nombre as usuarioExternal, 
+
+(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule)
+ FROM evento_solicitud  
+ WHERE tipo = 'Schedule'
+   AND estatus_schedule = 1  
+   AND id_solicitud = s.id_solicitud
+   AND descripcion LIKE '%Scheduled app%'
+ ORDER BY fecha DESC
+ LIMIT 1) AS fechaint, 
+
+(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule)
+ FROM evento_solicitud  
+ WHERE tipo = 'Schedule'
+   AND estatus_schedule = 1  
+   AND id_solicitud = s.id_solicitud
+   AND descripcion LIKE '%Scheduled scales%'
+ ORDER BY fecha DESC
+ LIMIT 1) AS fechascale, 
+
+(SELECT COUNT(scale)
+ FROM request_evaluation.scale
+ WHERE id_solicitud = s.id_solicitud) AS tieneScale, 
+
+s.numero_de_caso as numeroDeCaso,
+s.docusign,s.email_abogado,s.firma_de_abogados,
+s.fecha_nacimiento,s.tipo_entrevista,
+s.parelegal_name,s.parelegal_emails,s.parelegal_telefonos, 
+
+(SELECT COALESCE(SUM(monto),0)
+ FROM movimiento
+ WHERE tipo IN ('Payment')
+   AND id_solicitud = s.id_solicitud) AS pagos, 
+
+IFNULL(uri.id_usuario,0) as idUsuarioInterview,
+uri.nombre as usuarioInterview, 
+
+s.fin_int_ini,s.fin_int_sc,
+s.assigned_clinician,s.id_abogado,
+s.fin_asg_tmp,s.email_abo_sel, 
+
+MAX(CASE WHEN e.descripcion = 'Request Lost' THEN 'x' ELSE NULL END) AS requestLost, 
+a.cupon,a.fecha_cupon,s.sexo, 
+
+ucl.nombre as usuarioClinician,
+uri.id_rol,s.fin_asg_clnc,
+
+(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule)
+ FROM evento_solicitud  
+ WHERE tipo = 'Schedule'
+   AND estatus_schedule = 1  
+   AND id_solicitud = s.id_solicitud
+   AND descripcion LIKE '%Scheduled clinician%'
+ ORDER BY fecha DESC
+ LIMIT 1) AS fechaClinician,
+
+(
+  SELECT GROUP_CONCAT(descripcion SEPARATOR ', ')
+  FROM evento_solicitud
+  WHERE tipo IN ('Important','Suicide')
+    AND id_solicitud = s.id_solicitud
+) AS importantNotes,
+s.signed_clnc
+
+
 FROM solicitud s  
 LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud 
 LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago 
@@ -34,4 +96,5 @@ LEFT  JOIN usuario urt ON urt.id_usuario = s.usuario_template
 LEFT JOIN usuario urex ON urex.id_usuario = s.usuario_external 
 LEFT  JOIN usuario uri ON uri.id_usuario = s.usuario_interview 
 LEFT  JOIN usuario ucl ON ucl.id_usuario = s.assigned_clinician 
-LEFT JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud LEFT JOIN abogado a ON a.id_abogado = s.id_abogado
+LEFT JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud 
+LEFT JOIN abogado a ON a.id_abogado = s.id_abogado

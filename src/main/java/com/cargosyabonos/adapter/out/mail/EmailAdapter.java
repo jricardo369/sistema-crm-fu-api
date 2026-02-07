@@ -1,7 +1,11 @@
 package com.cargosyabonos.adapter.out.mail;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -15,7 +19,11 @@ import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
+import com.cargosyabonos.application.port.in.UsuariosUseCase;
 import com.cargosyabonos.application.port.out.EnviarCorreoPort;
+import com.cargosyabonos.application.port.out.EventoSolicitudPort;
+import com.cargosyabonos.domain.EventoRecordatorioCita;
+import com.cargosyabonos.domain.UsuarioEntity;
 
 @Service
 @PropertySource(value = "classpath:configuraciones-global.properties")
@@ -53,6 +61,12 @@ public class EmailAdapter implements EnviarCorreoPort {
 	@Autowired
 	private CorreoElectronicoUseCase correoUs;
 
+	@Autowired
+	private UsuariosUseCase usUC;
+
+	@Autowired
+	private EventoSolicitudPort usPort;
+
 	@Override
 	public void enviarCorreoRecuperacion(String email, Map<String, Object> params) {
 
@@ -71,7 +85,6 @@ public class EmailAdapter implements EnviarCorreoPort {
 	@Override
 	public void enviarCorreoMovimiento(String email, Map<String, Object> params) {
 
-		// System.out.println("rutaServer:"+rutaServer());
 		params.put("${rutahost}", rutaServer());
 		String template = "";
 
@@ -233,6 +246,7 @@ public class EmailAdapter implements EnviarCorreoPort {
 		}
 		envioCorreo.enviarAsync(email, subject, template,null,"");
 	}
+	
 
 	@Override
 	public void enviarCorreoDeLayoutCalendar(String email, String subject, Map<String, Object> params, String layout,String formatoFecha) {
@@ -248,11 +262,6 @@ public class EmailAdapter implements EnviarCorreoPort {
 			e.printStackTrace();
 		}
 		try {
-			//String tipo = params.get("${tipo}").toString();
-			/*int hora = Integer.valueOf(params.get("${hora}").toString());
-			if (tipo.equals("PM")) {
-				hora = hora + 12;
-			}*/
 			String hora = params.get("${hora}").toString();
 			Date fecha = null;
 			if(formatoFecha != null){
@@ -264,9 +273,137 @@ public class EmailAdapter implements EnviarCorreoPort {
 			if(!formatoFechaLleno){
 				fecha = UtilidadesAdapter.cadenaAFecha(params.get("${fecha}").toString());
 			}
-			// System.out.println("fecha:"+fecha);
-			// System.out.println("hora:"+hora);
 			envioCorreo.sendCalendarInvite(email, subject, template, fecha, hora);
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void enviarCorreoDeLayoutCalendarWithInvite(String email, String subject, Map<String, Object> params, String layout) {
+
+		params.put("${rutahost}", rutaServer());
+		params.put("${url}", rutaServer());
+		
+		String template = "";
+		try {
+			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+
+			String hora = params.get("${hora}").toString();
+			String fecha = params.get("${fecha}").toString();
+			String tipo = params.get("${tipo}").toString();
+
+			// true si la fecha viene en formato con "/" (ej. 02/02/2026),
+			// false en caso contrario (ej. 2026-02-02)
+			boolean formatoUs = fecha != null && fecha.contains("/");
+
+			UtilidadesAdapter.pintarLog("fecha:"+fecha);
+			UtilidadesAdapter.pintarLog("hora:"+hora);
+			UtilidadesAdapter.pintarLog("tipo:"+tipo);
+
+			if (tipo.equals("PM")) {
+
+				String horaStr = hora.substring(0, 2);
+				int horaInt = Integer.valueOf(horaStr);
+
+				if (horaInt < 12) {
+					horaInt = horaInt + 12;
+
+					hora = hora.replace(horaStr, String.valueOf(horaInt));
+					UtilidadesAdapter.pintarLog("hora PM modificada:" + hora);
+
+				}
+
+			}
+
+			String anio = "";
+			String dia = "";
+			String mes = "";
+			String horaStr = "";
+			String minutoStr = "";
+
+			if (formatoUs) {
+				anio = fecha.substring(6, 10);
+				dia = fecha.substring(3, 5);
+				mes = fecha.substring(0, 2);
+				horaStr = hora.substring(0, 2);
+				minutoStr = hora.substring(3, 5);
+			} else {
+				anio = fecha.substring(0, 4);
+				mes = fecha.substring(5, 7);
+				dia = fecha.substring(8, 10);
+				horaStr = hora.substring(0, 2);
+				minutoStr = hora.substring(3, 5);
+			}
+
+			List<EventoCalendario> eventos = new ArrayList<>();
+			
+			EventoCalendario evento = new EventoCalendario(
+						"Interview with Mental Health Evaluation Group by Familias Unidas",
+						"Interview with Mental Health Evaluation Group by Familias Unidas",
+						"",
+						LocalDateTime.of(Integer.valueOf(anio), Integer.valueOf(mes), Integer.valueOf(dia), Integer.valueOf(horaStr), Integer.valueOf(minutoStr)),
+						LocalDateTime.of(Integer.valueOf(anio), Integer.valueOf(mes), Integer.valueOf(dia), Integer.valueOf(horaStr), Integer.valueOf(minutoStr)));
+
+			eventos.add(evento);
+
+			envioCorreo.sendMailWithSchedule(email, subject, template, eventos);
+
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		} 
+		
+	}
+
+	@Override
+	public void enviarCorreoSincronizacionCitas(String layout,String fecha,int idUsuario,String formatoFecha) {
+
+		Map<String, Object> params = new HashMap<>();
+
+		params.put("${rutahost}", rutaServer());
+		params.put("${url}", rutaServer());
+		params.put("${fecha}", fecha);
+		
+		String template = "";
+		try {
+			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+
+			UsuarioEntity u = usUC.buscarPorId(idUsuario);
+
+			params.put("${usuario}",  u.getNombre());
+
+			String rangoFechasString = UtilidadesAdapter.rangoRangoFechasDeFecha(fecha, formatoFecha);
+			UtilidadesAdapter.pintarLog("rangoFechasString:"+rangoFechasString);
+			params.put("${rango-fechas}", rangoFechasString);
+
+			List<EventoRecordatorioCita> eventos = usPort.obtenerRecordatoriosCitasDeUsuario(rangoFechasString, idUsuario);
+
+			List<EventoCalendario> eventosCalendario = new ArrayList<>();
+			for (EventoRecordatorioCita er : eventos) {
+
+				EventoCalendario eventoCalendario = new EventoCalendario(
+						"Interview with Mental Health Evaluation Group by Familias Unidas",
+						"Interview with Mental Health Evaluation Group by Familias Unidas",
+						"",
+						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()), Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()), Integer.valueOf(er.getMinutos())),
+						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()), Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()), Integer.valueOf(er.getMinutos())));
+
+				eventosCalendario.add(eventoCalendario);
+			}
+
+			envioCorreo.sendMailWithSchedule(u.getCorreoElectronico(), "Appointment reminders for " + rangoFechasString + " in Mental Health Evaluation Group by Familias Unidas", template,eventosCalendario);
+		
 		} catch (MessagingException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {

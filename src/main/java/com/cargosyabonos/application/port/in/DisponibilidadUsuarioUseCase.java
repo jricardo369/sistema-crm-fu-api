@@ -11,7 +11,7 @@ import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 public interface DisponibilidadUsuarioUseCase {
 	
 	public List<DisponibilidadUsuarioEntity> obtenerDisponibilidadUsuario(int idUsuario); 
-	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,boolean clinician); 
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,String estado); 
 	public void crearDisponibilidadUsuario(DisponibilidadUsuario es);
 	public void actualizarDisponibilidadUsuario(DisponibilidadUsuarioEntity es);
 	public void eliminarDisponibilidadUsuario(int idDisponibilidad);

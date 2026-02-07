@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitasUsuario;
+import com.cargosyabonos.domain.EventoRecordatorioCita;
 import com.cargosyabonos.domain.EventoSolicitud;
 import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.cargosyabonos.domain.ReporteSolsDeUsuario;
@@ -40,7 +41,8 @@ public interface EventoSolicitudPort {
 	public List<EventoSolicitudEntity> obtenerSchedulesPendientesPorFecha(Date fecha);
 	public List<EventoSolicitudEntity> obtenerEventosScheduleDeFechaPorUsuario(String fecha,String hora,String tipo,int idUsuario);
 	public List<SchedulersActivasDeSolicitud> obtenerSchedulesActivasDeSolicitud(int idSolicitud,int idUsuario);
-	public List<Cita> obtenerCitasInterviewer(String fecha,int idUsuario, String estatusCita);
+	public List<Cita> obtenerCitasInterviewer(String fecha,int idUsuario, String estatusCita,String estado);
+	public List<EventoRecordatorioCita> obtenerRecordatoriosCitasDeUsuario(String fecha,int idUsuario);
 	public void actualizarFinSchedule(String finSchedule,int idEvento);
 	public void actualizarFinScheduleDeSolicitud(int idSolicitud);	
 	public List<EventoSolicitud> obtenerEventosDash(String fechai, String fechaf, int tileDash,int idUsuario,int usuario);

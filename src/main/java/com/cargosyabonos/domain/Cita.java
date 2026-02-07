@@ -27,7 +27,21 @@ public class Cita {
 	private String importante;
 	private String cliente;
 	private String fechaCreacion;
+	private String zonaHoraria;
+	private int idEvento;
 	
+	public int getIdEvento() {
+		return idEvento;
+	}
+	public void setIdEvento(int idEvento) {
+		this.idEvento = idEvento;
+	}
+	public String getZonaHoraria() {
+		return zonaHoraria;
+	}
+	public void setZonaHoraria(String zonaHoraria) {
+		this.zonaHoraria = zonaHoraria;
+	}
 	public String getCliente() {
 		return cliente;
 	}

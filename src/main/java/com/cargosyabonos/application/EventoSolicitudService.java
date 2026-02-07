@@ -49,8 +49,10 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 	@Override
 	public List<EventoSolicitudEntity> obtenerEventosSolicitudes(int idSolicitud, int idUsuario) {
+		
 		UsuarioEntity u = usPort.buscarPorId(idUsuario);
-		if (u.getRol().equals("5") || u.getRol().equals("7")) {
+
+		if (u.getRol().equals("5") || u.getRol().equals("7") || u.getRol().equals("11")) {
 			return esPort.obtenerEventosSolicitudesSinPagos(idSolicitud);
 		} else {
 			return esPort.obtenerEventosSolicitudes(idSolicitud);
@@ -254,23 +256,29 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 		String rolUsEvento = u.getRol();
 		UtilidadesAdapter.pintarLog("Usuario rol:" + rolUsEvento);
 
+		boolean esClinicianComoCaseManager = false;
+		
+		UsuarioEntity rolInt = usPort.buscarPorId(u.getIdUsuario());
+		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
+
+		esClinicianComoCaseManager = "11".equals(rolUsCasManager);
+
+		if (rolUsEvento.equals("11")) {
+
+			if(esClinicianComoCaseManager){
+				solPort.actualizarFinAsgClnc("0", s.getIdSolicitud());
+				solPort.actualizarAsignacionIntReset(s.getIdSolicitud());
+				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
+			}else{
+				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
+			}
+
+		}
+
 		if (rolUsEvento.equals("5")) {
-			// int idUs = solPort.obtenerRevisorConMenorSolicitudes(0);
-			// s.setUsuarioRevisando(idUs);
 			solPort.actualizarEstatusSolicitud(s.getIdSolicitud(), 1);
 			solPort.actualizarAsignacionIntReset(s.getIdSolicitud());
 			solPort.actualizarFinInterview(0, e.getSolicitud().getIdSolicitud());
-		}
-
-		if (rolUsEvento.equals("11")) {
-			if (e.getDescripcion().contains("Scheduled appointment")) {
-				solPort.actualizarEstatusSolicitud(s.getIdSolicitud(), 1);
-				solPort.actualizarAsignacionIntReset(s.getIdSolicitud());
-				solPort.actualizarFinInterview(0, e.getSolicitud().getIdSolicitud());
-			} else {
-				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
-				solPort.actualizarFinAsgClnc("0", e.getSolicitud().getIdSolicitud());
-			}
 		}
 
 		if (rolUsEvento.equals("8")) {

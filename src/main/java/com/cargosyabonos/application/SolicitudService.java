@@ -197,9 +197,14 @@ public class SolicitudService implements SolicitudUseCase {
 			r.setIdEstatusPago(1);
 			r.setIdEstatusSolicitud(1);
 			r.setTelefono(r.getTelefono().replaceAll("\\D+", ""));
-			int idUs = reqPort.obtenerRevisorConMenorSolicitudes(0);
-			r.setIdUsuarioRevisor(idUs);
-			r.setIdUsuarioRevisando(idUs);
+			if(u.getRol().equals("4")&& !u.isRevisor()){
+				r.setIdUsuarioRevisor(idUsuario);
+				r.setIdUsuarioRevisando(idUsuario);
+			}else{
+				int idUs = reqPort.obtenerRevisorConMenorSolicitudes(0);
+				r.setIdUsuarioRevisor(idUs);
+				r.setIdUsuarioRevisando(idUs);
+			}
 
 			SolicitudEntity s = reqPort.crearSolicitud(convertirARequestEntity(r), idUsuario, true);
 
@@ -387,7 +392,6 @@ public class SolicitudService implements SolicitudUseCase {
 		s.setNumeroDeCaso(r.getNumeroDeCaso());
 		s.setExternal(r.isExternal());
 		s.setUsuarioExternal(r.getUsuarioExternal());
-		s.setImportante(r.getImportante() == null ? "" : r.getImportante());
 		s.setAsignacionIntSc(r.isAsignacionIntSc());
 		s.setUsuarioIntSc(r.getUsuarioIntSc());
 		s.setInterviewMaster(r.isInterviewMaster());
@@ -401,52 +405,10 @@ public class SolicitudService implements SolicitudUseCase {
 		s.setEmailAboSel(r.getEmailAboSel());
 		s.setSexo(r.getSexo());
 		s.setFinAsgClnc(r.isFinAsgClnc());
+		s.setSignedClnc(r.isSignedClnc());
 
 		return s;
 	}
-
-	/*private SolicitudVocEntity convertirARequestEntityVoc(SolicitudVoc r) {
-
-		SolicitudVocEntity s = new SolicitudVocEntity();
-
-		s.setIdSolicitud(r.getIdSolicitud());
-		s.setFechaInicio(r.getFechaInicio());
-		s.setCliente(r.getCliente());
-		s.setTelefono(r.getTelefono());
-		s.setEmail(r.getEmail());
-		s.setDocusign(r.getDocusign());
-		s.setAbogado(r.getAbogado());
-		s.setEmail_abogado(r.getEmail_abogado());
-		s.setNumeroDeCaso(r.getNumeroDeCaso());
-		s.setFirmaAbogados(r.getFirmaAbogados());
-		TipoSolicitudEntity ts = tsPort.obtenerTipoSolicitudPorId(r.getIdTipoSolicitud());
-		s.setTipoSolicitud(ts);
-		EstatusSolicitudEntity es = esPort.obtenerEstatusSolicitudPorId(r.getIdEstatusSolicitud());
-		s.setEstatusSolicitud(es);
-		EstatusPagoEntity ep = epPort.obtenerEstatusPagoPorId(r.getIdEstatusPago());
-		s.setEstatusPago(ep);
-		s.setFechaNacimiento(r.getFechaNacimiento());
-		s.setAdicional(r.getAdicional());
-		s.setIdioma(r.getIdioma());
-		s.setDireccion(r.getDireccion());
-		s.setEstado(r.getEstado());
-		s.setApellidos(r.getApellidos());
-		s.setParalegalName(r.getParalegalName());
-		s.setParalegalEmails(r.getParalegalEmails());
-		s.setParalegalTelefonos(r.getParalegalTelefonos());
-		s.setImportante(r.getImportante());
-		s.setNumSesiones(r.getNumSesiones());
-		s.setNumSchedules(r.getNumSchedules());
-		s.setSesionesPendientes(r.getSesionesPendientes());
-		s.setDocumento1(r.isDocumento1());
-		s.setFechaDoc1(r.getFechaDoc1());
-		s.setDocumento2(r.isDocumento2());
-		s.setFechaDoc2(r.getFechaDoc2());
-		s.setTerapeuta(r.getTerapeuta());
-		s.setUsuarioRevisando(r.getUsuarioRevisando());
-
-		return s;
-	}*/
 
 	@Override
 	public int obtenerRevisorConMenorSolicitudes() {
@@ -1640,9 +1602,6 @@ public class SolicitudService implements SolicitudUseCase {
 			UtilidadesAdapter.pintarLog("Fin Clnc");
 			evPort.ingresarEventoDeSolicitud("Info", "Finished the interview clinician", "Info", u.getUsuario(), s);
 			reqPort.actualizarFinAsgClnc("1", idSolicitud);
-			//EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleClinician(idSolicitud, "1");
-			//UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
-			//evPort.actualizarFinSchedule("1", ev.getIdEvento());
 			
 		} else {
 			
@@ -1654,8 +1613,6 @@ public class SolicitudService implements SolicitudUseCase {
 	
 	@Override
 	public void envioFinEntrevistaScales(int idSolicitud,int idUsuarioCambio){
-		//reqPort.actualizarInterviewMaster("1", idSolicitud);
-		//evPort.actualizarFinScheduleDeSolicitud(idSolicitud);
 		
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
@@ -1961,29 +1918,161 @@ public class SolicitudService implements SolicitudUseCase {
 
 	}
 
-	public void reasginar(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
+	public void envioTemplate(int idUsuario, int idSolicitud, int idUsuarioEnvio) {
+
+		UtilidadesAdapter.pintarLog("Envio template");
+
+		reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
 
 		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+
+		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+		UsuarioEntity us = usPort.buscarPorId(idUsuario);
+
+		UtilidadesAdapter.pintarLog("actualizar asignacion template");
+		reqPort.actualizarAsignacionTemplate(1, idUsuario, idSolicitud);
+		reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
+
+		evPort.ingresarEventoDeSolicitud("File Assignment", "File was assigned to user " + us.getNombre(), "Info",
+				usEnvio.getUsuario(), s);
+		correoUs.enviarCorreoAsignacion(s, us.getNombre(), us.getCorreoElectronico());
+
+	}
+
+	public void rejectSolicitud(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
+
+		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+		String rol = usEnvio.getRol();
+
+		boolean esClinicianComoCaseManager = false;
+
 		if (!usEnvio.getRol().equals("8")) {
 			reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
 		}
 
-		if (motivo != null) {
+		String motivoTrim = motivo == null ? "" : motivo.trim();
+
+		if (motivoTrim.isEmpty()) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"Rejection reason cannot be empty");
+		}
+
+		if (motivoTrim.length() > 250) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"The length of the rejection reason cannot be greater than 250");
+		}
+
+		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+
+		evPort.ingresarEventoDeSolicitud("Reject File", motivo, "Reject File", usEnvio.getUsuario(), s);
+
+		UsuarioEntity rolInt = usPort.buscarPorId(s.getUsuarioInterview());
+		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
+		esClinicianComoCaseManager = "11".equals(rolUsCasManager);
+
+		EventoSolicitudEntity evSol = null;
+		if (rol.equals("5")) {
+			evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
+		} else if (rol.equals("8")) {
+			evSol = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
+		} else if (rol.equals("11")) {
+			if (esClinicianComoCaseManager) {
+				evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
+			} else {
+				evSol = evPort.obtenerUltimoScheduleInterviewClinicianByUser(idSolicitud, "1", idUsuarioEnvio);
+			}
+		}
+
+		if (evSol != null) {
+
+			correoUs.enviarCorreoNoShow(usEnvio.getCorreoElectronico(), usEnvio.getNombre(), s, evSol);
+			if (s.getTelefono() != null) {
+				if (!"".equals(s.getTelefono())) {
+
+					if (evSol != null) {
+						String f = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule()) + " "
+								+ evSol.getHoraSchedule() + " " + evSol.getTipoSchedule();
+						msgPort.envioMensaje(s.getTelefono(),
+								" The client " + s.getCliente()
+										+ " did reject up for the interview scheduled for request "
+										+ s.getIdSolicitud() + " in the date " + f + ".",
+								s, false);
+					}
+				}
+			}
+
+			UtilidadesAdapter.pintarLog("Actualizar evento solicitud:" + evSol.getIdEvento());
+			evSol.setEstatusSchedule("0");
+			evPort.actualizarEventoSolicitud(evSol);
+
+		}
+
+		if (rol.equals("11")) {
+			if (esClinicianComoCaseManager) {
+				reqPort.actualizarFinAsgClnc("0", idSolicitud);
+				reqPort.actualizarAsignacionIntReset(idSolicitud);
+				reqPort.actualizarAssignedClinician(0, idSolicitud);
+			} else {
+				reqPort.actualizarAssignedClinician(0, idSolicitud);
+			}
+		}
+		if (rol.equals("8")) {
+			reqPort.actualizarAsignacionIntScReset(idSolicitud);
+		}
+		if (rol.equals("5")) {
+			reqPort.actualizarAsignacionIntReset(idSolicitud);
+		}
+		if (rol.equals("7")) {
+
+			reqPort.actualizarAsignacionTemplate(0, 0, idSolicitud);
+
+		}
+
+		//Cambiar estatus solicitud dependiendo en que rol y estatus esta
+		if (!usEnvio.getRol().equals("8")) {
+
+			if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 2) {
+				// Actualizar estatus a Reviewing
+				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
+			} else {
+				// Actualizar estatus a Received
+				reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
+			}
+
+		}
+
+	}
+
+	public void reasignar(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
+
+		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+
+		if (!usEnvio.getRol().equals("8")) {
+			reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
+		}
 
 			UtilidadesAdapter.pintarLog("Con motivo");
 
-			if (!"".equals(motivo)) {
+			if (!"".equals(motivo)) {	
 
 				UtilidadesAdapter.pintarLog("Motivo lleno");
 
-				if ("".equals(motivo)) {
-					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-							"Rejection reason cannot be empty");
-				} else {
-					if (motivo.length() > 250) {
-						throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-								"The length of the rejection reason cannot be greater than 250");
-					}
+				String motivoTrim = motivo == null ? "" : motivo.trim();
+
+				if (motivoTrim.isEmpty()) {
+					throw new ResponseStatusException(
+						HttpStatus.BAD_REQUEST,
+						"Rejection reason cannot be empty"
+					);
+				}
+
+				if (motivoTrim.length() > 250) {
+					throw new ResponseStatusException(
+						HttpStatus.BAD_REQUEST,
+						"The length of the rejection reason cannot be greater than 250"
+					);
 				}
 
 				SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
@@ -2070,25 +2159,6 @@ public class SolicitudService implements SolicitudUseCase {
 
 			}
 
-		} else {
-
-			UtilidadesAdapter.pintarLog("Sin motivo");
-
-			SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
-			UsuarioEntity us = usPort.buscarPorId(idUsuario);
-
-			if (us.getRol().equals("7")) {
-				UtilidadesAdapter.pintarLog("actualizar asignacion template");
-				reqPort.actualizarAsignacionTemplate(1, idUsuario, idSolicitud);
-				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
-			}
-
-			evPort.ingresarEventoDeSolicitud("File Assignment", "File was assigned to user " + us.getNombre(), "Info",
-					usEnvio.getUsuario(), s);
-			correoUs.enviarCorreoAsignacion(s, us.getNombre(), us.getCorreoElectronico());
-
-		}
-
 	}
 	
 	public void noShow(String motivo, int idSolicitud, int idUsuarioEnvio) {
@@ -2111,15 +2181,13 @@ public class SolicitudService implements SolicitudUseCase {
 
 		String rol = u.getRol();
 		boolean actualizarUsuarioRevisando = true;
-
 		boolean esClinicianComoCaseManager = false;
 
 		
 		UsuarioEntity rolInt = usPort.buscarPorId(s.getUsuarioInterview());
 		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
-		if (rolUsCasManager.equals("11")) {
-			esClinicianComoCaseManager = true;
-		}
+
+		esClinicianComoCaseManager = "11".equals(rolUsCasManager);
 
 		EventoSolicitudEntity evSol = null;
 		if (rol.equals("5")) {
@@ -2136,19 +2204,18 @@ public class SolicitudService implements SolicitudUseCase {
 
 		if (evSol != null) {
 
-			reqPort.actualizarImportante("No show", s.getIdSolicitud());
+			//reqPort.actualizarImportante("No show", s.getIdSolicitud());
 			UsuarioEntity uRev = usPort.buscarPorId(s.getUsuarioRevisor());
+			
 			// Enviar mail
 			correoUs.enviarCorreoNoShow(uRev.getCorreoElectronico(), uRev.getNombre(), s, evSol);
+			
 			// Enviar mensaje texto
 			if (s.getTelefono() != null) {
 				if (!"".equals(s.getTelefono())) {
-
-					if (evSol != null) {
-						
+					if (evSol != null) {					
 						String f = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule()) + " "
 								+ evSol.getHoraSchedule() + " " + evSol.getTipoSchedule();
-						
 						msgPort.envioMensaje(uRev.getTelefono(),
 								" The client " + s.getCliente()
 										+ " did not show up for the interview scheduled for request "
@@ -2163,9 +2230,7 @@ public class SolicitudService implements SolicitudUseCase {
 			evPort.actualizarEventoSolicitud(evSol);
 		}
 
-		if (rol.equals("8")) {
-			actualizarUsuarioRevisando = false;
-		}
+		actualizarUsuarioRevisando = !"8".equals(rol);
 
 		if (actualizarUsuarioRevisando) {
 			s.setUsuarioRevisando(s.getUsuarioRevisor());
@@ -2176,13 +2241,13 @@ public class SolicitudService implements SolicitudUseCase {
 
 
 		if (rol.equals("11")) {
-
 			if(esClinicianComoCaseManager){
 				reqPort.actualizarFinAsgClnc("0", idSolicitud);
+				reqPort.actualizarAsignacionIntReset(idSolicitud);
+				reqPort.actualizarAssignedClinician(0, idSolicitud);
 			}else{
 				reqPort.actualizarAssignedClinician(0, idSolicitud);
 			}
-
 		}
 		if (rol.equals("8")) {
 			reqPort.actualizarAsignacionIntScReset(idSolicitud);
@@ -2190,9 +2255,6 @@ public class SolicitudService implements SolicitudUseCase {
 		if (rol.equals("5") ) {
 			reqPort.actualizarAsignacionIntReset(idSolicitud);
 		}
-
-		reqPort.actualizarImportante("No show", s.getIdSolicitud());
-				
 
 	}
 	
@@ -2867,6 +2929,7 @@ public class SolicitudService implements SolicitudUseCase {
 			s.add("Payment Status");
 			s.add("Responsible User");
 			s.add("Interviewer User");
+			s.add("Editor User");
 			s.add("Waiver");
 			s.add("Interview review");
 			s.add("Assignment editor");

@@ -52,7 +52,7 @@ public class UtilController {
 		envCorrPort.enviarCorreoDeLayout(email, "Test", params, "email-recordatorio-cita");
 	}
 
-	@GetMapping("envio-correo-new/{email}")
+	@GetMapping("envio-correo-test/{email}")
 	public void envioCorreoTestNew(@PathVariable("email") String email, @RequestParam("tipo") String tipo,
 			@RequestParam(required = false) String fecha, @RequestParam(required = false) String hora,
 			@RequestParam(required = false) String tipoH, @RequestParam(required = false) String estado,
@@ -60,14 +60,9 @@ public class UtilController {
 		envCorrPort.testMail(email, tipo, fecha, hora, tipoH, estado, zonaHoraria);
 	}
 
-	@GetMapping("envio-correo-calendar/{email}")
-	public void envioCorreoCalendar(@PathVariable("email") String email) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("${cliente}", 1);
-		params.put("${fecha}", "2024-07-17 0:00:00");
-		params.put("${hora}", "1");
-		params.put("${tipo}", "PM");
-		envCorrPort.enviarCorreoDeLayoutCalendar(email, "Appointment for interview", params, "email-cita", null);
+	@GetMapping("envio-correo-calendar-sinc-citas/{email}")
+	public void envioCorreoCalendarSincCitas(@PathVariable("email") String email) {
+		envCorrPort.enviarCorreoSincronizacionCitas("email-recordatorios-citas", "2024-07-17", 23, "US");
 	}
 
 	@GetMapping("envio-correo-pdf/{idSolicitud}/{email}")

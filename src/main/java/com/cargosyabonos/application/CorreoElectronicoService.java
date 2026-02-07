@@ -70,7 +70,6 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 	@Override
 	public void enviarCorreoRecuperacion(String usuario) {
 
-		// Usuario
 		UsuarioEntity us = usPort.buscarPorUsuario(usuario);
 		if (us != null) {
 
@@ -142,10 +141,14 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		params.put("${fecha}", fecha);
 		params.put("${hora}", hora);
 		params.put("${tipo}", tipo);
-		//envCorrPort.enviarCorreoDeLayout(solicitud.getEmail(), "Appointment for interview", params, "email-cita");
-		envCorrPort.enviarCorreoDeLayoutCalendar(email, "Appointment with Familias Unidas for file "+idSolicitud, params, "email-cita",formatoFecha);
+		envCorrPort.enviarCorreoDeLayoutCalendarWithInvite(email, "Appointment with Familias Unidas for file "+idSolicitud, params, "email-cita");
 	}
-	
+
+	@Override
+	public void enviarCorreoRecordatoriosCitas(String fecha,int idUsuario,String formatoFecha){
+		envCorrPort.enviarCorreoSincronizacionCitas("email-recordatorios-citas", fecha, idUsuario, formatoFecha);
+	}
+
 	@Override
 	public void enviarCorreoCitaVoc(String nombre,String fecha,String hora,String tipo,String email,int idSolicitud) {
 		Map<String, Object> params = new HashMap<>();
@@ -153,7 +156,6 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		params.put("${fecha}", fecha);
 		params.put("${hora}", hora);
 		params.put("${tipo}", tipo);
-		//envCorrPort.enviarCorreoDeLayout(solicitud.getEmail(), "Appointment for interview", params, "email-cita");
 		envCorrPort.enviarCorreoDeLayoutCalendar(email, "Appointment with Familias Unidas for file VOC "+idSolicitud , params, "email-cita",null);
 	}
 
@@ -344,5 +346,7 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		params.put("${cuerpo}", cuerpo);
 		envCorrPort.enviarCorreoNotificacion(email, titulo, params, null, "",false);
 	}
+
+	
 
 }

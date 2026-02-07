@@ -123,8 +123,6 @@ public class SolicitudEntity {
 	@Column(name = "usuario_external")
 	private int usuarioExternal;
 	
-	private String importante;
-	
 	@Column(name = "asignacion_int_sc")
 	private boolean asignacionIntSc;
 	
@@ -162,7 +160,18 @@ public class SolicitudEntity {
 	
 	@Column(name = "fin_asg_clnc")
 	private boolean finAsgClnc;
-	
+
+	@Column(name = "signed_clnc")
+	private boolean signedClnc;
+
+	public boolean isSignedClnc() {
+		return signedClnc;
+	}
+
+	public void setSignedClnc(boolean signedClnc) {
+		this.signedClnc = signedClnc;
+	}
+
 	public int getIdSolicitud() {
 		return idSolicitud;
 	}
@@ -500,14 +509,6 @@ public class SolicitudEntity {
 
 	public void setUsuarioExternal(int usuarioExternal) {
 		this.usuarioExternal = usuarioExternal;
-	}
-
-	public String getImportante() {
-		return importante;
-	}
-
-	public void setImportante(String importante) {
-		this.importante = importante;
 	}
 
 	public boolean isAsignacionIntSc() {

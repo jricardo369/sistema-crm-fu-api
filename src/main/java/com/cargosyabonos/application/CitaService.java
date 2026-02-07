@@ -22,6 +22,7 @@ import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.CitaSql;
 import com.cargosyabonos.domain.ConfiguracionEntity;
+import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
 
@@ -135,7 +136,8 @@ public class CitaService implements CitaUseCase {
 	
 
 	@Override
-	public List<Cita> obtenerCitasDeUsuarioPorSemana(int idUsuario, String fecha,String filtro,boolean disponibilidad,String idRol, String estatusCita) {
+	public List<Cita> obtenerCitasDeUsuarioPorSemana(int idUsuario, String fecha,String filtro,boolean disponibilidad,
+		String idRol, String estatusCita,String estado) {
 		
 		UsuarioEntity ue = usPort.buscarPorId(idUsuario);
 		List<Cita> sce = new ArrayList<>();
@@ -143,74 +145,34 @@ public class CitaService implements CitaUseCase {
 		if (disponibilidad) {
 
 			if (ue.getRol().equals("2") || ue.getRol().equals("3") || ue.getRol().equals("4")) {
-
-				//List<CitaEntrevista> se = null;
-
 				if(idRol != null && !idRol.equals("")){
 					if(idRol.equals("0")){
 						idRol = "5,8,11";
 					}	
 				}
-
 				if (!"".equals(filtro)) {
-					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, Integer.valueOf(filtro),idRol);
+					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, Integer.valueOf(filtro),idRol,estado);
 				} else {
-					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, 0,idRol);
+					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, 0,idRol,estado);
 				}
-
-				/*if (se != null) {
-					for (CitaEntrevista ce : se) {
-						Cita c = convertirACita(ce,false);
-						sce.add(c);
-					}
-				}*/
-
 			} else if (ue.getRol().equals("5") || ue.getRol().equals("8") || ue.getRol().equals("11")) {
-				
-				//List<CitaEntrevista> se = null;
-				sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, idUsuario,idRol);
-
-				/*if (se != null) {
-					for (CitaEntrevista ce : se) {
-						Cita c = convertirACita(ce,false);
-						sce.add(c);
-					}
-				}*/
+				sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, idUsuario,idRol,estado);
 			}
 
 		}else{
 		
 			if(ue.getRol().equals("2")||ue.getRol().equals("3")|| ue.getRol().equals("4")){
-				
-				//List<Cita> se = null;
-				
 				if(!"".equals(filtro)){
-					sce =  evPort.obtenerCitasInterviewer(fecha, Integer.valueOf(filtro),estatusCita);
+					sce =  evPort.obtenerCitasInterviewer(fecha, Integer.valueOf(filtro),estatusCita, estado);
 				}else{
-					sce =  evPort.obtenerCitasInterviewer(fecha,0,estatusCita);
+					sce =  evPort.obtenerCitasInterviewer(fecha,0,estatusCita, estado);
 				}
 				
-				/*for (CitaEntrevista ce : se) {
-					Cita c = convertirACita(ce,true);
-					sce.add(c);
-				}*/
-				
 			}else if(ue.getRol().equals("5")||ue.getRol().equals("8")|| ue.getRol().equals("11")){
-				sce =  evPort.obtenerCitasInterviewer(fecha, idUsuario,estatusCita);
-				
-				/*for (CitaEntrevista ce : se) {
-					Cita c = convertirACita(ce,true);
-					sce.add(c);
-				}*/
+				sce =  evPort.obtenerCitasInterviewer(fecha, idUsuario,estatusCita, estado);
 			}else{
 				List<Cita> se =  citaUseCase.obtenerCitasDeUsuarioPorSemanaV2(fecha, idUsuario, 0);
 				sce.addAll(se);
-				/*List<CitaEntity> se =  citaPort.obtenerCitasDeUsuarioPorSemana(idUsuario, fecha,0);
-				
-				for (CitaEntity ce : se) {
-					Cita c = convertirACita(ce);
-					sce.add(c);
-				}*/
 			}
 		}
 		return sce;
@@ -356,24 +318,6 @@ public class CitaService implements CitaUseCase {
 		
 		return c;
 	}
-	
-	/*private Cita convertirACita(CitaEntrevista ce, boolean adicionales){
-		Cita c = new Cita();
-		c.setFecha(ce.getfecha());
-		c.setHora(ce.gethora());
-		c.setIdSolicitud(ce.getsolicitud());
-		c.setIdUsuario(ce.getusuario());
-		c.setNombreUsuario(ce.getnombreUsuario());
-		c.setTipo(ce.gettipo());
-		c.setColor(ce.getcolor());
-		if(adicionales){
-			c.setFinSchedule(ce.getfinSchedule());
-			c.setDescEst(ce.getdescEst());
-			c.setIdEstaSol(ce.getestSol());
-		}
-		c.setImportante(ce.getimportante() == null ? "" : ce.getimportante());
-		return c;
-	}*/
 
 	@Override
 	public void actualizarPagado(boolean pagado, int idCita,int idUsuario) {
@@ -398,6 +342,27 @@ public class CitaService implements CitaUseCase {
 			sce.add(c);
 		}
 		return sce;
+	}
+
+	@Override
+	public boolean envioRecordatorio(int idEvento){
+
+		EventoSolicitudEntity e = evPort.findByIdEvento(idEvento);
+
+		if(e != null){
+			UsuarioEntity u = usPort.buscarPorId(Integer.valueOf(e.getUsuarioSchedule()));
+			correoUs.enviarCorreoCita(u.getNombre(), UtilidadesAdapter.formatearFecha(e.getFechaSchedule()), e.getHoraSchedule(), e.getTipoSchedule(), u.getCorreoElectronico(), e.getSolicitud().getIdSolicitud(), "US");
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean envioRecordatorios(String fecha,int idUsuario){
+
+		correoUs.enviarCorreoRecordatoriosCitas(fecha, idUsuario, "US");
+
+		return true;
 	}
 	
 

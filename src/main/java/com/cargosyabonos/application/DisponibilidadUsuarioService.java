@@ -101,11 +101,11 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 	}
 
 	@Override
-	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,boolean clinician) {
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,String estado) {
 		
 		List<DisponibilidadUsuario> salida = null;
 		
-		salida = duPort.obtenerDisponibilidadUsuarioPorFecha(fecha,rol,idSolicitud,fechaAnterior,clinician);
+		salida = duPort.obtenerDisponibilidadUsuarioPorFecha(fecha,rol,idSolicitud,fechaAnterior,estado);
 		
 		return salida;
 	}
