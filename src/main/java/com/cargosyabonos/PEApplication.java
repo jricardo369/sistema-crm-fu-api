@@ -2,6 +2,8 @@ package com.cargosyabonos;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,6 +11,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,7 +28,10 @@ import com.cargosyabonos.domain.TareaProgramadaEntity;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync 
 public class PEApplication extends SpringBootServletInitializer{
+
+	private static final Logger logger = LoggerFactory.getLogger(PEApplication.class);
 	
 	@Autowired
 	private TareaProgramadaPort tPort;
@@ -157,7 +163,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		dia = diaParaCron(dia);
 		String hora = tp.getHora();
 		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
-		System.out.println("cron payments:"+salida);
+		logger.info("cron payments:"+salida);
 		return salida;
 	}
 	
@@ -170,7 +176,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		dia = diaParaCron(dia);
 		String hora = tp.getHora();
 		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
-		System.out.println("cron payments:"+salida);
+		logger.info("cron payments:"+salida);
 		return salida;
 	}
 	
@@ -183,7 +189,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		dia = diaParaCron(dia);
 		String hora = tp.getHora();
 		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
-		System.out.println("cron payments:"+salida);
+		logger.info("cron payments:"+salida);
 		return salida;
 	}
 	
@@ -196,7 +202,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		dia = diaParaCron(dia);
 		String hora = tp.getHora();
 		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
-		System.out.println("cron late requests:"+salida);
+		logger.info("cron late requests:"+salida);
 		return salida;
 	}
 	
@@ -205,7 +211,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		String salida = "";
 		//Todos los dias a la 5 pm horario california, quedo en 23 por que se le restan 6 horas para que sean las 5 pm
 		salida = "0 0 23 * * *";
-		System.out.println("cron recordatorio citas:"+salida);
+		logger.info("cron recordatorio citas:"+salida);
 		return salida;
 	}
 	
@@ -214,7 +220,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		String salida = "";
 		//Todos los dias a la media noche
 		salida = "0 0 7 * * *";
-		System.out.println("cron limpieza disponibilidad:"+salida);
+		logger.info("cron limpieza disponibilidad:"+salida);
 		return salida;
 	}
 	
@@ -223,7 +229,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		String salida = "";
 		//Todos los dias a las 7 am horario california
 		salida = "0 00 15 * * *";
-		System.out.println("cron validacion msms:"+salida);
+		logger.info("cron validacion msms:"+salida);
 		return salida;
 	}
 	
@@ -232,7 +238,7 @@ public class PEApplication extends SpringBootServletInitializer{
 		String salida = "";
 		//Todos los dias a las 12 pm horario california,se le restan 6 horas a 18
 		salida = "0 00 18 * * *";
-		System.out.println("cron sols ending session:"+salida);
+		logger.info("cron sols ending session:"+salida);
 		return salida;
 	}
 

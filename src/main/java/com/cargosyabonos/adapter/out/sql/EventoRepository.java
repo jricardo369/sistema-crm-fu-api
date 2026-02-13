@@ -1,6 +1,9 @@
 package com.cargosyabonos.adapter.out.sql;
 
 import java.nio.charset.StandardCharsets;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +13,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -32,6 +37,8 @@ import com.cargosyabonos.domain.UsuarioEntity;
 
 @Service
 public class EventoRepository implements EventoSolicitudPort {
+
+	private static final Logger logger = LoggerFactory.getLogger(EventoRepository.class);
 
 	@Value("classpath:/querys/queryCitasInterviewers.txt")
     private Resource queryCitasInterviewers;
@@ -286,13 +293,20 @@ public class EventoRepository implements EventoSolicitudPort {
 			queryS = queryS.replace("$andsAdicionales", "");
 		}
 
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate referencia   = LocalDate.parse(fecha, formatter);              // fecha de entrada
+		LocalDate inicioSemana = referencia.with(DayOfWeek.MONDAY);
+		LocalDate finSemana    = inicioSemana.plusDays(6);
+
 		sb.append(queryS);
 
-		UtilidadesAdapter.pintarLog("query:"+"\n"  + sb.toString());
+		logger.info("query:"+"\n"  + sb.toString().replace(":inicioSemana", "'"+inicioSemana+"'").replace(":finSemana", "'"+finSemana+"'"));
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
-	    query.setParameter("fecha", fecha);
+	    //query.setParameter("fecha", fecha);
+		query.setParameter("inicioSemana", inicioSemana);
+		query.setParameter("finSemana",  finSemana);
 	    
 	    List<Object[]> rows = query.getResultList();
 		return rows;
@@ -345,7 +359,7 @@ public class EventoRepository implements EventoSolicitudPort {
 
 		sb.append(queryS);
 
-		UtilidadesAdapter.pintarLog("query:"+"\n"  + sb.toString());
+		logger.info("query:"+"\n"  + sb.toString());
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
@@ -383,7 +397,7 @@ public class EventoRepository implements EventoSolicitudPort {
 		fechai = fechai + " 00:00:00";
 		fechaf = fechaf + " 23:59:59";
 
-		UtilidadesAdapter.pintarLog("ejecutando query anios");
+		logger.info("ejecutando query anios");
 		StringBuilder sb = new StringBuilder();
 		StringBuilder sbW = new StringBuilder();
 		
@@ -469,7 +483,7 @@ public class EventoRepository implements EventoSolicitudPort {
 
 		sb.append("\n");
 
-		UtilidadesAdapter.pintarLog("query:\n" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
+		logger.info("query:\n" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 		

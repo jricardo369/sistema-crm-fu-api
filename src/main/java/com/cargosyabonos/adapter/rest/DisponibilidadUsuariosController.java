@@ -2,8 +2,6 @@ package com.cargosyabonos.adapter.rest;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.cargosyabonos.application.port.in.DisponibilidadUsuarioUseCase;
 import com.cargosyabonos.application.port.out.ArchivosPort;
-import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 
@@ -28,8 +25,6 @@ import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 @RequestMapping("/disponibilidad-usuarios")
 @RestController
 public class DisponibilidadUsuariosController {
-	
-	Logger log = LoggerFactory.getLogger(DisponibilidadUsuariosController.class);
 	
 	@Autowired
 	private DisponibilidadUsuarioUseCase dCase;
@@ -55,10 +50,10 @@ public class DisponibilidadUsuariosController {
 		return dCase.obtenerDisponibilidadUsuarioPorFecha(fecha,idRol,fechaAnterior,idSol,estado);
 	}
 	
-	@GetMapping("/todo-usuario/{idUsuario}")
+	/*@GetMapping("/todo-usuario/{idUsuario}")
 	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(@PathVariable("idUsuario") int idUsuario) { 
 		return dCase.obtenerDisponibilidadTodoDeUsuario(idUsuario);
-	}
+	}*/
 	
 	@PostMapping()
 	public void crearDisponibilidad (@RequestBody DisponibilidadUsuario d) { 

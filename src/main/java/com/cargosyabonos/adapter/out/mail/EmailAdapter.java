@@ -29,7 +29,7 @@ import com.cargosyabonos.domain.UsuarioEntity;
 @PropertySource(value = "classpath:configuraciones-global.properties")
 public class EmailAdapter implements EnviarCorreoPort {
 
-	Logger log = LoggerFactory.getLogger(EmailAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(EmailAdapter.class);
 
 	@Value("${ruta.host}")
 	private String rutaHost;
@@ -304,9 +304,9 @@ public class EmailAdapter implements EnviarCorreoPort {
 			// false en caso contrario (ej. 2026-02-02)
 			boolean formatoUs = fecha != null && fecha.contains("/");
 
-			UtilidadesAdapter.pintarLog("fecha:"+fecha);
-			UtilidadesAdapter.pintarLog("hora:"+hora);
-			UtilidadesAdapter.pintarLog("tipo:"+tipo);
+			logger.info("fecha:"+fecha);
+			logger.info("hora:"+hora);
+			logger.info("tipo:"+tipo);
 
 			if (tipo.equals("PM")) {
 
@@ -317,7 +317,7 @@ public class EmailAdapter implements EnviarCorreoPort {
 					horaInt = horaInt + 12;
 
 					hora = hora.replace(horaStr, String.valueOf(horaInt));
-					UtilidadesAdapter.pintarLog("hora PM modificada:" + hora);
+					logger.info("hora PM modificada:" + hora);
 
 				}
 
@@ -363,31 +363,30 @@ public class EmailAdapter implements EnviarCorreoPort {
 	}
 
 	@Override
-	public void enviarCorreoSincronizacionCitas(String layout,String fecha,int idUsuario,String formatoFecha) {
+	public void enviarCorreoSincronizacionCitas(String layout, String fecha, int idUsuario, String formatoFecha) {
 
 		Map<String, Object> params = new HashMap<>();
 
 		params.put("${rutahost}", rutaServer());
 		params.put("${url}", rutaServer());
 		params.put("${fecha}", fecha);
-		
+
 		String template = "";
-		try {
-			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		String rangoFechasString = "";
+
 		try {
 
 			UsuarioEntity u = usUC.buscarPorId(idUsuario);
 
-			params.put("${usuario}",  u.getNombre());
+			params.put("${usuario}", u.getNombre());
 
-			String rangoFechasString = UtilidadesAdapter.rangoRangoFechasDeFecha(fecha, formatoFecha);
-			UtilidadesAdapter.pintarLog("rangoFechasString:"+rangoFechasString);
+			rangoFechasString = UtilidadesAdapter.rangoRangoFechasDeFecha(fecha, formatoFecha);
+			logger.info("rangoFechasString:" + rangoFechasString);
 			params.put("${rango-fechas}", rangoFechasString);
 
-			List<EventoRecordatorioCita> eventos = usPort.obtenerRecordatoriosCitasDeUsuario(rangoFechasString, idUsuario);
+			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
+
+			List<EventoRecordatorioCita> eventos = usPort.obtenerRecordatoriosCitasDeUsuario(fecha, idUsuario);
 
 			List<EventoCalendario> eventosCalendario = new ArrayList<>();
 			for (EventoRecordatorioCita er : eventos) {
@@ -396,20 +395,27 @@ public class EmailAdapter implements EnviarCorreoPort {
 						"Interview with Mental Health Evaluation Group by Familias Unidas",
 						"Interview with Mental Health Evaluation Group by Familias Unidas",
 						"",
-						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()), Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()), Integer.valueOf(er.getMinutos())),
-						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()), Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()), Integer.valueOf(er.getMinutos())));
+						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()),
+								Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()),
+								Integer.valueOf(er.getMinutos())),
+						LocalDateTime.of(Integer.valueOf(er.getAnio()), Integer.valueOf(er.getMes()),
+								Integer.valueOf(er.getDia()), Integer.valueOf(er.getHora()),
+								Integer.valueOf(er.getMinutos())));
 
 				eventosCalendario.add(eventoCalendario);
 			}
 
-			envioCorreo.sendMailWithSchedule(u.getCorreoElectronico(), "Appointment reminders for " + rangoFechasString + " in Mental Health Evaluation Group by Familias Unidas", template,eventosCalendario);
-		
+			envioCorreo.sendMailWithSchedule(u.getCorreoElectronico(), "Appointment reminders for " + rangoFechasString
+					+ " in Mental Health Evaluation Group by Familias Unidas", template, eventosCalendario);
+
 		} catch (MessagingException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
 			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override

@@ -30,12 +30,16 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.codec.Hex;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 public class UtilidadesAdapter {
+
+	private static final Logger logger = LoggerFactory.getLogger(UtilidadesAdapter.class);
 
 	public static String ambiente = "test";
 
@@ -493,7 +497,7 @@ public class UtilidadesAdapter {
 			hora = simpleDateFormatS.format(d);
 		}
 
-		// UtilidadesAdapter.pintarLog("Hora obt:" + hora);
+		// logger.info("Hora obt:" + hora);
 
 		if (soloFecha) {
 			salida = fecha;
@@ -702,7 +706,7 @@ public class UtilidadesAdapter {
 		LocalTime hora = LocalTime.parse(hora12, formato12);
 		String horaEn24 = hora.format(formato24);
 
-		// UtilidadesAdapter.pintarLog("Hora en 24 horas: " + horaEn24);
+		// logger.info("Hora en 24 horas: " + horaEn24);
 		return horaEn24;
 	}
 
@@ -717,9 +721,8 @@ public class UtilidadesAdapter {
 			zonaHoraria = "PST";
 		}
 
-		// UtilidadesAdapter.pintarLog("Zona horaria:"+zonaHoraria);
+		// logger.info("Zona horaria:"+zonaHoraria);
 		String horaSalida;
-		String fechaSalida;
 		String salida = "";
 		String horaAEnviar = "";
 		// pintarLog("hora12:"+hora12);
@@ -750,7 +753,6 @@ public class UtilidadesAdapter {
 		// pintarLog("\n**Convirtiendo hora");
 
 		salida = convertirHoraPersonalizada(anio, mes, dia, horaE, minutosE, zonaHoraria, estado);
-		fechaSalida = salida.substring(0, 10);
 		horaSalida = salida.substring(11, 16);
 
 		// pintarLog("Fecha salida:"+fechaSalida+" horaSalida:"+horaSalida);
@@ -863,9 +865,9 @@ public class UtilidadesAdapter {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z");
 
-		// UtilidadesAdapter.pintarLog("Hora original en " + zonaAbreviada + ": " +
+		// logger.info("Hora original en " + zonaAbreviada + ": " +
 		// fechaOrigen.format(formatter));
-		// UtilidadesAdapter.pintarLog("Hora convertida en " + estadoDestino + ": " +
+		// logger.info("Hora convertida en " + estadoDestino + ": " +
 		// fechaDestino.format(formatter));
 		salida = fechaDestino.format(formatter);
 
@@ -899,13 +901,13 @@ public class UtilidadesAdapter {
 			public void run() {
 				try {
 					Thread.sleep(3000);
-					UtilidadesAdapter.pintarLog("prueba thread mail");
+					logger.info("prueba thread mail");
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
 		}).start();
-		UtilidadesAdapter.pintarLog("prueba thread");
+		logger.info("prueba thread");
 	}
 
 	public static String rangoRangoFechasDeFecha(String fecha, String formatoFecha) throws ParseException {

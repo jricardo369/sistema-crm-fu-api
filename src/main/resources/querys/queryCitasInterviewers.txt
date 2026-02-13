@@ -16,7 +16,8 @@ JOIN usuario u ON u.id_usuario = usuario_schedule
 LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud 
 LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud 
 LEFT JOIN estado_usuario eu ON eu.id_usuario = u.id_usuario 
-WHERE e.tipo = 'Schedule' and YEARWEEK(`fecha_schedule`,1) = YEARWEEK(:fecha,1) 
+WHERE e.tipo = 'Schedule' 
+AND e.fecha_schedule >= :inicioSemana AND  e.fecha_schedule <= :finSemana
 AND e.estatus_schedule = 1
 
 $andsAdicionales

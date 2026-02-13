@@ -36,10 +36,13 @@ import com.cargosyabonos.adapter.out.file.PdfPagos;
 import com.cargosyabonos.domain.ConfiguracionEntity;
 import com.cargosyabonos.application.port.out.ConfiguracionPort;
 import com.itextpdf.text.DocumentException;
+import org.springframework.scheduling.annotation.Async;
 
 @Component
 @PropertySource(ignoreResourceNotFound = true, value = "classpath:configuraciones-global.properties")
 public class EnvioCorreoAdapter {
+
+	private static final Logger logger = LoggerFactory.getLogger(EnvioCorreoAdapter.class);
 
 	@Autowired
 	private JavaMailSender javaMailSender;
@@ -56,8 +59,6 @@ public class EnvioCorreoAdapter {
 	@Value("${spring.mail.username}")
 	private String fromEmail;
 
-	private static String amb = "pro";
-
 	// Flag global para habilitar/deshabilitar envío de correos
 	private boolean enviarCorreos = false;
 
@@ -65,7 +66,7 @@ public class EnvioCorreoAdapter {
 	public void initConfig() {
 		ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("ENVIAR-CORREOS");
 		this.enviarCorreos = Boolean.valueOf(confj.getValor());
-		UtilidadesAdapter.pintarLog("[EnvioCorreoAdapter] Config enviarCorreos=" + this.enviarCorreos);
+		logger.info("[EnvioCorreoAdapter] Config enviarCorreos=" + this.enviarCorreos);
 	}
 
 	Logger log = LoggerFactory.getLogger(EnvioCorreoAdapter.class);
@@ -80,7 +81,7 @@ public class EnvioCorreoAdapter {
 				MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true, "UTF-8");
 				// helper.setTo(email);
 				helper.setTo(InternetAddress.parse(email));
-				// UtilidadesAdapter.pintarLog(html);
+				// logger.info(html);
 				helper.setText(html.trim(), true);
 				if (archivo != null) {
 					File f = new File("C:\\Users\\user\\Desktop\\output\\myfile.pdf");
@@ -89,7 +90,7 @@ public class EnvioCorreoAdapter {
 					helper.addAttachment("file." + extension, file);
 				}
 				javaMailSender.send(mailMessage);
-				UtilidadesAdapter.pintarLog("Se envió correo....");
+				logger.info("Se envió correo....");
 			} catch (MessagingException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -97,7 +98,7 @@ public class EnvioCorreoAdapter {
 			}
 
 		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
 	}
@@ -106,14 +107,14 @@ public class EnvioCorreoAdapter {
 
 		if (enviarCorreos) {
 
-			UtilidadesAdapter.pintarLog("Envio de correo");
+			logger.info("Envio de correo");
 			MimeMessage mailMessage = javaMailSender.createMimeMessage();
 			try {
 				mailMessage.setSubject(subject, "UTF-8");
 				MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true, "UTF-8");
 				helper.setTo(email);
-				// UtilidadesAdapter.pintarLog(html);
-				UtilidadesAdapter.pintarLog("Enviando correo....");
+				// logger.info(html);
+				logger.info("Enviando correo....");
 				helper.setText(html.trim(), true);
 				if (archivo) {
 
@@ -127,9 +128,9 @@ public class EnvioCorreoAdapter {
 				}
 				if (UtilidadesAdapter.isCorreoValido(email)) {
 					javaMailSender.send(mailMessage);
-					UtilidadesAdapter.pintarLog("Se envió correo....");
+					logger.info("Se envió correo....");
 				} else {
-					UtilidadesAdapter.pintarLog("No se envió correo el mail no es valid:" + email);
+					logger.info("No se envió correo el mail no es valid:" + email);
 				}
 
 			} catch (MessagingException e) {
@@ -140,40 +141,30 @@ public class EnvioCorreoAdapter {
 				e.printStackTrace();
 			}
 		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
 	}
 
+	@Async
 	public void enviarAsync(String email, String subject, String html, byte[] archivo, String extension) {
-
-		if (enviarCorreos) {
-
-			boolean mailValido = UtilidadesAdapter.isCorreoValido(email);
-			if (mailValido) {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							Thread.sleep(5000);
-							// UtilidadesAdapter.pintarLog("Se espero 5 segundos
-							// para enviar");
-							enviarCorreo(email, subject, html, archivo, extension);
-							// UtilidadesAdapter.pintarLog("Se envio");
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-
-					}
-				}).start();
-			} else {
-				UtilidadesAdapter.pintarLog("Correo no valido para ser enviado:" + email);
-			}
-
-		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+		if (!enviarCorreos) {
+			logger.info("No se envio mail ya que no es " + ambiente);
+			return;
 		}
 
+		if (!UtilidadesAdapter.isCorreoValido(email)) {
+			logger.info("Correo no valido para ser enviado:" + email);
+			return;
+		}
+
+		try {
+			Thread.sleep(5000); // si quieres seguir esperando 5s
+			enviarCorreo(email, subject, html, archivo, extension);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt(); 
+			e.printStackTrace();
+		}
 	}
 
 	public void sendCalendarInvite(String toEmail, String subject, String body, Date fecha, String hora)
@@ -199,28 +190,28 @@ public class EnvioCorreoAdapter {
 					@Override
 					public void run() {
 
-						// UtilidadesAdapter.pintarLog("Se espero 5 segundos
+						// logger.info("Se espero 5 segundos
 						// para enviar");
 						javaMailSender.send(message);
-						// UtilidadesAdapter.pintarLog("Se envio");
+						// logger.info("Se envio");
 
 					}
 				}).start();
 
 			} else {
-				UtilidadesAdapter.pintarLog("Correo no valido para ser enviado:" + toEmail);
+				logger.info("Correo no valido para ser enviado:" + toEmail);
 			}
 
 		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
 	}
 
-	public void sendMailWithSchedule(String toEmail, String subject, String body,List<EventoCalendario> eventos)
+	public void sendMailWithSchedule(String toEmail, String subject, String body, List<EventoCalendario> eventos)
 			throws MessagingException {
 
-		UtilidadesAdapter.pintarLog("Enviando correo schedule a:" + toEmail);
+		logger.info("Enviando correo schedule a:" + toEmail);
 
 		if (enviarCorreos) {
 
@@ -249,34 +240,34 @@ public class EnvioCorreoAdapter {
 
 				try {
 					javaMailSender.send(message);
-					UtilidadesAdapter.pintarLog("Correo enviado con 2 ICS a: " + toEmail);
+					logger.info("Correo enviado con 2 ICS a: " + toEmail);
 				} catch (MailException ex1) {
-					UtilidadesAdapter.pintarLog("Fallo envío (intento 1) con 2 ICS | " + ex1.getMessage());
+					logger.info("Fallo envío (intento 1) con 2 ICS | " + ex1.getMessage());
 					try {
 						Thread.sleep(1500);
 						javaMailSender.send(message);
-						UtilidadesAdapter.pintarLog("Correo enviado en reintento (2 ICS) a: " + toEmail);
+						logger.info("Correo enviado en reintento (2 ICS) a: " + toEmail);
 					} catch (InterruptedException | MailException ex2) {
-						UtilidadesAdapter.pintarLog("Fallo envío definitivo (2 ICS): " + ex2.getMessage());
+						logger.info("Fallo envío definitivo (2 ICS): " + ex2.getMessage());
 					}
 				}
 
 			} else {
-				UtilidadesAdapter.pintarLog("Correo no valido para ser enviado:" + toEmail);
+				logger.info("Correo no valido para ser enviado:" + toEmail);
 			}
 
 		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
-		UtilidadesAdapter.pintarLog("Fin correo");
+		logger.info("Fin correo");
 
 	}
 
-	public void sendSchedulesInterviews(String toEmail, String subject, String body,List<EventoCalendario> eventos)
+	public void sendSchedulesInterviews(String toEmail, String subject, String body, List<EventoCalendario> eventos)
 			throws MessagingException {
 
-		UtilidadesAdapter.pintarLog("Enviando correo a:" + toEmail);
+		logger.info("Enviando correo a:" + toEmail);
 
 		if (enviarCorreos) {
 
@@ -305,30 +296,29 @@ public class EnvioCorreoAdapter {
 
 				try {
 					javaMailSender.send(message);
-					UtilidadesAdapter.pintarLog("Correo enviado con 2 ICS a: " + toEmail);
+					logger.info("Correo enviado con 2 ICS a: " + toEmail);
 				} catch (MailException ex1) {
-					UtilidadesAdapter.pintarLog("Fallo envío (intento 1) con 2 ICS | " + ex1.getMessage());
+					logger.info("Fallo envío (intento 1) con 2 ICS | " + ex1.getMessage());
 					try {
 						Thread.sleep(1500);
 						javaMailSender.send(message);
-						UtilidadesAdapter.pintarLog("Correo enviado en reintento (2 ICS) a: " + toEmail);
+						logger.info("Correo enviado en reintento (2 ICS) a: " + toEmail);
 					} catch (InterruptedException | MailException ex2) {
-						UtilidadesAdapter.pintarLog("Fallo envío definitivo (2 ICS): " + ex2.getMessage());
+						logger.info("Fallo envío definitivo (2 ICS): " + ex2.getMessage());
 					}
 				}
 
 			} else {
-				UtilidadesAdapter.pintarLog("Correo no valido para ser enviado:" + toEmail);
+				logger.info("Correo no valido para ser enviado:" + toEmail);
 			}
 
 		} else {
-			UtilidadesAdapter.pintarLog("No se envio mail ya que no es " + ambiente);
+			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
-		UtilidadesAdapter.pintarLog("Fin correo");
+		logger.info("Fin correo");
 
 	}
-
 
 	private String generateCalendarContent(String toEmail, String description, String subject, Date fecha,
 			String hora) {

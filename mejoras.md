@@ -4,19 +4,6 @@ Revisa las dependencias en el pom.xml para eliminar las que no se usan y actuali
 2. Seguridad
 El método de seguridad actual (WebSecurityConfigurerAdapter) está obsoleto en Spring Boot 3.x. Se recomienda migrar a la nueva forma basada en beans de configuración.
 El código permite acceso a todos los endpoints (/**). Evalúa restringir el acceso y aplicar roles/permisos según la lógica de negocio.
-3. Organización y buenas prácticas
-Separa la configuración de seguridad en un archivo propio, fuera de la clase principal.
-Usa perfiles de configuración (application-dev.properties, application-prod.properties) para separar ambientes.
-Aplica principios SOLID y patrones de diseño donde sea posible.
-4. Pruebas y calidad
-Asegúrate de tener pruebas unitarias y de integración para los componentes principales.
-Integra herramientas de análisis estático como SonarQube o SpotBugs.
-5. Documentación y mantenimiento
-Mantén actualizado el README.md con instrucciones claras de instalación, ejecución y despliegue.
-Documenta los endpoints y servicios con Swagger/OpenAPI.
-
-
-
 
 
 
@@ -121,3 +108,16 @@ Este documento lista mejoras propuestas para aplicar paulatinamente al proyecto.
 
 
 
+
+
+
+cambair en
+
+5. (Mejora extra) Evitar funciones sobre columnas
+
+YEARWEEK(e.fecha_schedule, 1) hace que muchas veces el índice sobre fecha_schedule no se use bien.
+
+Mejor cambiar la condición a un rango:
+
+WHERE e.fecha_schedule >= :inicioSemana
+  AND e.fecha_schedule <  :finSemana

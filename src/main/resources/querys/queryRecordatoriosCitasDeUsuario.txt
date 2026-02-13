@@ -1,5 +1,5 @@
 SELECT 
-    YEAR(e.fecha_schedule)  AS anio,
+    CAST(YEAR(e.fecha_schedule) AS CHAR)    AS anio,
     LPAD(MONTH(e.fecha_schedule), 2, '0') AS mes,
     LPAD(DAY(e.fecha_schedule),   2, '0') AS dia,
     LPAD(HOUR(e.hora_schedule),   2, '0') AS hora,

@@ -12,13 +12,14 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.domain.SolicitudVoc;
 
 public class ExcelSolicitudesVOC {
 	
-
+    private static final Logger logger = LoggerFactory.getLogger(ExcelSolicitudesVOC.class);
 
 	public static byte[] generarExcelSolicitudesVOC(List<SolicitudVoc> solicitudes) throws IOException {
 		boolean local=false;
@@ -113,7 +114,7 @@ public class ExcelSolicitudesVOC {
                 
             }
             if(local){
-            	UtilidadesAdapter.pintarLog("Sera local");
+            	logger.info("Sera local");
             	FileOutputStream fo = new FileOutputStream("/Users/joser.vazquez/Desktop/test.xlsx");
             	workbook.write(fo);
             	fo.close();
@@ -123,7 +124,7 @@ public class ExcelSolicitudesVOC {
 	            return out.toByteArray();
             }
         }catch(Exception e){
-        	UtilidadesAdapter.pintarLog("Error:"+e.getMessage());
+        	logger.info("Error:"+e.getMessage());
         	return null;
         }
     }

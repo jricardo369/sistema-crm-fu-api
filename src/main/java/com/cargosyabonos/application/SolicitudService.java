@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -79,7 +77,7 @@ import java.lang.reflect.Field;
 @PropertySource(value = "classpath:configuraciones-global.properties")
 public class SolicitudService implements SolicitudUseCase {
 
-	Logger log = LoggerFactory.getLogger(SolicitudService.class);
+	private static final Logger logger = LoggerFactory.getLogger(SolicitudService.class);
 
 	@Value("${ambiente}")
 	private String ambiente;
@@ -142,11 +140,13 @@ public class SolicitudService implements SolicitudUseCase {
 	public List<Solicitud> obtenerSolicitudesV2(int idUsuario, int estatus, String fechai, String fechaf,
 			String ordenarPor, String orden, String campo, String valor, boolean myFiles, String cerradas,
 			boolean primeraVez,int usuario) {
+
+				logger.info("Obtener solicitudes");
 		
 		if(campo != null){
 			if(campo.equals("Phone")){
 				valor = valor.replace("-", "").replace("(", "").replace(")", "").replace(" ", "");
-				UtilidadesAdapter.pintarLog("valor para phone:"+valor);
+				logger.info("valor para phone:"+valor);
 			}
 		}
 
@@ -217,20 +217,20 @@ public class SolicitudService implements SolicitudUseCase {
 			}
 
 			ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("MAIL-BVN-CLT");
-			UtilidadesAdapter.pintarLog("Se envia mail a cliente?" + confj.getValor());
+			logger.info("Se envia mail a cliente?" + confj.getValor());
 			boolean exc = Boolean.valueOf(confj.getValor());
 
 			if (exc) {
 
 				// Enviar correo cliente
-				UtilidadesAdapter.pintarLog("Datos cliente vacio:" + s.datosClienteEEmailVacios());
+				logger.info("Datos cliente vacio:" + s.datosClienteEEmailVacios());
 				if (s.datosClienteEEmailVacios()) {
 				} else {
 					correoUs.enviarCorreoNuevaSolicitudCliente(idUsuario, s, false, true);
 
 				}
 
-				UtilidadesAdapter.pintarLog("Tel:" + r.getTelefono() + "|s:" + s.getTelefono());
+				logger.info("Tel:" + r.getTelefono() + "|s:" + s.getTelefono());
 				if (r.getTelefono() != null) {
 					if (!"".equals(r.getTelefono())) {
 						msgPort.envioMensaje(r.getTelefono(),
@@ -242,16 +242,16 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 
 			} else {
-				UtilidadesAdapter.pintarLog("No se envio correo ni mensaje texto de bienvenida a cliente");
+				logger.info("No se envio correo ni mensaje texto de bienvenida a cliente");
 			}
 
 			ConfiguracionEntity confbvnAbo = confPort.obtenerConfiguracionPorCodigo("MAIL-BVN-ABO");
-			UtilidadesAdapter.pintarLog("Se envia mail a abogado?" + confbvnAbo.getValor());
+			logger.info("Se envia mail a abogado?" + confbvnAbo.getValor());
 			boolean excAbo = Boolean.valueOf(confj.getValor());
 
 			if (excAbo) {
 				// Enviar correo abogado
-				UtilidadesAdapter.pintarLog("Datos abogado vacio:" + s.datosAbogadoVacios());
+				logger.info("Datos abogado vacio:" + s.datosAbogadoVacios());
 				if (s.datosAbogadoVacios()) {
 					evPort.ingresarEventoDeSolicitud("Email to lawyer not sent",
 							"Email to lawyer was not sent due to lack of data", "Info", u.getUsuario(), s);
@@ -261,7 +261,7 @@ public class SolicitudService implements SolicitudUseCase {
 							u.getUsuario(), s);
 				}
 			} else {
-				UtilidadesAdapter.pintarLog("No se envio correo ni mensaje texto de bienvenida a abogado");
+				logger.info("No se envio correo ni mensaje texto de bienvenida a abogado");
 			}
 
 		} else {
@@ -296,36 +296,16 @@ public class SolicitudService implements SolicitudUseCase {
 		if (estatus != null) {
 			if (estatus.equals("cerrado")) {
 				UsuarioEntity us = usPort.buscarPorId(idUsuario);
-				/*
-				 * UtilidadesAdapter.pintarLog("Actualizar datos"); BigDecimal a
-				 * = new BigDecimal(r.getAmount().toString()); a.setScale(2,
-				 * BigDecimal.ROUND_UP); r.setAmount(a); SolicitudEntity s1 =
-				 * convertirARequestEntity(r); SolicitudEntity s2 =
-				 * reqPort.obtenerSolicitud(r.getIdSolicitud()); try {
-				 * Map<String, String> cambios = comparar(s2, s1);
-				 * cambios.forEach((campo, cambio) -> System.out.println(campo +
-				 * ": " + cambio)); } catch (IllegalAccessException e) {
-				 * e.printStackTrace(); }
-				 */
 				evPort.ingresarEventoDeSolicitud("Update", "The request has been updated", "Info", us.getUsuario(),
 						convertirARequestEntity(r));
 			}
 			
 		}
-		/*if(r.getAssignedClinician()>0){
-			SolicitudEntity se = reqPort.obtenerSolicitud(r.getIdSolicitud());
-			if(se.getAssignedClinician() != r.getAssignedClinician()){
-				UsuarioEntity us = usPort.buscarPorId(idUsuario);
-				UsuarioEntity use = usPort.buscarPorId(r.getAssignedClinician());
-				evPort.ingresarEventoDeSolicitud("Update", "Clinician assigned - "+use.getUsuario(), "Info", us.getUsuario(),
-						convertirARequestEntity(r));
-			}
-		}*/
 		if(r.getIdAbogado() == 0){
 			r.setEmailAboSel(null);
 		}
 		r.setTelefono(r.getTelefono().replaceAll("\\D+", ""));
-		UtilidadesAdapter.pintarLog("emailAboSel:"+r.getEmailAboSel());
+		logger.info("emailAboSel:"+r.getEmailAboSel());
 		reqPort.actualizarSolicitud(convertirARequestEntity(r));
 	}
 
@@ -418,7 +398,7 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public void actualizarEstatusSolicitud(int idSolicitud, int idEstatus, int idUsuario, boolean closed,String motivo) {
 
-		UtilidadesAdapter.pintarLog("Closed:" + closed+"|motivo:"+motivo);
+		logger.info("Closed:" + closed+"|motivo:"+motivo);
 		boolean montosCeros = false;
 
 		EstatusSolicitudEntity es = esPort.obtenerEstatusSolicitudPorId(idEstatus);
@@ -459,7 +439,7 @@ public class SolicitudService implements SolicitudUseCase {
 					BigDecimal sm = movPort.obtenerSumaMovimientosSolicitud(idSolicitud);
 
 					if (amount.compareTo(BigDecimal.ZERO) == 0 && sm.compareTo(BigDecimal.ZERO) == 0) {
-						UtilidadesAdapter.pintarLog("Amount y suma son 0");
+						logger.info("Amount y suma son 0");
 						montosCeros = true;
 					}
 					if (montosCeros) {
@@ -497,7 +477,7 @@ public class SolicitudService implements SolicitudUseCase {
 		
 		int idUsuarioRevisando = 0;
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + " | idUsuarioCambio:" + idUsuarioCambio + " | es fecha anterior:"+fechaAnterior );
+		logger.info("idSolicitud:" + idSolicitud + " | idUsuarioCambio:" + idUsuarioCambio + " | es fecha anterior:"+fechaAnterior );
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
 		EventoSolicitudEntity eventoFirstSchedule = null;
@@ -511,8 +491,7 @@ public class SolicitudService implements SolicitudUseCase {
 		if (disp != null) {
 			
 			idUsuarioRevisando = disp.getUsuario().getIdUsuario();
-			
-			@Nonnull
+
 			UsuarioEntity us = disp.getUsuario();
 			UsuarioEntity usCambio = usPort.buscarPorId(idUsuarioCambio);
 			
@@ -525,8 +504,8 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 			}
 			
-			UtilidadesAdapter.pintarLog("fechaAnterior:" + fechaAnterior + " | usuario revisando:"+idUsuarioRevisando);
-			UtilidadesAdapter.pintarLog("usuario disponibilidad:" + us.getIdUsuario() + " | usuario cambio:"+usCambio.getIdUsuario());
+			logger.info("fechaAnterior:" + fechaAnterior + " | usuario revisando:"+idUsuarioRevisando);
+			logger.info("usuario disponibilidad:" + us.getIdUsuario() + " | usuario cambio:"+usCambio.getIdUsuario());
 
 			String fecha = UtilidadesAdapter.formatearFechaUS(disp.getFecha());
 			String hora = disp.getHora();
@@ -545,7 +524,7 @@ public class SolicitudService implements SolicitudUseCase {
 					horaConvertida = UtilidadesAdapter.convertirAHoraEstado(fecha, hora, tipo,
 							s.getEstado(), zonaHoraria);
 
-					UtilidadesAdapter.pintarLog(
+					logger.info(
 							"Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
 					if ("".equals(horaConvertida)) {
 						horaConvertidaFlag = false;
@@ -557,7 +536,7 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 			}
 
-			UtilidadesAdapter.pintarLog("fecha disp:" + fecha + " " + hora);
+			logger.info("fecha disp:" + fecha + " " + hora);
 			// Agregar evento de cita
 			zonaHoraria = zonaHoraria == null ? "" : zonaHoraria;
 			eventoFirstSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
@@ -633,7 +612,7 @@ public class SolicitudService implements SolicitudUseCase {
 				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
 				
 				int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-				UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+				logger.info("Usuario revisor:" + usRevisor);
 
 				if (usRevisor != 0) {
 					idUsuarioRevisando = usRevisor;
@@ -659,10 +638,7 @@ public class SolicitudService implements SolicitudUseCase {
 		}else{
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"Error, availability needs to be sent");
-		}
-		
-		
-		
+		}	
 		
 	}
 	
@@ -674,7 +650,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 		int idUsuarioRevisando = 0;
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
+		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
 		EventoSolicitudEntity eventoScalesSchedule = null;
@@ -689,7 +665,7 @@ public class SolicitudService implements SolicitudUseCase {
 			String hora = disp.getHora();
 			String tipo = disp.getTipo();
 			String zonaHoraria = disp.getZonaHoraria();
-			UtilidadesAdapter.pintarLog("fecha disp:" + fecha + hora);
+			logger.info("fecha disp:" + fecha + hora);
 
 			// Convertir a horario del State seleccionado en solicitud, si viene
 			// vacio dejar la hora noramal
@@ -766,7 +742,7 @@ public class SolicitudService implements SolicitudUseCase {
 				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
 
 				int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-				UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+				logger.info("Usuario revisor:" + usRevisor);
 
 				if (usRevisor != 0) {
 					idUsuarioRevisando = usRevisor;
@@ -793,6 +769,7 @@ public class SolicitudService implements SolicitudUseCase {
 			}
 
 		}
+		
 	}
 	
 	@Override
@@ -801,7 +778,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 		int idUsuarioRevisando = 0;
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
+		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
 		EventoSolicitudEntity eventoScalesSchedule = null;
@@ -816,7 +793,7 @@ public class SolicitudService implements SolicitudUseCase {
 			String hora = disp.getHora();
 			String tipo = disp.getTipo();
 			String zonaHoraria = disp.getZonaHoraria();
-			UtilidadesAdapter.pintarLog("fecha disp:" + fecha + hora);
+			logger.info("fecha disp:" + fecha + hora);
 
 			// Convertir a horario del State seleccionado en solicitud, si viene
 			// vacio dejar la hora noramal
@@ -830,7 +807,7 @@ public class SolicitudService implements SolicitudUseCase {
 					horaConvertidaFlag = true;
 					horaConvertida = UtilidadesAdapter.convertirAHoraEstado(fecha, hora, tipo, s.getEstado(),zonaHoraria);
 
-					UtilidadesAdapter.pintarLog("Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
+					logger.info("Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
 					if ("".equals(horaConvertida)) {
 						horaConvertidaFlag = false;
 					} else {
@@ -893,7 +870,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
 				int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-				UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+				logger.info("Usuario revisor:" + usRevisor);
 
 				if (usRevisor != 0) {
 					idUsuarioRevisando = usRevisor;
@@ -926,7 +903,7 @@ public class SolicitudService implements SolicitudUseCase {
 	public void envioSiguienteProceso(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,
 			boolean fechaAnterior) {
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
+		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
 
@@ -1018,7 +995,7 @@ public class SolicitudService implements SolicitudUseCase {
 				if (seguir) {
 					estatusNuevo = 10;
 					int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-					UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+					logger.info("Usuario revisor:" + usRevisor);
 					if (usRevisor != 0) {
 						idUsuarioRevisando = usRevisor;
 					} else {
@@ -1066,7 +1043,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 					if (amount.compareTo(BigDecimal.ZERO) == 0 && sm.compareTo(BigDecimal.ZERO) == 0) {
 
-						UtilidadesAdapter.pintarLog("Amount y suma son 0");
+						logger.info("Amount y suma son 0");
 						montosCeros = true;
 
 					}
@@ -1086,7 +1063,7 @@ public class SolicitudService implements SolicitudUseCase {
 								public void run() {
 									try {
 										Thread.sleep(5000);
-										// UtilidadesAdapter.pintarLog("Se
+										// logger.info("Se
 										// espero 5 segundos para enviar");
 										// Enviar correo a abogado que ya se
 										// cerro la
@@ -1094,11 +1071,11 @@ public class SolicitudService implements SolicitudUseCase {
 										correoUs.enviarCorreoAAbogadoPorFinSolicitud(s);
 										correoUs.enviarCorreoAMasterPorFinSolicitud(s);
 
-										UtilidadesAdapter.pintarLog("proBono" + proBono);
+										logger.info("proBono" + proBono);
 										if (proBono > 0) {
-											UtilidadesAdapter.pintarLog("No enviara notificacion de invoice");
+											logger.info("No enviara notificacion de invoice");
 										} else {
-											UtilidadesAdapter.pintarLog("Se enviara notificacion de invoice");
+											logger.info("Se enviara notificacion de invoice");
 											correoUs.enviarCorreoInvoice(s.getEmail(), s);
 										}
 									} catch (InterruptedException e) {
@@ -1135,7 +1112,7 @@ public class SolicitudService implements SolicitudUseCase {
 	public void envioSiguienteProcesoBackup(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,
 			boolean fechaAnterior) {
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
+		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
 		EventoSolicitudEntity eventoFirstSchedule = null;
@@ -1147,16 +1124,16 @@ public class SolicitudService implements SolicitudUseCase {
 		if (u.getRol().equals("8")) {
 
 			if (!s.isFinIntSc()) {
-				UtilidadesAdapter.pintarLog("Es SCALE");
+				logger.info("Es SCALE");
 				evPort.ingresarEventoDeSolicitud("Info", "Finished the interview scale", "Info", u.getUsuario(), s);
 				reqPort.actualizarFinIntSc("1", idSolicitud);
 				EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
 				reqPort.actualizarAsignacionIntSc(1, Integer.valueOf(ev.getUsuarioSchedule()), idSolicitud);
-				UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
+				logger.info("id evento:" + ev.getIdEvento());
 				evPort.actualizarFinSchedule("1", ev.getIdEvento());
 				
 			} else {
-				UtilidadesAdapter.pintarLog("Ya se termino scale y volvio a mandar");
+				logger.info("Ya se termino scale y volvio a mandar");
 				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
 			}
 
@@ -1222,7 +1199,7 @@ public class SolicitudService implements SolicitudUseCase {
 					if (seguir) {
 						estatusNuevo = 10;
 						int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-						UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+						logger.info("Usuario revisor:" + usRevisor);
 						if (usRevisor != 0) {
 							idUsuarioRevisando = usRevisor;
 						} else {
@@ -1274,7 +1251,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 						if (amount.compareTo(BigDecimal.ZERO) == 0 && sm.compareTo(BigDecimal.ZERO) == 0) {
 
-							UtilidadesAdapter.pintarLog("Amount y suma son 0");
+							logger.info("Amount y suma son 0");
 							montosCeros = true;
 
 						}
@@ -1295,17 +1272,17 @@ public class SolicitudService implements SolicitudUseCase {
 									public void run() {
 										 try {
 											Thread.sleep(5000);
-											//UtilidadesAdapter.pintarLog("Se espero 5 segundos para enviar");
+											//logger.info("Se espero 5 segundos para enviar");
 											// Enviar correo a abogado que ya se cerro la
 											// solicitud
 											correoUs.enviarCorreoAAbogadoPorFinSolicitud(s);
 											correoUs.enviarCorreoAMasterPorFinSolicitud(s);
 											
-											UtilidadesAdapter.pintarLog("proBono" + proBono);
+											logger.info("proBono" + proBono);
 											if (proBono > 0) {
-												UtilidadesAdapter.pintarLog("No enviara notificacion de invoice");
+												logger.info("No enviara notificacion de invoice");
 											} else {
-												UtilidadesAdapter.pintarLog("Se enviara notificacion de invoice");
+												logger.info("Se enviara notificacion de invoice");
 												correoUs.enviarCorreoInvoice(s.getEmail(), s);
 											}
 										} catch (InterruptedException e) {
@@ -1354,7 +1331,7 @@ public class SolicitudService implements SolicitudUseCase {
 								horaConvertida = UtilidadesAdapter.convertirAHoraEstado(fecha, hora, tipo,
 										s.getEstado(), zonaHoraria);
 
-								UtilidadesAdapter.pintarLog(
+								logger.info(
 										"Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
 								if ("".equals(horaConvertida)) {
 									horaConvertidaFlag = false;
@@ -1366,7 +1343,7 @@ public class SolicitudService implements SolicitudUseCase {
 							}
 						}
 
-						UtilidadesAdapter.pintarLog("fecha disp:" + fecha + " " + hora);
+						logger.info("fecha disp:" + fecha + " " + hora);
 						// Agregar evento de cita
 						zonaHoraria = zonaHoraria == null ? "" : zonaHoraria;
 						eventoFirstSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
@@ -1470,7 +1447,7 @@ public class SolicitudService implements SolicitudUseCase {
 					}
 					
 					//reqPort.actualizarInterview(Integer.valueOf(ev.getUsuarioSchedule()), idSolicitud);
-					UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
+					logger.info("id evento:" + ev.getIdEvento());
 					evPort.actualizarFinSchedule("1", ev.getIdEvento());
 					reqPort.actualizarFinInterview(1, idSolicitud);
 					evPort.ingresarEventoDeSolicitud("Info", "Finished the first interview by user "+u.getUsuario(), "Info", u.getNombre(), s);
@@ -1498,7 +1475,7 @@ public class SolicitudService implements SolicitudUseCase {
 				if (fechaAnterior) {
 
 					int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-					UtilidadesAdapter.pintarLog("Usuario revisor:" + usRevisor);
+					logger.info("Usuario revisor:" + usRevisor);
 
 					if (usRevisor != 0) {
 						idUsuarioRevisando = usRevisor;
@@ -1534,18 +1511,18 @@ public class SolicitudService implements SolicitudUseCase {
 			envioFinEntrevistaCaseManager(idSolicitud, s, u);
 			
 		} else {
-			UtilidadesAdapter.pintarLog("Ya se termino case manager y volvio a mandar");
+			logger.info("Ya se termino case manager y volvio a mandar");
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
 		}
 		
 	}
 	
 	public void envioFinEntrevistaCaseManager(int idSolicitud,SolicitudEntity s, UsuarioEntity usCambio){
-		UtilidadesAdapter.pintarLog("Es CASE MANAGER");
+		logger.info("Es CASE MANAGER");
 		evPort.ingresarEventoDeSolicitud("Info", "Finished the first interview by user "+usCambio.getUsuario(), "Info", usCambio.getNombre(), s);
 		reqPort.actualizarFinInterview(1, idSolicitud);
 		EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleInt(idSolicitud, "1");
-		UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
+		logger.info("id evento:" + ev.getIdEvento());
 		evPort.actualizarFinSchedule("1", ev.getIdEvento());
 		validacionTerminacionCitasParaEntrevistas(idSolicitud);
 	}
@@ -1570,21 +1547,19 @@ public class SolicitudService implements SolicitudUseCase {
 				
 			}else{
 				
-				UtilidadesAdapter.pintarLog("Es CLINICIAN");
+				logger.info("Es CLINICIAN");
 				evPort.ingresarEventoDeSolicitud("Info", "Finished the interview clinician", "Info", u.getUsuario(), s);
 				reqPort.actualizarFinAsgClnc("1", idSolicitud);
 				EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleClinician(idSolicitud, "1");
-				UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
+				logger.info("id evento:" + ev.getIdEvento());
 				evPort.actualizarFinSchedule("1", ev.getIdEvento());
 				validacionTerminacionCitasParaEntrevistas(idSolicitud);
 			
 			}
-
-			
 			
 		} else {
 			
-			UtilidadesAdapter.pintarLog("Ya se termino clinician y volvio a mandar");
+			logger.info("Ya se termino clinician y volvio a mandar");
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
 			
 		}
@@ -1599,13 +1574,13 @@ public class SolicitudService implements SolicitudUseCase {
 		
 		if (!s.isFinAsgClnc()) {
 				
-			UtilidadesAdapter.pintarLog("Fin Clnc");
+			logger.info("Fin Clnc");
 			evPort.ingresarEventoDeSolicitud("Info", "Finished the interview clinician", "Info", u.getUsuario(), s);
 			reqPort.actualizarFinAsgClnc("1", idSolicitud);
 			
 		} else {
 			
-			UtilidadesAdapter.pintarLog("Ya se termino clinician y volvio a mandar");
+			logger.info("Ya se termino clinician y volvio a mandar");
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
 			
 		}
@@ -1618,17 +1593,17 @@ public class SolicitudService implements SolicitudUseCase {
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
 		
 		if (!s.isFinIntSc()) {
-			UtilidadesAdapter.pintarLog("Es SCALE");
+			logger.info("Es SCALE");
 			evPort.ingresarEventoDeSolicitud("Info", "Finished the interview scale", "Info", u.getUsuario(), s);
 			reqPort.actualizarFinIntSc("1", idSolicitud);
 			EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
 			reqPort.actualizarAsignacionIntSc(1, Integer.valueOf(ev.getUsuarioSchedule()), idSolicitud);
-			UtilidadesAdapter.pintarLog("id evento:" + ev.getIdEvento());
+			logger.info("id evento:" + ev.getIdEvento());
 			evPort.actualizarFinSchedule("1", ev.getIdEvento());
 			validacionTerminacionCitasParaEntrevistas(idSolicitud);
 			
 		} else {
-			UtilidadesAdapter.pintarLog("Ya se termino scale y volvio a mandar");
+			logger.info("Ya se termino scale y volvio a mandar");
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
 		}
 		
@@ -1648,7 +1623,7 @@ public class SolicitudService implements SolicitudUseCase {
 			int esFinEntrevistas = reqPort.esFinEntrevistasWithoutClinician(idSolicitud);
 
 			if (esFinEntrevistas == 1) {
-				UtilidadesAdapter.pintarLog("Todas las entrevistas terminadas");
+				logger.info("Todas las entrevistas terminadas");
 				int idUsuarioRevisando = reqPort.obtenerRevisorConMenorSolicitudes(1);
 				reqPort.actualizarUsuarioRevisando(idUsuarioRevisando, idSolicitud);
 			}
@@ -1658,7 +1633,7 @@ public class SolicitudService implements SolicitudUseCase {
 			int esFinEntrevistas = reqPort.esFinEntrevistas(idSolicitud);
 
 			if (esFinEntrevistas == 1) {
-				UtilidadesAdapter.pintarLog("Todas las entrevistas terminadas");
+				logger.info("Todas las entrevistas terminadas");
 				int idUsuarioRevisando = reqPort.obtenerRevisorConMenorSolicitudes(1);
 				reqPort.actualizarUsuarioRevisando(idUsuarioRevisando, idSolicitud);
 			}
@@ -1696,7 +1671,7 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public List<ReporteSolsDeUsuarioObj> obtenerReporteSolicitudesDeUsuario(Date fechai, Date fechaf, int idUsuario) {
 		UsuarioEntity us = usPort.buscarPorId(idUsuario);
-		UtilidadesAdapter.pintarLog("Usario rol:" + us.getRol());
+		logger.info("Usario rol:" + us.getRol());
 		List<ReporteSolsDeUsuario> l = null;
 		switch (us.getRol()) {
 		case "7":
@@ -1730,12 +1705,12 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public List<ReporteContador> obtenerReporteSolicitudesDeUsuarios(int idUsuario, Date fechai, Date fechaf) {
 
-		UtilidadesAdapter.pintarLog("Usuario:" + idUsuario);
+		logger.info("Usuario:" + idUsuario);
 		UsuarioEntity u = usPort.buscarPorId(idUsuario);
 		List<ReporteContador> lsalida = new ArrayList<>();
 		List<ReporteSolsUsuario> l = evPort.obtenerNumeroSolicitudesAtendidasPorEntrevistadores("Schedule", "1", fechai,
 				fechaf);
-		UtilidadesAdapter.pintarLog("Entrevsitadores:" + l.size());
+		logger.info("Entrevsitadores:" + l.size());
 		ReporteContador o = null;
 		String fechaiFormato = fechai + " 00:00:00";
 		String fechafFormato = fechaf + " 23:59:59";
@@ -1757,7 +1732,7 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 
 		List<ReporteSolsUsuario> lr = reqPort.obtenerNumeroSolicitudesAtendidasPorRevisores(fechai, fechaf);
-		UtilidadesAdapter.pintarLog("Revisores:" + lr.size());
+		logger.info("Revisores:" + lr.size());
 		for (ReporteSolsUsuario r : lr) {
 			o = new ReporteContador();
 			o.setColor(r.getcolor());
@@ -1775,7 +1750,7 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 
 		List<ReporteSolsUsuario> lrt = reqPort.obtenerNumeroSolicitudesAtendidasPorTemplates(fechaiFormato, fechafFormato);
-		UtilidadesAdapter.pintarLog("Templates:" + lrt.size());
+		logger.info("Templates:" + lrt.size());
 		for (ReporteSolsUsuario r : lrt) {
 			o = new ReporteContador();
 			o.setColor(r.getcolor());
@@ -1793,7 +1768,7 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 
 		List<ReporteSolsUsuario> lrad = reqPort.obtenerNumeroSolicitudesAtendidasPorRevisorAdicional(fechai, fechaf);
-		UtilidadesAdapter.pintarLog("Revisors ad:" + lrad.size());
+		logger.info("Revisors ad:" + lrad.size());
 		for (ReporteSolsUsuario r : lrad) {
 			o = new ReporteContador();
 			o.setColor(r.getcolor());
@@ -1812,7 +1787,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 		if (u.getRol().equals("2") || u.getRol().equals("6") || u.getRol().equals("4")) {
 			List<ReporteSolsUsuario> lrvoc = reqVocPort.obtenerNumeroSolicitudesDeTemperatura(fechai, fechaf);
-			UtilidadesAdapter.pintarLog("Terapeutas:" + lrvoc.size());
+			logger.info("Terapeutas:" + lrvoc.size());
 			for (ReporteSolsUsuario r : lrvoc) {
 				o = new ReporteContador();
 				o.setColor(r.getcolor());
@@ -1832,7 +1807,7 @@ public class SolicitudService implements SolicitudUseCase {
 		
 		
 			List<ReporteSolsUsuario> lc = reqPort.obtenerSolicitudesClinicians(fechai, fechaf);
-			UtilidadesAdapter.pintarLog("Revisors clinician:" + lc.size());
+			logger.info("Revisors clinician:" + lc.size());
 			for (ReporteSolsUsuario r : lc) {
 				o = new ReporteContador();
 				o.setColor(r.getcolor());
@@ -1855,16 +1830,16 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public List<ReporteContador> obtenerReporteMailsAbogados(String fechai, String fechaf) {
 		List<String> listaFirmas = reqPort.obtenerFirmasAbogados(fechai, fechaf);
-		UtilidadesAdapter.pintarLog("firmas:" + listaFirmas);
+		logger.info("firmas:" + listaFirmas);
 		List<ReporteContador> lsalida = new ArrayList<>();
 		ReporteContador o = null;
 		int nf = 0;
 		for (String v : listaFirmas) {
 			o = new ReporteContador();
 			o.setNombre(v);
-			UtilidadesAdapter.pintarLog("nombre:" + v);
+			logger.info("nombre:" + v);
 			nf = reqPort.obtenerReporteMailsAbogados(v);
-			UtilidadesAdapter.pintarLog("nf:" + nf);
+			logger.info("nf:" + nf);
 			if (nf != 0) {
 				o.setNumero(nf);
 				lsalida.add(o);
@@ -1895,7 +1870,7 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public void envioReadyOnDraft(int idSolicitud, int idUsuario) {
 
-		UtilidadesAdapter.pintarLog("idSolicitud:" + idSolicitud + "/idUsuario:" + idUsuario);
+		logger.info("idSolicitud:" + idSolicitud + "/idUsuario:" + idUsuario);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 
 		// Agregar evento
@@ -1906,7 +1881,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 		reqPort.actualizarEstatusSolicitud(idSolicitud, 10);
 
-		UtilidadesAdapter.pintarLog("email cliente:" + s.getEmail() + " |email abogado:" + s.getEmail_abogado());
+		logger.info("email cliente:" + s.getEmail() + " |email abogado:" + s.getEmail_abogado());
 		if ("".equals(s.getEmail()) || "".equals(s.getEmail_abogado())) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"Customer email and lawyer email are mandatory");
@@ -1920,7 +1895,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 	public void envioTemplate(int idUsuario, int idSolicitud, int idUsuarioEnvio) {
 
-		UtilidadesAdapter.pintarLog("Envio template");
+		logger.info("Envio template");
 
 		reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
 
@@ -1929,7 +1904,7 @@ public class SolicitudService implements SolicitudUseCase {
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity us = usPort.buscarPorId(idUsuario);
 
-		UtilidadesAdapter.pintarLog("actualizar asignacion template");
+		logger.info("actualizar asignacion template");
 		reqPort.actualizarAsignacionTemplate(1, idUsuario, idSolicitud);
 		reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
 
@@ -2003,7 +1978,7 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 			}
 
-			UtilidadesAdapter.pintarLog("Actualizar evento solicitud:" + evSol.getIdEvento());
+			logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
 			evSol.setEstatusSchedule("0");
 			evPort.actualizarEventoSolicitud(evSol);
 
@@ -2053,11 +2028,11 @@ public class SolicitudService implements SolicitudUseCase {
 			reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
 		}
 
-			UtilidadesAdapter.pintarLog("Con motivo");
+			logger.info("Con motivo");
 
 			if (!"".equals(motivo)) {	
 
-				UtilidadesAdapter.pintarLog("Motivo lleno");
+				logger.info("Motivo lleno");
 
 				String motivoTrim = motivo == null ? "" : motivo.trim();
 
@@ -2106,7 +2081,7 @@ public class SolicitudService implements SolicitudUseCase {
 						}
 					}
 
-					UtilidadesAdapter.pintarLog("Actualizar evento solicitud:" + evSol.getIdEvento());
+					logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
 					evSol.setEstatusSchedule("0");
 					evPort.actualizarEventoSolicitud(evSol);
 					
@@ -2154,7 +2129,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 			if (usEnvio.getRol().equals("7")) {
 
-				UtilidadesAdapter.pintarLog("actualizar asignacion template");
+				logger.info("actualizar asignacion template");
 				reqPort.actualizarAsignacionTemplate(0, 0, idSolicitud);
 
 			}
@@ -2225,7 +2200,7 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 			}
 
-			UtilidadesAdapter.pintarLog("Actualizar evento solicitud:" + evSol.getIdEvento());
+			logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
 			evSol.setEstatusSchedule("0");
 			evPort.actualizarEventoSolicitud(evSol);
 		}
@@ -2264,7 +2239,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 		if (!"".equals(motivo)) {
 
-			UtilidadesAdapter.pintarLog("Motivo lleno");
+			logger.info("Motivo lleno");
 
 			
 			if (motivo.length() > 250) {
@@ -2282,7 +2257,7 @@ public class SolicitudService implements SolicitudUseCase {
 					"Rejection reason cannot be empty");
 		}
 
-		UtilidadesAdapter.pintarLog("actualizar asignacion template");
+		logger.info("actualizar asignacion template");
 		reqPort.actualizarAsignacionTemplate(0, 0, idSolicitud);
 
 	}
@@ -2297,7 +2272,7 @@ public class SolicitudService implements SolicitudUseCase {
 	public void pintarLog(String mensaje, StringBuilder sb) {
 		if (ambiente.equals("test")) {
 			// if(false){
-			// UtilidadesAdapter.pintarLog(mensaje);
+			// logger.info(mensaje);
 			// sb.append(mensaje+"\n");
 		}
 
@@ -2363,7 +2338,7 @@ public class SolicitudService implements SolicitudUseCase {
 		for (int i = 0; i <= 12; i++) {
 
 			ReporteAnios a = new ReporteAnios();
-			// UtilidadesAdapter.pintarLog("i:"+i);
+			// logger.info("i:"+i);
 
 			if (i == 1) {
 
@@ -2518,7 +2493,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 	public String cargaExcelv2(MultipartFile archivo) {
 
-		UtilidadesAdapter.pintarLog("Ambiente:" + ambiente);
+		logger.info("Ambiente:" + ambiente);
 		Workbook workbook = null;
 		String salida = "";
 		StringBuilder sb = new StringBuilder();
@@ -2530,7 +2505,7 @@ public class SolicitudService implements SolicitudUseCase {
 			InputStream is = new ByteArrayInputStream(archivo.getBytes());
 			workbook = WorkbookFactory.create(is);
 
-			UtilidadesAdapter.pintarLog("Number of sheetss: " + workbook.getNumberOfSheets());
+			logger.info("Number of sheetss: " + workbook.getNumberOfSheets());
 			int cargados = 0;
 			boolean solicitud = false;
 
@@ -2564,15 +2539,15 @@ public class SolicitudService implements SolicitudUseCase {
 
 				Sheet sheet = workbook.getSheetAt(i);
 				sheetName = sheet.getSheetName();
-				UtilidadesAdapter.pintarLog("NombreSheet:" + sheetName);
+				logger.info("NombreSheet:" + sheetName);
 
-				UtilidadesAdapter.pintarLog("Sheet:" + i);
+				logger.info("Sheet:" + i);
 
 				for (Row row : sheet) {
 					Solicitud r = new Solicitud();
 
 					// if (index++ == 0) continue;
-					// UtilidadesAdapter.pintarLog("row:"+ index);
+					// logger.info("row:"+ index);
 
 					if (row.getCell(0) != null && row.getCell(0).getCellType() == CellType.STRING) {
 						pintarLog("#################", sb);
@@ -2815,26 +2790,26 @@ public class SolicitudService implements SolicitudUseCase {
 					}
 
 				}
-				// UtilidadesAdapter.pintarLog(sb.toString());
-				UtilidadesAdapter.pintarLog("sols cargadas:" + cargados + "\n");
+				// logger.info(sb.toString());
+				logger.info("sols cargadas:" + cargados + "\n");
 				countGen = countGen + cargados;
 				cargados = 0;
 			}
 
-			// UtilidadesAdapter.pintarLog("sheetV:" + sheetV);
+			// logger.info("sheetV:" + sheetV);
 
 			salida = "Cargados " + countGen;
 
 		} catch (EncryptedDocumentException | IOException e) {
-			UtilidadesAdapter.pintarLog(e.getMessage());
+			logger.info(e.getMessage());
 		} finally {
 			try {
 				if (workbook != null)
 					workbook.close();
 			} catch (IOException e) {
-				UtilidadesAdapter.pintarLog(e.getMessage());
+				logger.info(e.getMessage());
 			}
-			UtilidadesAdapter.pintarLog(sb.toString());
+			logger.info(sb.toString());
 		}
 		return salida;
 	}
@@ -2913,7 +2888,7 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public List<String> obtenerTextosTipoParaFiltros(int idUsuario) {
 
-		UtilidadesAdapter.pintarLog("Obtener textos");
+		logger.info("Obtener textos");
 		UsuarioEntity us = usPort.buscarPorId(idUsuario);
 		String rol = us.getRol();
 		List<String> s = new ArrayList<>();
@@ -3028,7 +3003,7 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public void actualizarSolicitudConCupon(int idSolicitud, int idUsuario) {
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
-		UtilidadesAdapter.pintarLog("abogado:"+s.getIdAbogado());
+		logger.info("abogado:"+s.getIdAbogado());
 		abPort.actualizarCuponAbogado(s.getIdAbogado());
 	}
 

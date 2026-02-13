@@ -3,6 +3,9 @@ package com.cargosyabonos.adapter.out.sql;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.text.ParseException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -25,9 +28,13 @@ import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 import com.cargosyabonos.domain.SolicitudEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPort {
+
+	private static final Logger logger = LoggerFactory.getLogger(DisponibilidadUsuarioRepository.class);
 
 	@Autowired
 	DisponibilidadUsuarioJpa dispUsJpa;
@@ -40,6 +47,9 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 
 	@Value("classpath:/querys/queryDisponibilidadUsuariosPorRolYEstado.txt")
     private Resource queryDisponibilidadUsuariosPorRolYEstado;
+
+	@Value("classpath:/querys/queryDisponibilidadUsuario.txt")
+    private Resource queryDisponibilidadUsuario;
 
 	@Override
 	public List<DisponibilidadUsuarioEntity> obtenerDisponibilidadUsuario(int idUsuario) {
@@ -145,7 +155,8 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 	
 	@Override
 	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario){
-		return dispUsJpa.obtenerDisponibilidadTodoDeUsuario(idUsuario);
+		return null;
+		//return dispUsJpa.obtenerDisponibilidadTodoDeUsuario(idUsuario);
 	}
 
 	
@@ -170,21 +181,21 @@ public boolean horarioFueraDeClase(DisponibilidadUsuario d, String fecha,java.ut
 					String horaClase =  d.getHora().substring(0,2);
 					String tipo = d.getTipo();
 		
-					//UtilidadesAdapter.pintarLog("Tipo:" + tipo);
-					//UtilidadesAdapter.pintarLog("Hora Atual:" + horaActual);
-					//UtilidadesAdapter.pintarLog("Hora Clase:" + d.getHora().substring(0,2));
+					//logger.info("Tipo:" + tipo);
+					//logger.info("Hora Atual:" + horaActual);
+					//logger.info("Hora Clase:" + d.getHora().substring(0,2));
 		
 					if ("PM".equals(tipo)) {
 						horaClase = UtilidadesAdapter.convertirHoraA24Hrs(horaClase);
 					}
 		
-					//UtilidadesAdapter.pintarLog("Hora Ingresada despues formato:" + horaActual);
-					//UtilidadesAdapter.pintarLog("Hora Clase despues de formato:" + horaClase);
+					//logger.info("Hora Ingresada despues formato:" + horaActual);
+					//logger.info("Hora Clase despues de formato:" + horaClase);
 		
-					//UtilidadesAdapter.pintarLog(horaActual + " es mayor que " + horaClase);
+					//logger.info(horaActual + " es mayor que " + horaClase);
 					
 					String horaClaseFinal = UtilidadesAdapter.limpiarCaracteres(horaClase);
-					//UtilidadesAdapter.pintarLog("horaClaseFinal:" + horaClaseFinal);
+					//logger.info("horaClaseFinal:" + horaClaseFinal);
 		
 					if (Integer.valueOf(horaActual) > Integer.valueOf(horaClaseFinal)) {
 						salida = true;
@@ -263,7 +274,7 @@ public boolean horarioFueraDeClase(DisponibilidadUsuario d, String fecha,java.ut
 		boolean mostrarSeccionEstado = false;
 
 		mostrarSeccionEstado = idRol == 11;
-		UtilidadesAdapter.pintarLog("mostrarSeccionEstado:"+mostrarSeccionEstado);
+		logger.info("mostrarSeccionEstado:"+mostrarSeccionEstado);
 
 		try (Scanner scanner = new Scanner(queryDisponibilidadUsuariosPorRolYEstado.getInputStream(), StandardCharsets.UTF_8.name())) {
 			queryS = scanner.useDelimiter("\\A").next();
@@ -299,7 +310,7 @@ public boolean horarioFueraDeClase(DisponibilidadUsuario d, String fecha,java.ut
 
 		sb.append(queryS);
 		
-		UtilidadesAdapter.pintarLog("query:"+"\n" + sb.toString().replace(":fecha", "'"+fecha+"'"));
+		logger.info("query:"+"\n" + sb.toString().replace(":fecha", "'"+fecha+"'"));
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
@@ -330,46 +341,60 @@ public boolean horarioFueraDeClase(DisponibilidadUsuario d, String fecha,java.ut
 	public List<Object[]> obtenerDispoTodosUsuarios(String fecha, int idUsuario,String idRol,String estado) {
 
 		StringBuilder sb = new StringBuilder();
+		StringBuilder sbAnds = new StringBuilder();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate referencia   = LocalDate.parse(fecha, formatter);              
+		LocalDate inicioSemana = referencia.with(DayOfWeek.MONDAY);
+		LocalDate finSemana    = inicioSemana.plusDays(6);
+
+		logger.info("fecha:"+"\n"  + fecha + " inicioSemana:" + inicioSemana + " finSemana:" + finSemana);
 
 		String joinEstado = estado.isEmpty() ? "" : " JOIN estado_usuario eu ON eu.id_usuario = u.id_usuario "+"\n";
 
-		sb.append("SELECT DATE_FORMAT(d.fecha,'%Y-%m-%d') as fecha, d.hora, d.tipo, u.id_usuario as solicitud, u.id_usuario as usuario, u.nombre as nombreUsuario, u.color , d.zona_horaria " +"\n" 
-				+"FROM disponibilidad_usuario d "  +"\n" 
-				+"JOIN usuario u ON u.id_usuario = d.id_usuario "+"\n" 
-				+ joinEstado 
-				+"LEFT JOIN evento_solicitud e ON e.fecha_schedule = d.fecha " +"\n" 
-				+"AND e.hora_schedule = d.hora " +"\n" 
-				+"AND e.tipo_schedule = d.tipo " +"\n" 
-				+"AND e.usuario_schedule = u.id_usuario " +"\n" 
-				+"AND e.estatus_schedule = 1 " +"\n" 
-				+"AND YEARWEEK(e.fecha_schedule, 1) = YEARWEEK(:fecha, 1) " +"\n" 
-				+"WHERE YEARWEEK(d.fecha, 1) = YEARWEEK(:fecha, 1) " +"\n" 
-				+"AND u.estatus != 4 "+"\n" 
-				+"AND e.id_evento IS NULL "+"\n" );
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryDisponibilidadUsuario.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		queryS = queryS.replace("$joinEstado", joinEstado);
 
 		if (idUsuario != 0) {
-			sb.append(" AND d.id_usuario = " + idUsuario +"\n" );
+			sbAnds.append(" AND d.id_usuario = " + idUsuario +"\n" );
 		}else{
-			sb.append(" AND u.id_rol IN (" + idRol + ") "+"\n" );	
+			sbAnds.append(" AND u.id_rol IN (" + idRol + ") "+"\n" );	
 		}
 
 		if (!estado.isEmpty()) {
-			sb.append(" AND eu.estado = '" + estado + "' "+"\n" );
+			sbAnds.append(" AND eu.estado = '" + estado + "' "+"\n" );
 		}
 
-		sb.append("GROUP BY d.fecha,d.hora,d.tipo,u.id_usuario,u.nombre,u.color,d.zona_horaria ");
+		if(sbAnds.length() > 0) {
+			queryS = queryS.replace("$andsAdicionales", sbAnds.toString());
+		}else{
+			queryS = queryS.replace("$andsAdicionales", "");
+		}
 
-		UtilidadesAdapter.pintarLog("fecha:"+"\n"  + fecha);
-		UtilidadesAdapter.pintarLog("query:"+"\n"  + sb.toString());
+		sb.append(queryS);
+
+		logger.info("fecha:"+"\n"  + fecha);
+		logger.info("query:"+"\n"  + sb.toString().replace(":inicioSemana", "'"+inicioSemana+"'").replace(":finSemana", "'"+finSemana+"'"));
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
-	    query.setParameter("fecha", fecha);
+	    //query.setParameter("fecha", fecha);
+		query.setParameter("inicioSemana", inicioSemana);
+		query.setParameter("finSemana",  finSemana);
 	    
 	    List<Object[]> rows = query.getResultList();
 		return rows;
 
 	}
+
+	
 	
 	
 }

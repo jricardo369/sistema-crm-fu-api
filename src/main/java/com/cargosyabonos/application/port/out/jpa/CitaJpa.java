@@ -1,6 +1,7 @@
 package com.cargosyabonos.application.port.out.jpa;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Modifying;
@@ -52,8 +53,9 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 			 +"FROM cita c "
 			 +"LEFT JOIN solicitud_voc s ON s.id_solicitud= c.id_solicitud "
 			 +"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario "
-			 +"WHERE yearweek(`fecha`) = yearweek(?1) AND c.id_usuario = ?2 AND no_show = ?3", nativeQuery = true)
-	public List<CitaSql> obtenerCitasDeUsuarioPorSemanaV2(String fecha,int idUsuario,int noShow);
+			 +"WHERE fecha >= ?1 AND  fecha < ?2 "
+			 +"AND c.id_usuario = ?3 AND no_show = ?4", nativeQuery = true)
+	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(LocalDate inicioSemana, LocalDate finSemana,int idUsuario,int noShow);
 	
 	@Transactional
 	@Query(value = "UPDATE cita SET no_show  = ?1 WHERE id_cita = ?2", nativeQuery = true)

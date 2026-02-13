@@ -1,6 +1,9 @@
 package com.cargosyabonos.adapter.out.sql;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -222,8 +225,13 @@ public class CitaRepository implements CitaPort{
 	}
 
 	@Override
-	public List<CitaSql> obtenerCitasDeUsuarioPorSemanaV2(String fecha, int idUsuario, int noShow) {
-		return citaJpa.obtenerCitasDeUsuarioPorSemanaV2(fecha, idUsuario, noShow);
+	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(String fecha, int idUsuario, int noShow) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate referencia   = LocalDate.parse(fecha, formatter);             
+		LocalDate inicioSemana = referencia.with(DayOfWeek.MONDAY);
+		LocalDate finSemana    = inicioSemana.plusDays(6);
+		UtilidadesAdapter.pintarLog("fecha:" + fecha + " inicioSemana:" + inicioSemana + " finSemana:" + finSemana);
+		return citaJpa.obtenerCitasDeUsuarioPorSemana(inicioSemana, finSemana, idUsuario, noShow);
 	}
 
 }

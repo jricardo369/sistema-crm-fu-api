@@ -22,7 +22,7 @@ public interface CitaUseCase {
 	public void actualizarPagado(boolean pagado,int idCita,int idUsuario);
 	
 	
-	public List<Cita> obtenerCitasDeUsuarioPorSemanaV2(String fecha,int idUsuario,int noShow);
+	public List<Cita> obtenerCitasDeUsuarioPorSemana(String fecha,int idUsuario,int noShow);
 
 	public boolean envioRecordatorio(int idEvento);
 	public boolean envioRecordatorios(String fecha,int idUsuario);

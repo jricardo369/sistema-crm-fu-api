@@ -23,6 +23,6 @@ public interface CitaPort {
 			String tipo, String rol);
 	public void actualizarPagado(boolean pagado,String fechPagado,int idCita);
 	
-	public List<CitaSql> obtenerCitasDeUsuarioPorSemanaV2(String fecha,int idUsuario,int noShow);
+	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(String fecha,int idUsuario,int noShow);
 
 }

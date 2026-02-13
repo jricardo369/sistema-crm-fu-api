@@ -29,7 +29,7 @@ import com.itextpdf.text.DocumentException;
 @RestController
 public class CitaController {
 
-	Logger log = LoggerFactory.getLogger(CitaController.class);
+	private static final Logger logger = LoggerFactory.getLogger(CitaController.class);
 
 	@Autowired
 	CitaUseCase citaUseCase;
@@ -57,7 +57,7 @@ public class CitaController {
 		
 		int idUs = (idUsuario == null || idUsuario.isEmpty()) ? 0 : Integer.parseInt(idUsuario);
 
-		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"|fecha:"+fecha);
+		logger.info("idUsuario:"+idUsuario+"|fecha:"+fecha);
 		return citaUseCase.obtenerCitasDeUsuarioPorFecha(idUs, fecha);
 	}
 	
@@ -71,19 +71,19 @@ public class CitaController {
 		estado = (estado == null) ? "" : estado;
 		estado = estado.equals("All") ? "" : estado;
 
-		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"|fecha:"+fecha+"|filtro:"+filtro+"|disponibilidad:"+disponibilidad+"|idRol:"+idRol+"|estatusCita:"+estatusCita);
+		logger.info("idUsuario:"+idUsuario+"|fecha:"+fecha+"|filtro:"+filtro+"|disponibilidad:"+disponibilidad+"|idRol:"+idRol+"|estatusCita:"+estatusCita);
 		return citaUseCase.obtenerCitasDeUsuarioPorSemana(idUs, fecha,filtro,disponibilidad,idRol,estatusCita,estado);
 	}
 	
 	@PutMapping("/no-show/{idCita}")
 	public void noShowCita(@PathVariable("idCita") int idCita,@RequestParam("idUsuario") int idUsuario,@RequestParam("motivo") String motivo) {
-		UtilidadesAdapter.pintarLog("idCita:"+idCita+"|idUsuario:"+idUsuario+"|motivo:"+motivo);
+		logger.info("idCita:"+idCita+"|idUsuario:"+idUsuario+"|motivo:"+motivo);
 		citaUseCase.actualizarNoShow(idCita,idUsuario,motivo);
 	}
 	
 	@GetMapping("/reporte/{idCita}")
 	public byte[] reporteCita(@PathVariable("idCita") int idCita,@RequestParam("idUsuario") int idUsuario) {
-		UtilidadesAdapter.pintarLog("idCita:"+idCita+"idUsuario:"+idUsuario);
+		logger.info("idCita:"+idCita+"idUsuario:"+idUsuario);
 		byte[] salida = null;
 		try {
 			salida = pdfCita.generarPdf(idCita,idUsuario);
@@ -96,10 +96,11 @@ public class CitaController {
 		return salida;
 	}
 	
+	
 	@GetMapping("/cargos-pendientes")
 	public List<CargosCitasVoc> cargosPendientes(@RequestParam("idUsuario") int idUsuario,@RequestParam("fechai") String fechai,@RequestParam("fechaf") String fechaf,
 			@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,@RequestParam(required = false) String tipo) {
-		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
+		logger.info("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
 		return citaUseCase.obtenerCargosPendientes( fechai,  fechaf,  idUsuario,  campo,  valor,
 				 tipo);
 	}
@@ -108,10 +109,10 @@ public class CitaController {
 	public byte[] cargosPendientesExcel(@RequestParam("idUsuario") int idUsuario,@RequestParam("fechai") String fechai,@RequestParam("fechaf") String fechaf,
 			@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,@RequestParam(required = false) String tipo) {
 		
-		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
+		logger.info("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
 		List<CargosCitasVoc> l = citaUseCase.obtenerCargosPendientes( fechai,  fechaf,  idUsuario,  campo,  valor,
 				 tipo);
-		UtilidadesAdapter.pintarLog("size:"+l.size());
+		logger.info("size:"+l.size());
 		byte[] s = null;
 		try {
 			s = ExcelVOCCharges.generarExcelVOCCharges(l);
@@ -143,13 +144,13 @@ public class CitaController {
 
 	@GetMapping("/recordatorio/{idEvento}")
 	public boolean envioRecordatorio(@PathVariable("idEvento") int idEvento) {
-		UtilidadesAdapter.pintarLog("idEvento:"+idEvento);
+		logger.info("idEvento:"+idEvento);
 		return citaUseCase.envioRecordatorio(idEvento);
 	}
 
 	@GetMapping("/recordatorios/{fecha}")
 	public boolean envioRecordatorios(@PathVariable("fecha") String fecha,@RequestParam("idUsuario") int idUsuario) {
-		UtilidadesAdapter.pintarLog("fecha:"+fecha+"|idUsuario:"+idUsuario);
+		logger.info("fecha:"+fecha+"|idUsuario:"+idUsuario);
 		return citaUseCase.envioRecordatorios(fecha, idUsuario);
 	}
 

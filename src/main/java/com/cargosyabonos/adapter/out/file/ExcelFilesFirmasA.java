@@ -15,19 +15,21 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.cargosyabonos.UtilidadesAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.cargosyabonos.domain.FilesFirmaAbogadoObj;
 import com.cargosyabonos.domain.NumFilesAbogados;
 
 public class ExcelFilesFirmasA {
 
+	private static final Logger logger = LoggerFactory.getLogger(ExcelFilesFirmasA.class);
+
 	public static byte[] generarExcelFirmas( List<NumFilesAbogados> listRepCont, List<FilesFirmaAbogadoObj> l1, List<FilesFirmaAbogadoObj> l2,List<FilesFirmaAbogadoObj> l3)
 			throws IOException {
 		
-		UtilidadesAdapter.pintarLog("l1:"+l1.size());
-		UtilidadesAdapter.pintarLog("l2:"+l2.size());
-		UtilidadesAdapter.pintarLog("l3:"+l3.size());
+		logger.info("l1:"+l1.size());
+		logger.info("l2:"+l2.size());
+		logger.info("l3:"+l3.size());
 		
 		boolean local = false;
 		
@@ -134,14 +136,14 @@ public class ExcelFilesFirmasA {
 				List<FilesFirmaAbogadoObj> coincidencias = null;
 				if (rep.getIdAbogado() > 0) {
 					coincidencias = l1.stream().filter(f -> f.getIdAbogado() == rep.getIdAbogado()).collect(Collectors.toList());
-					//UtilidadesAdapter.pintarLog("conabo:"+coincidencias.size());
+					//logger.info("conabo:"+coincidencias.size());
 				} 
 				else if (firma.equals("")) {
 					
 					coincidencias = l2.stream().filter(f -> f.getFirma().equals(rep.getFirma())).collect(Collectors.toList());
 				} 
 				else if (!firma.equals("")) {
-					//UtilidadesAdapter.pintarLog("rep.getFirma():"+rep.getFirma());
+					//logger.info("rep.getFirma():"+rep.getFirma());
 					coincidencias = l3.stream().filter(f -> f.getFirma().equals(rep.getFirma()))
 							.collect(Collectors.toList());
 				}

@@ -3,6 +3,9 @@ package com.cargosyabonos.application;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,8 @@ import com.cargosyabonos.domain.UsuarioEntity;
 @Service
 @PropertySource(ignoreResourceNotFound = true, value = "classpath:configuraciones-global.properties")
 public class CitaService implements CitaUseCase {
+
+	private static final Logger logger = LoggerFactory.getLogger(CitaService.class);
 
 	@Autowired
 	private CitaPort citaPort;
@@ -171,7 +176,7 @@ public class CitaService implements CitaUseCase {
 			}else if(ue.getRol().equals("5")||ue.getRol().equals("8")|| ue.getRol().equals("11")){
 				sce =  evPort.obtenerCitasInterviewer(fecha, idUsuario,estatusCita, estado);
 			}else{
-				List<Cita> se =  citaUseCase.obtenerCitasDeUsuarioPorSemanaV2(fecha, idUsuario, 0);
+				List<Cita> se =  citaUseCase.obtenerCitasDeUsuarioPorSemana(fecha, idUsuario, 0);
 				sce.addAll(se);
 			}
 		}
@@ -184,7 +189,7 @@ public class CitaService implements CitaUseCase {
 		UsuarioEntity u = usPort.buscarPorId(a.getIdUsuario());
 		if (!u.getRol().equals("10")) {
 			SolicitudVocEntity v = solPort.obtenerSolicitud(a.getIdSolicitud());
-			UtilidadesAdapter.pintarLog("Terapeuta:" + v.getTerapeuta());
+			logger.info("Terapeuta:" + v.getTerapeuta());
 			if (v.getTerapeuta() != 0) {
 				a.setIdUsuario(v.getTerapeuta());
 			} else {
@@ -203,7 +208,7 @@ public class CitaService implements CitaUseCase {
 		String rate = u.getRate() == null ? "" : u.getRate();
 		if ("".equals(rate)) {
 			ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("THER-AMOUNT-DEF");
-			UtilidadesAdapter.pintarLog("amount default terapeuta" + confj.getValor());
+			logger.info("amount default terapeuta" + confj.getValor());
 			amount = new BigDecimal(confj.getValor());
 		} else {
 			amount = new BigDecimal(u.getRate());
@@ -220,7 +225,7 @@ public class CitaService implements CitaUseCase {
 		}
 
 		int spend = s.getNumSesiones() - nsesions;
-		UtilidadesAdapter.pintarLog("nsesions:" + nsesions + "|spend:" + spend);
+		logger.info("nsesions:" + nsesions + "|spend:" + spend);
 
 		solPort.actualizarNumSesiones(nsesions, spend, a.getIdSolicitud());
 		citaPort.crearCita(a);
@@ -334,8 +339,8 @@ public class CitaService implements CitaUseCase {
 	}
 
 	@Override
-	public List<Cita> obtenerCitasDeUsuarioPorSemanaV2(String fecha, int idUsuario, int noShow) {
-		List<CitaSql> cSql = citaPort.obtenerCitasDeUsuarioPorSemanaV2(fecha, idUsuario, noShow);
+	public List<Cita> obtenerCitasDeUsuarioPorSemana(String fecha, int idUsuario, int noShow) {
+		List<CitaSql> cSql = citaPort.obtenerCitasDeUsuarioPorSemana(fecha, idUsuario, noShow);
 		List<Cita> sce = new ArrayList<>();
 		for (CitaSql ce : cSql) {
 			Cita c = convertirCitaSqlACita(ce);
