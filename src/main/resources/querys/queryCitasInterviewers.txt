@@ -1,4 +1,4 @@
-SELECT  DATE_FORMAT(e.fecha_schedule,'%Y-%m-%d') as fecha, e.hora_schedule as hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,
+SELECT  DATE_FORMAT(e.fecha_schedule,'%Y-%m-%d') as fecha, DATE_FORMAT(CAST(TRIM(e.hora_schedule) AS TIME), '%h:%i') AS hora, e.tipo_schedule as tipo, e.id_solicitud as solicitud,e.usuario_schedule as usuario, u.nombre as nombreUsuario,u.color as color,
 e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud as estSol,
   CASE 
     WHEN EXISTS (

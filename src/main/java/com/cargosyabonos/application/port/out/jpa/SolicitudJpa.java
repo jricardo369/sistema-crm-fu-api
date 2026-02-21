@@ -127,7 +127,8 @@ public interface SolicitudJpa extends CrudRepository<SolicitudEntity, Serializab
 			+ "WHERE s.firma_de_abogados = ?1 AND e.evento = 'Email to lawyer sent' ", nativeQuery = true)
 	public int obtenerReporteMailsAbogados(String firma);
 
-	@Query(value = "SELECT u.color,u.image,usuario_revisor as id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario,COUNT(usuario_revisor) as numero FROM solicitud s "
+	@Query(value = "SELECT u.color,u.image,usuario_revisor as id_usuario,u.nombre as usuario,COUNT(usuario_revisor) as numero, r.nombre as rol  "
+	        + "FROM solicitud s "
 			+ "JOIN usuario u ON u.id_usuario = s.usuario_revisor " + "JOIN rol r ON r.id_rol = u.id_rol "
 			+ "WHERE fecha_inicio BETWEEN ? AND ? " + "GROUP BY usuario_revisor ", nativeQuery = true)
 	public List<ReporteSolsUsuario> obtenerSolicitudesRevisores(Date fechai, Date fechaf);
@@ -137,9 +138,9 @@ public interface SolicitudJpa extends CrudRepository<SolicitudEntity, Serializab
 			+"WHERE fecha_inicio BETWEEN ?1 AND ?2 AND usuario_revisor = ?3 ", nativeQuery = true)
 	public List<ReporteSolsDeUsuario> obtenerSolicitudesRevisor(Date fechai, Date fechaf,int idUsuario);
 
-	@Query(value = "SELECT u.color,u.image,u.id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario,(SELECT count(*) from evento_solicitud e "
+	@Query(value = "SELECT u.color,u.image,u.id_usuario,u.nombre as usuario,(SELECT count(*) FROM evento_solicitud e  "
 				+"WHERE   descripcion = 'It was sent to the next process Ready on draft' "
-				+"AND e.fecha BETWEEN ?1 AND ?2 AND usuario = u.usuario) as numero "
+				+"AND e.fecha BETWEEN ?1 AND ?2 AND usuario = u.usuario) as numero, r.nombre as rol "
 				+"FROM usuario u "
 				+"JOIN rol r ON r.id_rol = u.id_rol "
 				+"WHERE u.id_rol = 7", nativeQuery = true)
@@ -151,13 +152,14 @@ public interface SolicitudJpa extends CrudRepository<SolicitudEntity, Serializab
 				+"AND e.fecha BETWEEN ?1 AND ?2  AND u.id_usuario = ?3 ORDER BY fecha DESC", nativeQuery = true)
 public List<ReporteSolsDeUsuario> obtenerSolicitudesDeUsuarioTemplate(Date fechai, Date fechaf,int idUsuario);
 
-	@Query(value = "SELECT u.color,u.image,usuario_revisando AS id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario,COUNT(usuario_revisando) AS numero FROM solicitud s "
+	@Query(value = "SELECT u.color,u.image,usuario_revisando AS id_usuario,u.nombre as usuario,COUNT(usuario_revisando) AS numero, r.nombre as rol " 
+	        + "FROM solicitud s "
 			+ "JOIN usuario u ON u.id_usuario = s.usuario_revisando " + "JOIN rol r ON r.id_rol = u.id_rol "
 			+ "WHERE fecha_inicio BETWEEN ?1 AND ?2 AND u.revisor = 1 "
 			+ "GROUP BY usuario_revisando ", nativeQuery = true)
 	public List<ReporteSolsUsuario> obtenerSolicitudesRevisoresAd(Date fechai, Date fechaf);
 	
-	@Query(value = "SELECT u.color,u.image,assigned_clinician AS id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario,COUNT(assigned_clinician) AS numero " 
+	@Query(value = "SELECT u.color,u.image,assigned_clinician AS id_usuario,u.nombre as usuario,COUNT(assigned_clinician) AS numero, r.nombre as rol  " 
 			+"FROM solicitud s "
 			+"JOIN usuario u ON u.id_usuario = s.assigned_clinician "
 			+"JOIN rol r ON r.id_rol = u.id_rol "
@@ -184,9 +186,6 @@ public List<ReporteSolsDeUsuario> obtenerSolicitudesDeUsuarioTemplate(Date fecha
 	@Query(value = "SELECT firma_de_abogados FROM solicitud WHERE fecha_inicio BETWEEN ?1 AND ?2 GROUP BY firma_de_abogados ", nativeQuery = true)
 	public List<String> obtenerFirmasAbogados(String fechai, String fechaf);
 	
-	@Query(value = "SELECT firma_de_abogados as firma,count(*) as numero FROM solicitud WHERE fecha_inicio BETWEEN ?1 AND ?2 GROUP BY firma_de_abogados ", nativeQuery = true)
-	public List<NumFilesAbogados> obtenerFirmasAbogadosyNumFiles(String fechai, String fechaf);
-
 	@Query(value = "SELECT email,firma_de_abogados from solicitud WHERE firma_de_abogados IN(:correos)  ", nativeQuery = true)
 	public List<CorreosFirmas> obtenerCorreosFirmas(@Param("correos") List<String> correos);
 

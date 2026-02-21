@@ -1,0 +1,15 @@
+WHERE s.fecha_inicio BETWEEN '2026-01-01 00:00:00' 
+                         AND '2026-01-31 23:59:59'
+  AND s.id_estatus_solicitud IN (1,2,3,10)
+  ${byUsuario}
+  AND s.id_solicitud NOT IN (
+        SELECT s.id_solicitud
+        FROM evento_solicitud e
+        JOIN solicitud s 
+             ON s.id_solicitud = e.id_solicitud
+        WHERE s.fecha_inicio BETWEEN :fechai
+                                 AND :fechaf
+          AND s.id_estatus_solicitud IN (1,2,3,10)
+          AND e.descripcion = 'Request Lost'
+        GROUP BY e.id_solicitud
+  )

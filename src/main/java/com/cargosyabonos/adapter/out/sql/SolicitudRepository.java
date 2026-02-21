@@ -83,6 +83,23 @@ public class SolicitudRepository implements SolicitudPort {
 	@Value("classpath:/querys/queryNumFilesAbo.txt")
     private Resource queryNumFilesAbo;
 
+	@Value("classpath:/querys/queryReporteDash.txt")
+    private Resource queryReporteDash;
+
+	@Value("classpath:/querys/queryDetallesDash.txt")
+    private Resource queryDetallesDash;
+
+	@Value("classpath:/querys/whereDash1.txt")
+    private Resource whereDash1;
+
+	@Value("classpath:/querys/whereDash2.txt")
+    private Resource whereDash2;
+
+	@Value("classpath:/querys/whereDash3.txt")
+    private Resource whereDash3;
+
+
+
 	@Override
 	public List<SolicitudEntity> obtenerSolicitudesPorFecha(Date fechai, Date fechaf) {
 		return reqJpa.obtenerSolicitudesPorFecha(fechai, fechaf);
@@ -296,7 +313,6 @@ public class SolicitudRepository implements SolicitudPort {
 		}
 		
 		return result;
-		//return reqJpa.obtenerFirmasAbogadosyNumFiles(fechai, fechaf);
 	}
 
 	@Override
@@ -1122,8 +1138,87 @@ public class SolicitudRepository implements SolicitudPort {
 			
 			UsuarioEntity usE = uPort.buscarPorId(usuario);
 			if(usE.getRol().equals("4")){
+				if(usE.isRevisor()){
+					byUsuario = " AND s.usuario_revisor = "+usuario+" ";
+				}else{
+					byUsuario = "  AND EXISTS (SELECT 1 FROM evento_solicitud e "
+					+"WHERE e.id_solicitud = s.id_solicitud "
+					+"AND e.usuario = '"+usE.getUsuario()+"' AND e.evento = 'Request creation' ) ";
+
+				}
+				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+			}
+			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+				byUsuario = " AND s.usuario_interview = "+usuario+" ";
+				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+			}
+			if(usE.getRol().equals("7")){
+				byUsuario = " AND s.usuario_template = "+usuario+" ";
+				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+			}
+			if(usE.getRol().equals("8")){
+				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+			}
+			
+		}
+		
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryReporteDash.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		if("".equals(byUsuario)){
+			queryS = queryS.replace("${byUsuario}", "");
+		}else{
+			queryS = queryS.replace("${byUsuario}", byUsuario);
+		}
+
+		if("".equals(byUsuario2)){
+			queryS = queryS.replace("${byUsuario2}", "");
+		}else{
+			queryS = queryS.replace("${byUsuario2}", byUsuario2);
+		}
+
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:\n" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+
+		List<Object[]> rows = query.getResultList();
+		UtilidadesAdapter.pintarLog("registros encontrados:" + rows.size());
+		return rows;
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerReporteDashBack(String fechai, String fechaf,int usuario) {
+		
+		fechai = fechai + " 00:00:00";
+		fechaf = fechaf + " 23:59:59";
+
+		UtilidadesAdapter.pintarLog("ejecutando query dash");
+		StringBuilder sb = new StringBuilder();
+		
+		String byUsuario = "";
+		String byUsuario2 = "";
+		String byUsuarioActivas = "";
+		
+		if(usuario > 0){
+			
+			UsuarioEntity usE = uPort.buscarPorId(usuario);
+			if(usE.getRol().equals("4")){
 				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
 				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+				byUsuarioActivas  = "  AND e.usuario = '"+usE.getUsuario()+"'";
 			}
 			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
 				byUsuario = " AND s.usuario_interview = "+usuario+" ";
@@ -1148,10 +1243,11 @@ public class SolicitudRepository implements SolicitudPort {
 		sb.append(" ) a "); 
 		sb.append("\n "); 
 		sb.append("CROSS JOIN ( ");sb.append("\n "); 
-		sb.append("SELECT count(s.id_solicitud) as activas ");sb.append("\n "); 
+		sb.append("SELECT count(DISTINCT s.id_solicitud) as activas ");sb.append("\n "); 
 		sb.append("FROM solicitud s ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10)  "+byUsuario+" ");sb.append("\n "); 
-		sb.append("AND id_solicitud ");sb.append("\n "); 
+		sb.append("JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud  ");sb.append("\n "); 
+		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10)  "+byUsuarioActivas+" ");sb.append("\n "); 
+		sb.append("AND s.id_solicitud ");sb.append("\n "); 
 		sb.append("NOT IN ");sb.append("\n "); 
 		sb.append("( "); sb.append("\n "); 
 		sb.append("\n "); 
@@ -1400,7 +1496,108 @@ public class SolicitudRepository implements SolicitudPort {
 			
 			UsuarioEntity usE = uPort.buscarPorId(usuario);
 			if(usE.getRol().equals("4")){
+				if(!usE.isRevisor()){
+					byUsuario = " AND EXISTS (SELECT 1 FROM evento_solicitud e  WHERE e.id_solicitud = s.id_solicitud AND e.usuario = '"+usE.getUsuario()+"') ";
+				}else{
 				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
+				}
+				
+			}
+			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+				byUsuario = " AND s.usuario_interview = "+usuario+" ";
+			}
+			if(usE.getRol().equals("7")){
+				byUsuario = " AND s.usuario_template = "+usuario+" ";
+			}
+			if(usE.getRol().equals("8")){
+				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+			}
+			
+		}
+		
+		String queryS = "";
+		String q1 = "";
+		String q2 = "";
+		String q3 = "";
+
+		try (Scanner scanner = new Scanner(queryDetallesDash.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		try (Scanner scanner = new Scanner(whereDash1.getInputStream(), StandardCharsets.UTF_8.name())) {
+			q1 = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		try (Scanner scanner = new Scanner(whereDash2.getInputStream(), StandardCharsets.UTF_8.name())) {
+			q2 = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		try (Scanner scanner = new Scanner(whereDash3.getInputStream(), StandardCharsets.UTF_8.name())) {
+			q3 = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		if (dash == 1) {
+			queryS = queryS.replace("${WHERE}", q1);
+		} else if (dash == 2) {
+			queryS = queryS.replace("${WHERE}", q2);
+		} else if (dash == 3) {
+			queryS = queryS.replace("${WHERE}", q3);
+		}
+
+
+		if("".equals(byUsuario)){
+			queryS = queryS.replace("${byUsuario}", "");
+		}else{
+			queryS = queryS.replace("${byUsuario}", byUsuario);
+		}
+
+
+		sb.append(queryS);
+
+
+
+		UtilidadesAdapter.pintarLog("query:" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+
+		List<Object[]> rows = query.getResultList();
+		UtilidadesAdapter.pintarLog("registros encontrados:" + rows.size());
+		return rows;
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerDetalleReporteDashBack(int dash,String fechai, String fechaf,int usuario) {
+		
+		fechai = fechai + " 00:00:00";
+		fechaf = fechaf + " 23:59:59";
+
+		UtilidadesAdapter.pintarLog("ejecutando query dash");
+		StringBuilder sb = new StringBuilder();
+		
+		String byUsuario = "";
+		
+		if(usuario > 0){
+			
+			UsuarioEntity usE = uPort.buscarPorId(usuario);
+			if(usE.getRol().equals("4")){
+				if(dash == 1){
+					byUsuario = " AND ec.usuario =  '"+usE.getUsuario()+"' ";
+				}else{
+				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
+				}
+				
 			}
 			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
 				byUsuario = " AND s.usuario_interview = "+usuario+" ";
@@ -1438,7 +1635,6 @@ public class SolicitudRepository implements SolicitudPort {
 					+ "LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago "
 					+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
 					+ "LEFT JOIN evento_solicitud ec ON ec.id_solicitud = s.id_solicitud "
-					+ "AND ec.evento = 'Request creation' "
 					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10) "
 					+ byUsuario + "AND s.id_solicitud  " + "NOT IN  " + "(   "
 					+ "SELECT s.id_solicitud FROM evento_solicitud e  "
@@ -1496,10 +1692,11 @@ public class SolicitudRepository implements SolicitudPort {
 					+ "AND ec.evento = 'Request creation' "
 					+ "JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud " + byUsuario
 					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf " + " AND e.descripcion LIKE '%Request Lost%';");
+
 		}
 
 
-		UtilidadesAdapter.pintarLog("query:" + sb.toString());
+		UtilidadesAdapter.pintarLog("query:" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 		
@@ -1516,7 +1713,7 @@ public class SolicitudRepository implements SolicitudPort {
 	public List<DetalleSolsPorFecha> reporteDetalleSolsFecha(String fechai, String fechaf,int usuario) {
 		
 		List<Object[]> rows = null;
-	    rows = obtenerDetalleSolsPorRango(fechai, fechaf);
+	    rows = obtenerDetalleSolsPorRango(fechai, fechaf,usuario);
 		
 	    List<DetalleSolsPorFecha> result = null;
 
@@ -1546,10 +1743,38 @@ public class SolicitudRepository implements SolicitudPort {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<Object[]> obtenerDetalleSolsPorRango(String fechai, String fechaf) {
+	public List<Object[]> obtenerDetalleSolsPorRango(String fechai, String fechaf,int usuario) {
 
 		UtilidadesAdapter.pintarLog("ejecutando query anios");
 		StringBuilder sb = new StringBuilder();
+
+
+		String byUsuario = "";
+
+		if(usuario > 0){
+			
+			UsuarioEntity usE = uPort.buscarPorId(usuario);
+			if(usE.getRol().equals("4")){
+				if(usE.isRevisor()){
+					byUsuario = " AND s.usuario_revisor = "+usuario+" ";
+				}else{
+					byUsuario = "  AND EXISTS (SELECT 1 FROM evento_solicitud e "
+					+"WHERE e.id_solicitud = s.id_solicitud "
+					+"AND e.usuario = '"+usE.getUsuario()+"' AND e.evento = 'Request creation' ) ";
+
+				}
+			}
+			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+				byUsuario = " AND s.usuario_interview = "+usuario+" ";
+			}
+			if(usE.getRol().equals("7")){
+				byUsuario = " AND s.usuario_template = "+usuario+" ";
+			}
+			if(usE.getRol().equals("8")){
+				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+			}
+			
+		}
 
 		String queryS = "";
 
@@ -1558,8 +1783,12 @@ public class SolicitudRepository implements SolicitudPort {
 		} catch (Exception e) {
 			throw new RuntimeException("Error al leer el archivo", e);
 		}
-		queryS = queryS.replace("$fechai", fechai);
-		queryS = queryS.replace("$fechaf", fechaf);
+
+		if("".equals(byUsuario)){
+			queryS = queryS.replace("${byUsuario}", "");
+		}else{
+			queryS = queryS.replace("${byUsuario}", byUsuario);
+		}
 
 		sb.append(queryS);
 
@@ -1574,8 +1803,8 @@ public class SolicitudRepository implements SolicitudPort {
 
 		Query query = entityManager.createNativeQuery(sb.toString());
 
-		// query.setParameter("fechai", fechai);
-		// query.setParameter("fechaf", fechaf);
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
 
 		List<Object[]> rows = query.getResultList();
 		return rows;

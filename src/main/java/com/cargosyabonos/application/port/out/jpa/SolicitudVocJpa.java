@@ -72,7 +72,8 @@ public interface SolicitudVocJpa extends CrudRepository<SolicitudVocEntity, Seri
 		     +"WHERE u.id_rol = ?1 order by numero LIMIT 1", nativeQuery = true) 
 			public UltimoUsuarioRevisor obtenerUsuarioConMenosRevisiones(int idRol);
 	
-	@Query(value = "SELECT u.color,u.image,c.id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario, COUNT(*) AS numero FROM cita c "
+	@Query(value = "SELECT u.color,u.image,c.id_usuario,u.nombre as usuario, COUNT(*) AS numero, r.nombre as rol "
+	        + "FROM cita c "
 			+"JOIN usuario u ON u.id_usuario = c.id_usuario "
 			+"JOIN rol r ON r.id_rol = u.id_rol "
 			+"WHERE fecha BETWEEN ?1 AND ?2 GROUP BY id_usuario", nativeQuery = true)

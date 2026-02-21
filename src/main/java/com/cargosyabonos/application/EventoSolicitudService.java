@@ -267,7 +267,6 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 			if(esClinicianComoCaseManager){
 				solPort.actualizarFinAsgClnc("0", s.getIdSolicitud());
-				solPort.actualizarAsignacionIntReset(s.getIdSolicitud());
 				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
 			}else{
 				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());

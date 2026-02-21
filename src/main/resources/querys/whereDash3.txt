@@ -1,0 +1,9 @@
+WHERE s.fecha_inicio BETWEEN :fechai
+                         AND :fechaf
+   AND EXISTS (
+    SELECT 1
+    FROM evento_solicitud e
+    WHERE e.id_solicitud = s.id_solicitud
+      AND e.descripcion LIKE '%Request Lost%'
+)
+  ${byUsuario}

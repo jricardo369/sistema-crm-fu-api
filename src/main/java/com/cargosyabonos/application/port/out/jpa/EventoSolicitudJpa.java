@@ -81,7 +81,8 @@ public interface EventoSolicitudJpa extends CrudRepository<EventoSolicitudEntity
 	@Query(value = "SELECT count(*) FROM evento_solicitud WHERE id_solicitud = ?1 AND tipo = ?2", nativeQuery = true)
 	public int tieneTipoEventoLaSolicitud(int idSolicitud, String tipoEvento);
 
-	@Query(value = "SELECT u.color,u.image,u.id_usuario,CONCAT(u.nombre,' (',r.nombre,')') as usuario,count(*) as numero FROM evento_solicitud e "
+	@Query(value = "SELECT u.color,u.image,u.id_usuario,u.nombre as usuario,count(*) as numero, r.nombre as rol "
+			+  "FROM evento_solicitud e "
 			+ "JOIN usuario u ON u.id_usuario = e.usuario_schedule " + "JOIN rol r ON r.id_rol = u.id_rol "
 			+ "WHERE  tipo = ?1 " + "AND estatus_schedule = ?2  AND fecha_schedule BETWEEN ?3 AND ?4 AND e.fin_schedule = 1 "
 			+ "GROUP BY usuario_schedule", nativeQuery = true)

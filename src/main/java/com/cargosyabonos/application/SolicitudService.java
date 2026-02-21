@@ -1729,6 +1729,7 @@ public class SolicitudService implements SolicitudUseCase {
 			if (o.getNumero() > 0) {
 				lsalida.add(o);
 			}
+			o.setRol(r.getrol());
 		}
 
 		List<ReporteSolsUsuario> lr = reqPort.obtenerNumeroSolicitudesAtendidasPorRevisores(fechai, fechaf);
@@ -1747,6 +1748,7 @@ public class SolicitudService implements SolicitudUseCase {
 			if (o.getNumero() > 0) {
 				lsalida.add(o);
 			}
+			o.setRol(r.getrol());
 		}
 
 		List<ReporteSolsUsuario> lrt = reqPort.obtenerNumeroSolicitudesAtendidasPorTemplates(fechaiFormato, fechafFormato);
@@ -1765,6 +1767,7 @@ public class SolicitudService implements SolicitudUseCase {
 			if (o.getNumero() > 0) {
 				lsalida.add(o);
 			}
+			o.setRol(r.getrol());
 		}
 
 		List<ReporteSolsUsuario> lrad = reqPort.obtenerNumeroSolicitudesAtendidasPorRevisorAdicional(fechai, fechaf);
@@ -1783,6 +1786,7 @@ public class SolicitudService implements SolicitudUseCase {
 			if (o.getNumero() > 0) {
 				lsalida.add(o);
 			}
+			o.setRol(r.getrol());
 		}
 
 		if (u.getRol().equals("2") || u.getRol().equals("6") || u.getRol().equals("4")) {
@@ -1802,7 +1806,9 @@ public class SolicitudService implements SolicitudUseCase {
 				if (o.getNumero() > 0) {
 					lsalida.add(o);
 				}
+				o.setRol(r.getrol());
 			}
+			
 		}
 		
 		
@@ -1822,6 +1828,7 @@ public class SolicitudService implements SolicitudUseCase {
 				if (o.getNumero() > 0) {
 					lsalida.add(o);
 				}
+				o.setRol(r.getrol());
 			}
 		
 		return lsalida;

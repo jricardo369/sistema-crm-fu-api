@@ -26,6 +26,7 @@ LEFT JOIN (
     JOIN solicitud s3 ON s3.id_solicitud = e.id_solicitud 
     WHERE e.descripcion LIKE '%No show%'
 ) noshow ON s.id_solicitud = noshow.id_solicitud AND DATE(s.fecha_inicio) = noshow.fecha
-WHERE s.fecha_inicio BETWEEN '$fechai' AND '$fechaf'
+WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+${byUsuario}
 GROUP BY DATE(s.fecha_inicio)
 ORDER BY fecha;

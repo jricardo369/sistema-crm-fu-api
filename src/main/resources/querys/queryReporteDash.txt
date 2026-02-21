@@ -1,0 +1,77 @@
+SELECT
+    a.todas,
+    s.activas,
+    s1.cerradas,
+    s2.lost,
+    e.noshow,
+    e.rejectFile,
+    e.cancelSchedules
+FROM (
+    SELECT COUNT(s.id_solicitud) AS todas
+    FROM solicitud s
+    WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+      ${byUsuario}
+) a
+CROSS JOIN (
+    SELECT COUNT(DISTINCT s.id_solicitud) AS activas
+    FROM solicitud s
+    INNER JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud
+    WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+      AND s.id_estatus_solicitud IN (1, 2, 3, 10)
+      ${byUsuario}
+      AND s.id_solicitud NOT IN (
+          SELECT s.id_solicitud
+          FROM evento_solicitud e
+          JOIN solicitud s ON s.id_solicitud = e.id_solicitud
+          WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+            AND s.id_estatus_solicitud IN (1, 2, 3, 10)
+            AND e.descripcion = 'Request Lost'
+          GROUP BY e.id_solicitud
+      )
+) s
+CROSS JOIN (
+    SELECT COUNT(*) AS cerradas
+    FROM solicitud s
+    WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+      AND s.id_estatus_solicitud IN (11)
+      ${byUsuario}
+      AND id_solicitud NOT IN (
+          SELECT s.id_solicitud
+          FROM evento_solicitud e
+          JOIN solicitud s ON s.id_solicitud = e.id_solicitud
+          WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+            AND s.id_estatus_solicitud IN (11)
+            AND e.descripcion LIKE '%Request Lost%'
+          GROUP BY e.id_solicitud
+      )
+) s1
+CROSS JOIN (
+    SELECT COUNT(*) AS lost
+    FROM solicitud s
+    JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud
+    WHERE s.fecha_inicio BETWEEN :fechai AND :fechaf
+      AND e.descripcion LIKE '%Request Lost%'
+      ${byUsuario}
+) s2
+CROSS JOIN (
+    SELECT
+        COUNT(DISTINCT CASE
+            WHEN e.descripcion LIKE '%No show%'
+             AND e.descripcion NOT LIKE '%re-scheduled%'
+             AND e.descripcion NOT LIKE '%was changed%'
+            THEN e.id_solicitud END) AS noshow,
+        COUNT(DISTINCT CASE
+            WHEN e.evento = 'Reject File'
+            THEN e.id_solicitud END) AS rejectFile,
+        COUNT(DISTINCT CASE
+            WHEN e.evento = 'Update'
+             AND e.tipo = 'Reject File'
+             AND e.descripcion NOT LIKE '%re-scheduled%'
+             AND e.descripcion NOT LIKE '%was changed%'
+             AND e.descripcion NOT LIKE '%is changed%'
+            THEN e.id_solicitud END) AS cancelSchedules
+    FROM evento_solicitud e
+    LEFT JOIN usuario u ON u.usuario = e.usuario
+    WHERE e.fecha BETWEEN :fechai AND :fechaf
+      ${byUsuario2}
+) e;

@@ -1,0 +1,112 @@
+SELECT 
+    s.id_solicitud,
+    s.fecha_inicio,
+    s.cliente,
+    s.apellidos,
+    s.telefono,
+    ts.id_tipo_solicitud,
+    ts.nombre AS tipoSolicitud,
+    s.estado,
+    s.referencia,
+    s.idioma,
+    s.direccion,
+    s.amount,
+    s.abogado,
+    s.email,
+    s.adicional,
+    
+    CASE 
+        WHEN EXISTS (
+            SELECT 1
+            FROM evento_solicitud ei
+            WHERE ei.tipo IN ('Important','Suicide')
+              AND ei.id_solicitud = s.id_solicitud
+        )
+        THEN 'x' 
+        ELSE ''
+    END AS tieneImportant,
+    
+    ep.id_estatus_pago,
+    ep.descripcion AS descEstPago,
+    es.id_estatus_solicitud,
+    es.descripcion AS descEstSol,
+    
+    s.waiver,
+    s.interview_master,
+    s.due_date,
+    
+    (
+        SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule)
+        FROM evento_solicitud
+        WHERE tipo = 'Schedule'
+          AND estatus_schedule = 1
+          AND id_solicitud = s.id_solicitud
+          AND descripcion LIKE '%Scheduled app%'
+        ORDER BY id_solicitud, fecha DESC
+        LIMIT 1
+    ) AS fechaint,
+    
+    (
+        SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule)
+        FROM evento_solicitud
+        WHERE tipo = 'Schedule'
+          AND estatus_schedule = 1
+          AND id_solicitud = s.id_solicitud
+          AND descripcion LIKE '%Scheduled scales%'
+        ORDER BY id_solicitud, fecha DESC
+        LIMIT 1
+    ) AS fechascale,
+    
+     (
+       SELECT usuario from evento_solicitud e
+LEFT JOIN solicitud su on su.id_solicitud = e.id_solicitud
+WHERE e.evento = 'Request creation' AND su.id_solicitud = s.id_solicitud
+        LIMIT 1
+    ) AS usuario_creacion,
+     (
+       SELECT descripcion from evento_solicitud e
+LEFT JOIN solicitud su on su.id_solicitud = e.id_solicitud
+WHERE e.evento = 'Request creation' AND su.id_solicitud = s.id_solicitud
+        LIMIT 1
+    ) AS descripcion
+
+# FROM Y JOINS
+
+FROM solicitud s
+
+LEFT JOIN tipo_solicitud ts 
+       ON ts.id_tipo_solicitud = s.id_tipo_solicitud
+
+LEFT JOIN estatus_pago ep 
+       ON ep.id_estatus_pago = s.id_estatus_pago
+
+LEFT JOIN estatus_solicitud es 
+       ON es.id_estatus_solicitud = s.id_estatus_solicitud
+
+# WHERE
+
+${WHERE}
+
+ GROUP BY
+    s.id_solicitud,
+    s.fecha_inicio,
+    s.cliente,
+    s.apellidos,
+    s.telefono,
+    ts.id_tipo_solicitud,
+    ts.nombre,
+    s.estado,
+    s.referencia,
+    s.idioma,
+    s.direccion,
+    s.amount,
+    s.abogado,
+    s.email,
+    s.adicional,
+    ep.id_estatus_pago,
+    ep.descripcion,
+    es.id_estatus_solicitud,
+    es.descripcion,
+    s.waiver,
+    s.interview_master,
+    s.due_date;
