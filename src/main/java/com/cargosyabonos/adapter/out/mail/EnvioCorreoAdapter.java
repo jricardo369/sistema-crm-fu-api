@@ -167,7 +167,7 @@ public class EnvioCorreoAdapter {
 		}
 	}
 
-	public void sendCalendarInvite(String toEmail, String subject, String body, Date fecha, String hora)
+	/*public void sendCalendarInvite(String toEmail, String subject, String body, Date fecha, String hora)
 			throws MessagingException {
 
 		if (enviarCorreos) {
@@ -206,7 +206,7 @@ public class EnvioCorreoAdapter {
 			logger.info("No se envio mail ya que no es " + ambiente);
 		}
 
-	}
+	}*/
 
 	public void sendMailWithSchedule(String toEmail, String subject, String body, List<EventoCalendario> eventos)
 			throws MessagingException {
@@ -218,6 +218,7 @@ public class EnvioCorreoAdapter {
 			boolean mailValido = UtilidadesAdapter.isCorreoValido(toEmail);
 
 			if (mailValido) {
+
 
 				// Un solo correo con dos ICS adjuntos, uno por cada evento
 				MimeMessage message = javaMailSender.createMimeMessage();
@@ -320,7 +321,7 @@ public class EnvioCorreoAdapter {
 
 	}
 
-	private String generateCalendarContent(String toEmail, String description, String subject, Date fecha,
+	/*private String generateCalendarContent(String toEmail, String description, String subject, Date fecha,
 			String hora) {
 
 		String f = "";
@@ -362,7 +363,7 @@ public class EnvioCorreoAdapter {
 				"END:VALARM\n" +
 				"END:VEVENT\n" +
 				"END:VCALENDAR";
-	}
+	}*/
 
 	private static final ZoneId ZONA_MX = ZoneId.of("America/Mexico_City");
 	private static final DateTimeFormatter ICS_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
@@ -383,7 +384,7 @@ public class EnvioCorreoAdapter {
 		ZonedDateTime finUTC = evento.fin().atZone(ZONA_MX).withZoneSameInstant(ZoneOffset.UTC);
 
 		sb.append("BEGIN:VEVENT\n")
-				.append("UID:").append(UUID.randomUUID()).append("@familiasunidascc.com\n")
+				.append("UID:").append(UUID.randomUUID()).append("\n")
 				.append("DTSTAMP:")
 				.append(ZonedDateTime.now(ZoneOffset.UTC).format(ICS_FORMAT)).append("Z\n")
 				.append("DTSTART:")
@@ -406,6 +407,45 @@ public class EnvioCorreoAdapter {
 				.append("END:VALARM\n")
 				.append("END:VEVENT\n")
 				.append("END:VCALENDAR");
+
+		logger.info("Contenido ICS generado:\n" + sb.toString());
+
+		return sb.toString();
+	}
+
+	public static String generarCancelacionEvento(
+			String organizerEmail,
+			String attendeeEmail,
+			EventoCalendario evento) {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("BEGIN:VCALENDAR\n")
+				.append("PRODID:-//FamiliasUnidas//Calendario//ES\n")
+				.append("VERSION:2.0\n")
+				.append("CALSCALE:GREGORIAN\n")
+				.append("METHOD:CANCEL\n");
+
+		ZonedDateTime inicioUTC = evento.inicio().atZone(ZONA_MX).withZoneSameInstant(ZoneOffset.UTC);
+		ZonedDateTime finUTC = evento.fin().atZone(ZONA_MX).withZoneSameInstant(ZoneOffset.UTC);
+
+		sb.append("BEGIN:VEVENT\n")
+				.append("UID:").append(UUID.randomUUID()).append("\n")
+				.append("DTSTAMP:")
+				.append(ZonedDateTime.now(ZoneOffset.UTC).format(ICS_FORMAT)).append("Z\n")
+				.append("DTSTART:")
+				.append(inicioUTC.format(ICS_FORMAT)).append("Z\n")
+				.append("DTEND:")
+				.append(finUTC.format(ICS_FORMAT)).append("Z\n")
+				.append("SUMMARY:").append(evento.titulo()).append("\n")
+				.append("DESCRIPTION:").append(evento.descripcion()).append("\n")
+				.append("LOCATION:").append(evento.ubicacion()).append("\n")
+				.append("ORGANIZER:MAILTO:").append(organizerEmail).append("\n")
+				.append("ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:").append(attendeeEmail)
+				.append("\n")
+				.append("END:VEVENT\n")
+				.append("END:VCALENDAR");
+
+		logger.info("Contenido ICS generado:\n" + sb.toString());
 
 		return sb.toString();
 	}

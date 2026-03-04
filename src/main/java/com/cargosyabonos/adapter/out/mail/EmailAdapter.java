@@ -3,7 +3,6 @@ package com.cargosyabonos.adapter.out.mail;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -248,7 +247,7 @@ public class EmailAdapter implements EnviarCorreoPort {
 	}
 	
 
-	@Override
+	/*@Override
 	public void enviarCorreoDeLayoutCalendar(String email, String subject, Map<String, Object> params, String layout,String formatoFecha) {
 
 		boolean formatoFechaLleno = false;
@@ -273,14 +272,16 @@ public class EmailAdapter implements EnviarCorreoPort {
 			if(!formatoFechaLleno){
 				fecha = UtilidadesAdapter.cadenaAFecha(params.get("${fecha}").toString());
 			}
+			
 			envioCorreo.sendCalendarInvite(email, subject, template, fecha, hora);
+
 		} catch (MessagingException e) {
 			e.printStackTrace();
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		
-	}
+	}*/
 
 	@Override
 	public void enviarCorreoDeLayoutCalendarWithInvite(String email, String subject, Map<String, Object> params, String layout) {
@@ -346,8 +347,8 @@ public class EmailAdapter implements EnviarCorreoPort {
 			List<EventoCalendario> eventos = new ArrayList<>();
 			
 			EventoCalendario evento = new EventoCalendario(
-						"Interview with Mental Health Evaluation Group by Familias Unidas",
-						"Interview with Mental Health Evaluation Group by Familias Unidas",
+						subject,
+						subject,
 						"",
 						LocalDateTime.of(Integer.valueOf(anio), Integer.valueOf(mes), Integer.valueOf(dia), Integer.valueOf(horaStr), Integer.valueOf(minutoStr)),
 						LocalDateTime.of(Integer.valueOf(anio), Integer.valueOf(mes), Integer.valueOf(dia), Integer.valueOf(horaStr), Integer.valueOf(minutoStr)));
@@ -387,6 +388,8 @@ public class EmailAdapter implements EnviarCorreoPort {
 			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
 
 			List<EventoRecordatorioCita> eventos = usPort.obtenerRecordatoriosCitasDeUsuario(fecha, idUsuario);
+
+			logger.info("Eventos de recordatorio de citas obtenidos: " + eventos.size());
 
 			List<EventoCalendario> eventosCalendario = new ArrayList<>();
 			for (EventoRecordatorioCita er : eventos) {

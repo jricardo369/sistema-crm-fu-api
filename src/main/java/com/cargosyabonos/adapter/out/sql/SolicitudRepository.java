@@ -1148,7 +1148,7 @@ public class SolicitudRepository implements SolicitudPort {
 				}
 				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
 			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+			if(usE.getRol().equals("5")){
 				byUsuario = " AND s.usuario_interview = "+usuario+" ";
 				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
 			}
@@ -1158,6 +1158,10 @@ public class SolicitudRepository implements SolicitudPort {
 			}
 			if(usE.getRol().equals("8")){
 				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
+			}
+			if(usE.getRol().equals("11")){
+				byUsuario = " AND s.assigned_clinician = "+usuario+" ";
 				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
 			}
 			
@@ -1199,111 +1203,6 @@ public class SolicitudRepository implements SolicitudPort {
 		
 	}
 
-	@SuppressWarnings("unchecked")
-	public List<Object[]> obtenerReporteDashBack(String fechai, String fechaf,int usuario) {
-		
-		fechai = fechai + " 00:00:00";
-		fechaf = fechaf + " 23:59:59";
-
-		UtilidadesAdapter.pintarLog("ejecutando query dash");
-		StringBuilder sb = new StringBuilder();
-		
-		String byUsuario = "";
-		String byUsuario2 = "";
-		String byUsuarioActivas = "";
-		
-		if(usuario > 0){
-			
-			UsuarioEntity usE = uPort.buscarPorId(usuario);
-			if(usE.getRol().equals("4")){
-				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
-				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
-				byUsuarioActivas  = "  AND e.usuario = '"+usE.getUsuario()+"'";
-			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
-				byUsuario = " AND s.usuario_interview = "+usuario+" ";
-				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
-			}
-			if(usE.getRol().equals("7")){
-				byUsuario = " AND s.usuario_template = "+usuario+" ";
-				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
-			}
-			if(usE.getRol().equals("8")){
-				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
-				byUsuario2 = " AND u.id_usuario = "+usuario+" ";
-			}
-			
-		}
-		
-		sb.append("SELECT a.todas,s.activas,s1.cerradas,s2.lost,e.noshow,  e.rejectFile,e.cancelSchedules ");sb.append("\n "); 
-		sb.append("FROM ( ");   sb.append("\n "); 
-		sb.append("SELECT count(s.id_solicitud) as todas  ");sb.append("\n "); 
-		sb.append("FROM solicitud s ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf   "+byUsuario+" ");sb.append("\n "); 
-		sb.append(" ) a "); 
-		sb.append("\n "); 
-		sb.append("CROSS JOIN ( ");sb.append("\n "); 
-		sb.append("SELECT count(DISTINCT s.id_solicitud) as activas ");sb.append("\n "); 
-		sb.append("FROM solicitud s ");sb.append("\n "); 
-		sb.append("JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud  ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10)  "+byUsuarioActivas+" ");sb.append("\n "); 
-		sb.append("AND s.id_solicitud ");sb.append("\n "); 
-		sb.append("NOT IN ");sb.append("\n "); 
-		sb.append("( "); sb.append("\n "); 
-		sb.append("\n "); 
-		sb.append("SELECT s.id_solicitud FROM evento_solicitud e ");sb.append("\n "); 
-		sb.append("JOIN solicitud s ON s.id_solicitud = e.id_solicitud ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf  AND  s.id_estatus_solicitud IN (1,2,3,10) ");sb.append("\n "); 
-		sb.append("AND e.descripcion = 'Request Lost' group by e.id_solicitud ) ");sb.append("\n "); 
-		sb.append(") s ");sb.append("\n "); 
-		sb.append("\n "); 
-		sb.append("CROSS JOIN ( ");sb.append("\n "); 
-		sb.append("SELECT count(*) AS cerradas ");sb.append("\n "); 
-		sb.append("FROM solicitud s ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (11)   "+byUsuario+" ");sb.append("\n "); 
-		sb.append("AND id_solicitud ");sb.append("\n "); 
-		sb.append("NOT IN ");sb.append("\n "); 
-		sb.append("(  ");
-		sb.append("\n "); 
-		sb.append("SELECT s.id_solicitud FROM evento_solicitud e ");sb.append("\n "); 
-		sb.append("JOIN solicitud s ON s.id_solicitud = e.id_solicitud ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf  AND  s.id_estatus_solicitud IN (11) ");sb.append("\n "); 
-		sb.append("AND e.descripcion LIKE '%Request Lost%' group by e.id_solicitud ");sb.append("\n "); 
-		sb.append(") ");
-		sb.append("\n "); 
-		sb.append(") s1   CROSS JOIN ( ");sb.append("\n "); 
-		sb.append("SELECT count(*) AS lost ");sb.append("\n "); 
-		sb.append("FROM solicitud s ");sb.append("\n "); 
-		sb.append("JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud ");sb.append("\n "); 
-		sb.append("WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf ");sb.append("\n "); 
-		sb.append("AND e.descripcion LIKE '%Request Lost%' "+byUsuario+" ");sb.append("\n "); 
-		sb.append(")  s2 ");    
-	
-		sb.append("\n "); 
-		sb.append("CROSS JOIN (SELECT ");
-		sb.append("\n "); 
-		sb.append("COUNT(DISTINCT CASE WHEN  e.descripcion like '%No show%' AND (e.descripcion NOT LIKE '%re-scheduled%' AND e.descripcion NOT LIKE '%was changed%') THEN e.id_solicitud END) AS noshow, ");
-		sb.append("\n "); 
-		sb.append("COUNT(DISTINCT CASE WHEN e.evento = 'Reject File'  THEN e.id_solicitud END) AS rejectFile, ");
-		sb.append("\n "); 
-		sb.append("COUNT(DISTINCT CASE WHEN  e.evento = 'Update' AND e.tipo = 'Reject File' AND (e.descripcion NOT LIKE '%re-scheduled%' AND e.descripcion NOT LIKE '%was changed%' AND e.descripcion NOT LIKE '%is changed%') THEN e.id_solicitud END) AS cancelSchedules ");
-		sb.append("\n "); 
-		sb.append("FROM evento_solicitud e LEFT JOIN usuario u on u.usuario = e.usuario WHERE e.fecha BETWEEN :fechai AND :fechaf "+byUsuario2+") e;");
-		
-
-
-		UtilidadesAdapter.pintarLog("query:\n" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
-
-		Query query = entityManager.createNativeQuery(sb.toString());
-		
-		query.setParameter("fechai", fechai);
-		query.setParameter("fechaf", fechaf);
-
-		List<Object[]> rows = query.getResultList();
-		UtilidadesAdapter.pintarLog("registros encontrados:" + rows.size());
-		return rows;
-		
-	}
 
 	public int obtenerDashVentas(String fechai, String fechaf,String usuario) {
 
@@ -1497,13 +1396,13 @@ public class SolicitudRepository implements SolicitudPort {
 			UsuarioEntity usE = uPort.buscarPorId(usuario);
 			if(usE.getRol().equals("4")){
 				if(!usE.isRevisor()){
-					byUsuario = " AND EXISTS (SELECT 1 FROM evento_solicitud e  WHERE e.id_solicitud = s.id_solicitud AND e.usuario = '"+usE.getUsuario()+"') ";
+					byUsuario = " AND EXISTS (SELECT 1 FROM evento_solicitud e  WHERE e.id_solicitud = s.id_solicitud AND e.usuario = '"+usE.getUsuario()+"' AND e.evento = 'Request creation') ";
 				}else{
 				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
 				}
 				
 			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+			if(usE.getRol().equals("5")){
 				byUsuario = " AND s.usuario_interview = "+usuario+" ";
 			}
 			if(usE.getRol().equals("7")){
@@ -1511,6 +1410,9 @@ public class SolicitudRepository implements SolicitudPort {
 			}
 			if(usE.getRol().equals("8")){
 				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+			}
+			if(usE.getRol().equals("11")){
+				byUsuario = " AND s.assigned_clinician = "+usuario+" ";
 			}
 			
 		}
@@ -1561,140 +1463,6 @@ public class SolicitudRepository implements SolicitudPort {
 
 
 		sb.append(queryS);
-
-
-
-		UtilidadesAdapter.pintarLog("query:" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
-
-		Query query = entityManager.createNativeQuery(sb.toString());
-		
-		query.setParameter("fechai", fechai);
-		query.setParameter("fechaf", fechaf);
-
-		List<Object[]> rows = query.getResultList();
-		UtilidadesAdapter.pintarLog("registros encontrados:" + rows.size());
-		return rows;
-		
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<Object[]> obtenerDetalleReporteDashBack(int dash,String fechai, String fechaf,int usuario) {
-		
-		fechai = fechai + " 00:00:00";
-		fechaf = fechaf + " 23:59:59";
-
-		UtilidadesAdapter.pintarLog("ejecutando query dash");
-		StringBuilder sb = new StringBuilder();
-		
-		String byUsuario = "";
-		
-		if(usuario > 0){
-			
-			UsuarioEntity usE = uPort.buscarPorId(usuario);
-			if(usE.getRol().equals("4")){
-				if(dash == 1){
-					byUsuario = " AND ec.usuario =  '"+usE.getUsuario()+"' ";
-				}else{
-				byUsuario = " AND s.usuario_revisor = "+usuario+" ";
-				}
-				
-			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
-				byUsuario = " AND s.usuario_interview = "+usuario+" ";
-			}
-			if(usE.getRol().equals("7")){
-				byUsuario = " AND s.usuario_template = "+usuario+" ";
-			}
-			if(usE.getRol().equals("8")){
-				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
-			}
-			
-		}
-		
-		if (dash == 1) {
-			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,"
-					+" CASE \n" + //
-												"    WHEN EXISTS (\n" + //
-												"      SELECT 1\n" + //
-												"      FROM evento_solicitud ei\n" + //
-												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
-												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
-												"    )\n" + //
-												"    THEN 'x' ELSE ''\n" + //
-												"  END AS tieneImportant,"
-					+"ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
-					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
-					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
-					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled app%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaint, "
-					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
-					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
-					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled scales%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechascale,ec.usuario AS usuario_creacion  "
-					+ "FROM solicitud s "
-					+ "LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud "
-					+ "LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago "
-					+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
-					+ "LEFT JOIN evento_solicitud ec ON ec.id_solicitud = s.id_solicitud "
-					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10) "
-					+ byUsuario + "AND s.id_solicitud  " + "NOT IN  " + "(   "
-					+ "SELECT s.id_solicitud FROM evento_solicitud e  "
-					+ "JOIN solicitud s ON s.id_solicitud = e.id_solicitud "
-					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (1,2,3,10)  "
-					+ "AND e.descripcion = 'Request Lost' group by e.id_solicitud ) ;");
-		} else if (dash == 2) {
-			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,"
-					+" CASE \n" + //
-												"    WHEN EXISTS (\n" + //
-												"      SELECT 1\n" + //
-												"      FROM evento_solicitud ei\n" + //
-												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
-												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
-												"    )\n" + //
-												"    THEN 'x' ELSE ''\n" + //
-												"  END AS tieneImportant,"
-					+ "ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date, "
-					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
-					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
-					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled app%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechaint, "
-					+ "(SELECT CONCAT(fecha_schedule,' ',hora_schedule,tipo_schedule) " + "FROM evento_solicitud  "
-					+ "WHERE tipo = 'Schedule' AND estatus_schedule = 1  "
-					+ "AND id_solicitud = s.id_solicitud AND descripcion LIKE '%Scheduled scales%' ORDER BY id_solicitud, fecha DESC LIMIT 1)  as fechascale,ec.usuario AS usuario_creacion  "
-					+ "FROM solicitud s "
-					+ "LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud "
-					+ "LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago "
-					+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
-					+ "LEFT JOIN evento_solicitud ec ON ec.id_solicitud = s.id_solicitud "
-					+ "AND ec.evento = 'Request creation' "
-					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf AND  s.id_estatus_solicitud IN (11) " + byUsuario
-					+ "AND s.id_solicitud " + "NOT IN  " + "( " + "SELECT s.id_solicitud FROM evento_solicitud e "
-					+ "JOIN solicitud s ON s.id_solicitud = e.id_solicitud "
-					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf  AND  s.id_estatus_solicitud IN (11) "
-					+ byUsuario + "AND e.descripcion = 'Request Lost' group by e.id_solicitud " + ") ;");
-		} else if (dash == 3) {
-			sb.append("SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.apellidos,s.telefono,ts.id_tipo_solicitud,ts.nombre tipoSolicitud,s.estado,s.referencia,s.idioma,s.direccion,"
-					+ "s.amount,s.abogado,s.email,s.adicional,"
-					+" CASE \n" + //
-												"    WHEN EXISTS (\n" + //
-												"      SELECT 1\n" + //
-												"      FROM evento_solicitud ei\n" + //
-												"      WHERE ei.tipo IN ('Important','Suicide')\n" + //
-												"        AND ei.id_solicitud = ec.id_solicitud\n" + //
-												"    )\n" + //
-												"    THEN 'x' ELSE ''\n" + //
-												"  END AS tieneImportant,"
-					+"ep.id_estatus_pago,ep.descripcion as descEstPago,es.id_estatus_solicitud,es.descripcion as descEstSol,s.waiver,s.interview_master,s.due_date,e.descripcion,ec.usuario AS usuario_creacion "
-					+ "FROM solicitud s "
-					+ "LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud "
-					+ "LEFT JOIN estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago "
-					+ "LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud "
-					+ "LEFT JOIN evento_solicitud ec ON ec.id_solicitud = s.id_solicitud "
-					+ "AND ec.evento = 'Request creation' "
-					+ "JOIN evento_solicitud e ON e.id_solicitud = s.id_solicitud " + byUsuario
-					+ "WHERE  s.fecha_inicio BETWEEN :fechai AND :fechaf " + " AND e.descripcion LIKE '%Request Lost%';");
-
-		}
-
 
 		UtilidadesAdapter.pintarLog("query:" + sb.toString().replace(":fechai", "'"+fechai+"'").replace(":fechaf", "'"+fechaf+"'"));
 
@@ -1764,7 +1532,7 @@ public class SolicitudRepository implements SolicitudPort {
 
 				}
 			}
-			if(usE.getRol().equals("5")||usE.getRol().equals("11")){
+			if(usE.getRol().equals("5")){
 				byUsuario = " AND s.usuario_interview = "+usuario+" ";
 			}
 			if(usE.getRol().equals("7")){
@@ -1772,6 +1540,9 @@ public class SolicitudRepository implements SolicitudPort {
 			}
 			if(usE.getRol().equals("8")){
 				byUsuario = " AND s.usuario_int_sc = "+usuario+" ";
+			}
+			if(usE.getRol().equals("11")){
+				byUsuario = " AND s.assigned_clinician = "+usuario+" ";
 			}
 			
 		}
@@ -1791,13 +1562,6 @@ public class SolicitudRepository implements SolicitudPort {
 		}
 
 		sb.append(queryS);
-
-		/*
-		 * sb.
-		 * append("SELECT DATE(fecha_inicio) AS fecha,CAST(COUNT(*) AS SIGNED) AS numero_solicitudes "
-		 * +"FROM solicitud " +"WHERE fecha_inicio BETWEEN :fechai AND :fechaf "
-		 * +"GROUP BY fecha_inicio ORDER BY fecha_inicio; ");
-		 */
 
 		UtilidadesAdapter.pintarLog("query:" + sb.toString());
 

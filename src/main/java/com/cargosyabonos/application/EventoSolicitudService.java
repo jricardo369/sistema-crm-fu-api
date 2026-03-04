@@ -232,43 +232,44 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 	@Override
 	public void actualizarEstatusSchedule(int idEvento, String estatusSchedule, int idUsuario, String motivo) {
 
+		UtilidadesAdapter.pintarLog("Cancelar cita");
+
 		if ("".equals(motivo)) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"Cancellation reason cannot be empty");
 		}
 
 		EventoSolicitudEntity e = esPort.findByIdEvento(idEvento);
-		UsuarioEntity u = usPort.buscarPorId(Integer.valueOf(e.getUsuarioSchedule()));
+		UsuarioEntity usuarioEvento = usPort.buscarPorId(Integer.valueOf(e.getUsuarioSchedule()));
 		UsuarioEntity usEntrada = usPort.buscarPorId(idUsuario);
 		SolicitudEntity s = e.getSolicitud();
+
+		UsuarioEntity ucm = s.getUsuarioInterview() == 0 ? null : usPort.buscarPorId(s.getUsuarioInterview());
+		boolean esClinicianComoCaseManager = ucm == null ? false : "11".equals(ucm.getRol());
+
+		String fecha = UtilidadesAdapter.formatearFechaUS(e.getFecha());
 
 		esPort.ingresarEventoDeSolicitud("Update",
 				"The user " + usEntrada.getUsuario() + " canceled the file for the reason:" + motivo, "Reject File",
 				usEntrada.getUsuario(), s);
-
-		UtilidadesAdapter.pintarLog("Cancelar cita");
-		String fecha = UtilidadesAdapter.formatearFechaUS(e.getFecha());
 		esPort.ingresarEventoDeSolicitud("Update",
 				"The user's appointment for the date " + fecha + " at " + e.getHoraSchedule() + " "
-						+ e.getTipoSchedule() + " for the user " + u.getNombre() + " is cancelled",
+						+ e.getTipoSchedule() + " for the user " + usuarioEvento.getNombre() + " is cancelled",
 				"Info", usEntrada.getUsuario(), s);
 
-		String rolUsEvento = u.getRol();
-		UtilidadesAdapter.pintarLog("Usuario rol:" + rolUsEvento);
-
-		boolean esClinicianComoCaseManager = false;
+		String rolUsEvento = usuarioEvento.getRol();
 		
-		UsuarioEntity rolInt = usPort.buscarPorId(u.getIdUsuario());
-		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
-
-		esClinicianComoCaseManager = "11".equals(rolUsCasManager);
+		UtilidadesAdapter.pintarLog("esClinicianComoCaseManager:" +  esClinicianComoCaseManager);
 
 		if (rolUsEvento.equals("11")) {
 
 			if(esClinicianComoCaseManager){
 				solPort.actualizarFinAsgClnc("0", s.getIdSolicitud());
 				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
+				solPort.actualizarFinInterview(0, e.getSolicitud().getIdSolicitud());
+				solPort.actualizarAsignacionIntReset(s.getIdSolicitud());
 			}else{
+				solPort.actualizarFinAsgClnc("0", s.getIdSolicitud());
 				solPort.actualizarAssignedClinician(0, s.getIdSolicitud());
 			}
 
@@ -287,6 +288,8 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 		e.setEstatusSchedule(estatusSchedule);
 		esPort.actualizarEventoSolicitud(e);
+
+		//correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, e.getHoraSchedule(), e.getTipoSchedule(), s.getEmail(),s.getEstado(), s.getIdSolicitud(), "US", e.getTimeZoneSchedule() );
 
 	}
 

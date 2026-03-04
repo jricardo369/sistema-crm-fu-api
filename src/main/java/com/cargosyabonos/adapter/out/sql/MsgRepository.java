@@ -65,7 +65,7 @@ public class MsgRepository implements MsgPort {
 
 		boolean salida = true;
 
-		if (ambiente.equals(amb)) {
+		if (true) {
 
 			List<ConfiguracionEntity> confs = confPort.obtenerConfiguraciones();
 			if (servicioMsgEnvio.equals("goto")) {

@@ -78,6 +78,9 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	@Autowired
 	private SolicitudVocPort solVocPort;
 
+	@Autowired
+	private TextosPort textosPort;
+
 	@Override
 	public List<TareaProgramadaEntity> obtenerTareasProgramadas() {
 		return tPort.obtenerTareasProgramadas();
@@ -154,11 +157,10 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 								String monto = "";
 								monto = UtilidadesAdapter.currencyFormat(a.getdeuda());
 								SolicitudEntity s = solPort.obtenerSolicitud(a.getid_solicitud());
-								msgPort.envioMensaje(a.gettelefono(),
-										"Dear " + a.getcliente() + ",you have an overdue balance of $" + monto
-												+ " USD for the " + a.gettipo()
-												+ " Psychological evaluation with Mental Health Evaluation Group by Familias Unidas. Please reach out to us to settle your balance. You can contact us at: 877-958-6432",
-										s, false);
+
+								msgPort.envioMensaje(a.gettelefono(),textosPort.textoEnvioPayment(null, a.getdeuda(), s.getTipoSolicitud().getNombre(), "US"),
+									s, false);
+
 
 							}
 

@@ -1,0 +1,18 @@
+Pasos que debe hacer el admin (Google Workspace)
+
+Entrar a admin.google.com con cuenta de administrador.
+Ir a Seguridad → Autenticación → Verificación en dos pasos (el nombre puede variar un poco):
+Habilitar la verificación en dos pasos para tu unidad organizativa (OU) o al menos para tu usuario.
+En la misma sección de seguridad, habilitar la opción de:
+“Permitir a los usuarios generar contraseñas de aplicaciones” (App passwords).
+Guardar cambios.
+Con eso:
+
+Tú activas 2FA en tu cuenta.
+Generas una contraseña de aplicación para “Correo”.
+En tu application.properties / Java usas:
+username = tu_correo@tu-dominio.com
+password = la contraseña de aplicación
+Host smtp.gmail.com, puerto 587 con STARTTLS o 465 con SSL.
+Y repito: no es necesario ni útil que te activen “passkey, Microsoft Authenticator, SMS, OATH, email OTP, QR, etc.” para este caso; eso es para logins interactivos en Microsoft, no para SMTP desde tu API.
+

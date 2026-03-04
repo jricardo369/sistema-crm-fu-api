@@ -1,5 +1,6 @@
 package com.cargosyabonos.adapter.rest;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import com.cargosyabonos.application.port.in.EventoSolicitudUseCase;
 import com.cargosyabonos.application.port.out.EnviarCorreoPort;
 import com.cargosyabonos.application.port.out.MsgPort;
 import com.cargosyabonos.application.port.out.SolicitudPort;
+import com.cargosyabonos.application.port.out.TextosPort;
 import com.cargosyabonos.domain.EventoSolicitud;
 import com.cargosyabonos.domain.SolicitudEntity;
 
@@ -43,6 +45,9 @@ public class UtilController {
 	@Autowired
 	private MsgPort msgPort;
 
+	@Autowired
+	private TextosPort txtsPort;
+
 	@GetMapping("envio-correo/{email}")
 	public void envioCorreTest(@PathVariable("email") String email) {
 		Map<String, Object> params = new HashMap<>();
@@ -62,7 +67,12 @@ public class UtilController {
 
 	@GetMapping("envio-correo-calendar-sinc-citas/{email}")
 	public void envioCorreoCalendarSincCitas(@PathVariable("email") String email) {
-		envCorrPort.enviarCorreoSincronizacionCitas("email-recordatorios-citas", "2024-07-17", 23, "US");
+		envCorrPort.enviarCorreoSincronizacionCitas("email-recordatorios-citas", "2026-02-18", 23, "US");
+	}
+
+	@GetMapping("envio-correo-cita-cancelacion/{email}")
+	public void envioCorreoCitaCancelacion(@PathVariable("email") String email) {
+		ceUc.enviarCorreoCitaCancelacion("Jose Vazquez", "2026-02-18", "09:00", "AM", email, "FL", 123, "US", "");
 	}
 
 	@GetMapping("envio-correo-pdf/{idSolicitud}/{email}")
@@ -74,6 +84,19 @@ public class UtilController {
 	@GetMapping("envio-mensaje/{telefono}")
 	public void envioNumero(@PathVariable("telefono") String telefono, @RequestParam("mensaje") String mensaje) {
 		msgPort.envioMensaje(telefono, mensaje, null, false);
+	}
+
+	@GetMapping("envio-mensaje-de-job/{codigo}/{telefono}/{idioma}")
+	public void envioMensajeDeJob(@PathVariable("codigo") String codigo,@PathVariable("telefono") String telefono,@PathVariable("idioma") String idioma) {
+
+		if (codigo.equals("RECORDATORIO")) {
+			msgPort.envioMensaje(telefono,
+					txtsPort.textoEnvioRecordatorio("Nombre cliente", "2026-01-01", "09:00 AM", idioma), null, false);
+		} else if (codigo.equals("PAYMENT")) {
+			msgPort.envioMensaje(telefono, txtsPort.textoEnvioPayment(null, BigDecimal.ZERO, "Tipo Sol", idioma),
+					null, false);
+		}
+
 	}
 
 	@GetMapping("envio-mensaje-prueba")
