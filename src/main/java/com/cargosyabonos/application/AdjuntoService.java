@@ -85,7 +85,7 @@ public class AdjuntoService implements AdjuntoUseCase {
 		case "pro":
 			rutaServidorFinal = rutaServidorPro;
 			break;
-		case "test":
+		case "local":
 			rutaServidorFinal = rutaServidor;
 			break;
 		}
@@ -171,7 +171,7 @@ public class AdjuntoService implements AdjuntoUseCase {
 			System.out.println("Es PRO");
 			rutaArchivosFinal = rutaArchivosPRO + a.getUrlImagen();
 			break;
-		case "test":
+		case "local":
 			System.out.println("Es local");
 			rutaArchivosFinal = rutaArchivos + a.getUrlImagen();
 			break;

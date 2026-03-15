@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -17,12 +18,15 @@ import org.springframework.stereotype.Service;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.jpa.CitaJpa;
+import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.CargosCitasVoc;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.CitaSql;
 
 @Service
 public class CitaRepository implements CitaPort{
+
+	Logger log = Logger.getLogger(CitaRepository.class.getName());
 	
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -76,18 +80,43 @@ public class CitaRepository implements CitaPort{
 	}
 
 	@Override
-	public List<CargosCitasVoc> obtenerCargosPendientesFiltro(String fechai, String fechaf, int idUsuario, String campo, String valor,
+	public CargosCitasVocCabecera obtenerCargosPendientesFiltro(String fechai, String fechaf, int idUsuario, String campo,
+			String valor,
 			String tipo, String rol) {
-		
-			List<CargosCitasVoc> result = null;
-			List<Object[]> rows = obtenerCargosCitas(fechai, fechaf, idUsuario, campo, valor, tipo, rol);
-			result = new ArrayList<>(rows.size());
-			for (Object[] row : rows) {
-				result.add(convertirSolQueryACargosCitasVoc(row));
-			}
-			return result;
-		
-		//return citaJpa.obtenerCargosPendientesFiltro(filtro);
+
+		CargosCitasVocCabecera c = new CargosCitasVocCabecera();
+		List<CargosCitasVoc> result = null;
+		List<Object[]> rows = obtenerCargosCitas(fechai, fechaf, idUsuario, campo, valor, tipo, rol);
+		result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirSolQueryACargosCitasVoc(row));
+		}
+
+		BigDecimal totalPagado = result.stream()
+				.filter(CargosCitasVoc::isPagado)
+				.map(CargosCitasVoc::getAmount)
+				.filter(monto -> monto != null)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+				BigDecimal totalNoPagado = result.stream()
+				.filter(cargo -> !cargo.isPagado())
+				.map(CargosCitasVoc::getAmount)
+				.filter(monto -> monto != null)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		log.info("Total pagado: " + totalPagado);
+		log.info("Total no pagado: " + totalNoPagado);
+
+		BigDecimal balance = totalPagado.subtract(totalNoPagado);
+
+		log.info("Balance: " + balance);
+
+		c.setTotalPagado(totalPagado);
+		c.setTotalNoPagado(totalNoPagado);
+		c.setBalance(balance);
+		c.setCargoVoc(result);
+
+		return c;
 	}
 	
 	public CargosCitasVoc convertirSolQueryACargosCitasVoc(Object[] row) {
@@ -108,6 +137,7 @@ public class CitaRepository implements CitaPort{
 		d.setAnioNacimiento((String) row[12]);
 		d.setSexo((String) row[13]);
 		d.setDireccion((String) row[14]);
+
 		return d;
 		
 	}

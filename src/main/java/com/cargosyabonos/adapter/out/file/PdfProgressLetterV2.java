@@ -422,7 +422,7 @@ public class PdfProgressLetterV2 {
 		case "pro":
 			rutaHostFinal = rutaHostPro;
 			break;
-		case "test":
+		case "local":
 			rutaHostFinal = rutaHost;
 			break;
 		}
@@ -438,7 +438,7 @@ public class PdfProgressLetterV2 {
 		case "pro":
 			rutaLogoFinal = logoPRO;
 			break;
-		case "test":
+		case "local":
 			rutaLogoFinal = logo;
 			break;
 		}

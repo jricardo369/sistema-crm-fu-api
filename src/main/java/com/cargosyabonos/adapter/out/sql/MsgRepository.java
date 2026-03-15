@@ -2,9 +2,10 @@ package com.cargosyabonos.adapter.out.sql;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,14 +18,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.cargosyabonos.UtilidadesAdapter;
+import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.out.ConfiguracionPort;
-import com.cargosyabonos.application.port.out.EnviarCorreoPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.MsgPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.domain.Channel;
 import com.cargosyabonos.domain.ConfiguracionEntity;
-import com.cargosyabonos.domain.Mensaje;
 import com.cargosyabonos.domain.MensajePodium;
 import com.cargosyabonos.domain.RespuestaServicioToken;
 import com.cargosyabonos.domain.SolicitudEntity;
@@ -35,6 +35,7 @@ import com.itextpdf.xmp.impl.Base64;
 @Service
 @PropertySource(value = "classpath:configuraciones-global.properties")
 public class MsgRepository implements MsgPort {
+	Logger logger = Logger.getLogger(MsgRepository.class.getName());
 
 	@Value("${servicio.msg-envio}")
 	private String servicioMsgEnvio;
@@ -55,8 +56,17 @@ public class MsgRepository implements MsgPort {
 	@Autowired
 	private UsuariosPort usPort;
 
-	@Autowired
-	private EnviarCorreoPort correoPort;
+	private CorreoElectronicoUseCase correoUs;
+
+	// Flag global para habilitar/deshabilitar envío de correos
+    private boolean enviarMensajesTexto = false;
+
+    @PostConstruct
+    public void initConfig() {
+        ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("ENVIAR-MENSAJES");
+        this.enviarMensajesTexto = Boolean.valueOf(confj.getValor());
+        logger.info("[EnvioCorreoAdapter] Config enviarMensajesTexto=" + this.enviarMensajesTexto);
+    }
 
 	@Override
 	public boolean envioMensaje(String telefono, String mensaje, SolicitudEntity s, boolean segundaVez) {
@@ -65,17 +75,16 @@ public class MsgRepository implements MsgPort {
 
 		boolean salida = true;
 
-		if (true) {
+		if (enviarMensajesTexto) {
 
 			List<ConfiguracionEntity> confs = confPort.obtenerConfiguraciones();
-			if (servicioMsgEnvio.equals("goto")) {
-				envioMensajeAsync(telefono, mensaje, s, confs, false);
-			} else if (servicioMsgEnvio.equals("podium")) {
-				envioMensajePodiumAsync(telefono, mensaje, s, confs, segundaVez);
-			}
+			envioMensajePodiumAsync(telefono, mensaje, s, confs, segundaVez);
+			
 
 		}else{
+
 			UtilidadesAdapter.pintarLog("No se envia mensaje en ambiente diferente a produccion");
+			
 		}
 		return salida;
 
@@ -90,181 +99,14 @@ public class MsgRepository implements MsgPort {
 
 	}
 
-	public void envioMensajeAsyncN(String telefono, String mensaje, SolicitudEntity s, List<ConfiguracionEntity> confs,
-			boolean segundaVez) {
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-
-				UtilidadesAdapter.pintarLog("Enviando mensaje por goto...");
-
-				RestTemplate restTemplate = new RestTemplate();
-				URI uri;
-				String resultado = "";
-
-				try {
-
-					UtilidadesAdapter.pintarLog("Comenzo a enviar mensaje de texto goto");
-					String telefonoEnvio = confs.stream().filter(a -> a.getCodigo().equals("TEL-ENVIO")).findFirst()
-							.get().getValor();
-					telefonoEnvio = "+" + telefonoEnvio;
-
-					uri = new URI("https://api.goto.com/messaging/v1/messages");
-					Mensaje m = new Mensaje();
-					m.setOwnerPhoneNumber(telefonoEnvio);
-					String t = formatoTelefono(telefono);
-					m.setContactPhoneNumbers(t);
-					m.setBody(mensaje);
-					UtilidadesAdapter.pintarLog("t:" + t);
-
-					String token = confs.stream().filter(a -> a.getCodigo().equals("TOKEN")).findFirst().get()
-							.getValor();
-
-					HttpHeaders headers = new HttpHeaders();
-					headers.set("Authorization", "Bearer " + token);
-					HttpEntity<?> httpEntity = new HttpEntity<>(m, headers);
-					ResponseEntity<String> result = restTemplate.postForEntity(uri, httpEntity, String.class);
-					resultado = result.getStatusCode().toString();
-
-					if (resultado.contains("201")) {
-						UtilidadesAdapter.pintarLog("Se envio correctamente mensaje de texto");
-					}
-
-				} catch (Exception e) {
-
-					UtilidadesAdapter.pintarLog("Error:" + e.getMessage());
-
-					if (!segundaVez) {
-
-						if (e.getMessage().contains("401")) {
-
-							boolean rt = refreshToken(confs);
-							UtilidadesAdapter.pintarLog("Se termino refresh token y respondio:" + rt);
-							envioMensajeAsync(telefono, mensaje, s, confs, true);
-
-						}
-
-					} else {
-
-						UtilidadesAdapter.pintarLog("Se intento enviar nuevamente mensaje pero no pudo");
-						UsuarioEntity us = usPort.buscarPorId(1);
-
-						if (s != null) {
-
-							evPort.ingresarEventoDeSolicitud("Info",
-									"An attempt was made to send a text message to the registered number but it was not possible.",
-									"Info", us.getUsuario(), s);
-
-						} else {
-
-							String emailAdmin = confs.stream().filter(a -> a.getCodigo().equals("ADMIN-EMAIL"))
-									.findFirst().get().getValor();
-							Map<String, Object> params = new HashMap<>();
-							params.put("${cliente}", "");
-							params.put("${cuerpo}",
-									"There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.");
-							correoPort.enviarCorreoNotificacion(emailAdmin, "Error sending msm on FamiliasUnidas",
-									params, null, "", true);
-
-						}
-
-					}
-
-					e.printStackTrace();
-
-				}
-
-			}
-
-		}).start();
-	}
-
-	public void envioMensajeAsync(String telefono, String mensaje, SolicitudEntity s, List<ConfiguracionEntity> confs,
-			boolean segundaVez) {
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				
-				UtilidadesAdapter.pintarLog("Enviando mensaje por goto...");
-				
-				RestTemplate restTemplate = new RestTemplate();
-				URI uri;
-				String resultado = "";
-				@SuppressWarnings("unused")
-				boolean envioExitoso = false;
-
-				try {
-					UtilidadesAdapter.pintarLog("Comenzo a enviar mensaje de texto Goto");
-					String telefonoEnvio = confs.stream().filter(a -> a.getCodigo().equals("TEL-ENVIO")).findFirst()
-							.get().getValor();
-					telefonoEnvio = "+" + telefonoEnvio;
-
-					uri = new URI("https://api.goto.com/messaging/v1/messages");
-					Mensaje m = new Mensaje();
-					m.setOwnerPhoneNumber(telefonoEnvio);
-					String t = formatoTelefono(telefono);
-					m.setContactPhoneNumbers(t);
-					m.setBody(mensaje);
-					UtilidadesAdapter.pintarLog("t:" + t);
-
-					String token = confs.stream().filter(a -> a.getCodigo().equals("TOKEN")).findFirst().get()
-							.getValor();
-
-					HttpHeaders headers = new HttpHeaders();
-					headers.set("Authorization", "Bearer " + token);
-					HttpEntity<?> httpEntity = new HttpEntity<>(m, headers);
-					ResponseEntity<String> result = restTemplate.postForEntity(uri, httpEntity, String.class);
-					resultado = result.getStatusCode().toString();
-
-					if (resultado.contains("201")) {
-						UtilidadesAdapter.pintarLog("Se envio correctamente mensaje de texto Goto");
-						envioExitoso = true;
-						return; // Salir del método si el envío fue exitoso
-					}
-
-				} catch (Exception e) {
-
-					UtilidadesAdapter.pintarLog("Error:" + e.getMessage());
-
-					if (!segundaVez && e.getMessage().contains("401")) {
-						boolean rt = refreshToken(confs);
-						UtilidadesAdapter.pintarLog("Se termino refresh token y respondio:" + rt);
-						envioMensajeAsync(telefono, mensaje, s, confs, true);
-						return; // Salir después de reintentar
-					}
-
-					// Solo enviar correo si el envío falló y ya se intentó una
-					// segunda vez
-					if (segundaVez || (e.getMessage() != null && !e.getMessage().contains("401"))) {
-						UtilidadesAdapter.pintarLog("Se intento enviar nuevamente mensaje pero no pudo");
-						UsuarioEntity us = usPort.buscarPorId(1);
-
-						if (s != null) {
-							evPort.ingresarEventoDeSolicitud("Info",
-									"An attempt was made to send a text message to the registered number but it was not possible.",
-									"Info", us.getUsuario(), s);
-						} else {
-							String emailAdmin = confs.stream().filter(a -> a.getCodigo().equals("ADMIN-EMAIL"))
-									.findFirst().get().getValor();
-							Map<String, Object> params = new HashMap<>();
-							params.put("${cliente}", "");
-							params.put("${cuerpo}",
-									"There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.");
-							correoPort.enviarCorreoNotificacion(emailAdmin, "Error sending msm on FamiliasUnidas",
-									params, null, "", true);
-						}
-					}
-
-					e.printStackTrace();
-				}
-			}
-		}).start();
-	}
-
+	
 	public void envioMensajePodiumAsync(String telefono, String mensaje, SolicitudEntity s,
 			List<ConfiguracionEntity> confs, boolean segundaVez) {
+
+		if(telefono == null || telefono.trim().isEmpty()) {
+			UtilidadesAdapter.pintarLog("No se envio mensaje por podium ya que el telefono es nulo o vacio");
+			return;
+		}
 
 		new Thread(new Runnable() {
 			@Override
@@ -335,12 +177,8 @@ public class MsgRepository implements MsgPort {
 
 							String emailAdmin = confs.stream().filter(a -> a.getCodigo().equals("ADMIN-EMAIL"))
 									.findFirst().get().getValor();
-							Map<String, Object> params = new HashMap<>();
-							params.put("${cliente}", "");
-							params.put("${cuerpo}",
-									"There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.");
-							correoPort.enviarCorreoNotificacion(emailAdmin, "Error sending msm on FamiliasUnidas",
-									params, null, "", true);
+							String cuerpo = "There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.";
+							correoUs.enviarCorreoNotificacion("", cuerpo,emailAdmin, "Error sending msm on FamiliasUnidas", null, "", true);
 
 						}
 
@@ -524,11 +362,9 @@ public class MsgRepository implements MsgPort {
 	}
 
 	public void envioMail(String emailAdmin) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("${cliente}", "");
-		params.put("${cuerpo}",
-				"There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.");
-		correoPort.enviarCorreoNotificacion(emailAdmin, "Error sending msm on FamiliasUnidas", params, null, "", true);
+		String cuerpo = "There was an error when testing text message sending in the FamiliasUnidas system, please validate with the administrator.";
+				
+		correoUs.enviarCorreoNotificacion("",cuerpo,emailAdmin, "Error sending msm on FamiliasUnidas", null, "", true);
 	}
 
 }

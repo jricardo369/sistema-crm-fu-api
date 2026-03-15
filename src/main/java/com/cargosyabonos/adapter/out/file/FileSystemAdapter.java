@@ -57,7 +57,7 @@ public class FileSystemAdapter implements ArchivosPort {
 			System.out.println("Es PRO");
 			rutaArchivosFinal = rutaArchivosPRO + rutaArchivo;
 			break;
-		case "test":
+		case "local":
 			System.out.println("Es local");
 			rutaArchivosFinal = rutaArchivos + rutaArchivo;
 			break;
@@ -240,7 +240,7 @@ public class FileSystemAdapter implements ArchivosPort {
 			System.out.println("Es PRO");
 			rutaArchivosFinal = "PRO";
 			break;
-		case "test":
+		case "local":
 			System.out.println("Es local");
 			rutaArchivosFinal = "LOCAL";
 			break;

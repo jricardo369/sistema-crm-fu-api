@@ -2,7 +2,7 @@ package com.cargosyabonos.application.port.out;
 
 import java.util.List;
 
-import com.cargosyabonos.domain.CargosCitasVoc;
+import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.CitaSql;
 
@@ -19,7 +19,7 @@ public interface CitaPort {
 	public void actualizarCita(CitaEntity a);
 	public void eliminarCita(CitaEntity a);
 	public void actualizarNoShow(boolean noShow,int idCita);
-	public List<CargosCitasVoc> obtenerCargosPendientesFiltro(String fechai, String fechaf, int idUsuario, String campo, String valor,
+	public CargosCitasVocCabecera obtenerCargosPendientesFiltro(String fechai, String fechaf, int idUsuario, String campo, String valor,
 			String tipo, String rol);
 	public void actualizarPagado(boolean pagado,String fechPagado,int idCita);
 	

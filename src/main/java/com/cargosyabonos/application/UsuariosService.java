@@ -76,6 +76,11 @@ public class UsuariosService implements UsuariosUseCase {
 	}
 
 	@Override
+	public UsuarioEntity buscarPorCorreoWithLike(String correo) {
+		return usrPort.buscarPorCorreoWithLike(correo);
+	}
+
+	@Override
 	public UsuarioEntity buscarPorId(int idUsuario) {
 		List<PermisoUsuario> permisos = new ArrayList<>();
 		PermisoUsuario p = null;
@@ -260,7 +265,7 @@ public class UsuariosService implements UsuariosUseCase {
 		case "pro":
 			rutaServidorFinal = rutaServidorPro;
 			break;
-		case "test":
+		case "local":
 			rutaServidorFinal = rutaServidor;
 			break;
 		}

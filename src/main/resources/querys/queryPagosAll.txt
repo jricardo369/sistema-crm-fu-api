@@ -1,0 +1,29 @@
+SELECT 
+    s.id_solicitud,
+    s.fecha_inicio,
+    CONCAT(s.cliente, ' ', s.apellidos) AS nombre_cliente,
+    s.telefono,
+    s.email,
+    COALESCE(s.amount, 0) AS monto_solicitado,
+    COALESCE(p.total_pagos, 0) AS total_pagos,
+    COALESCE(s.amount, 0) - COALESCE(p.total_pagos, 0) AS deuda,
+    CASE 
+        WHEN s.amount - COALESCE(p.total_pagos, 0) > 0 THEN 'PENDIENTE'
+        ELSE 'TERMINADO'
+    END AS estado_pago
+FROM solicitud s
+LEFT JOIN (
+    SELECT 
+        id_solicitud,
+        SUM(monto) AS total_pagos
+    FROM movimiento
+    GROUP BY id_solicitud
+) p ON s.id_solicitud = p.id_solicitud
+ 	$whereAdicional
+    AND NOT EXISTS (
+        SELECT 1
+        FROM evento_solicitud es
+        WHERE es.id_solicitud = s.id_solicitud
+          AND LOWER(es.descripcion) LIKE '%lost%'
+    )
+ORDER BY s.fecha_inicio DESC;

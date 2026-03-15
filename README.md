@@ -45,7 +45,7 @@ Este proyecto está bajo la licencia MIT.
 # VER HERRAMIENTAS
 
 ## Acceder Swagger: 
-http://localhost:18080/pe_crm_api/swagger-ui/
+https://crm-familiasunidasla.com/pe_crm_api/swagger-ui/
 
 ## Acceder Actuator
 https://crm-familiasunidasla.com/pe_crm_api/actuator

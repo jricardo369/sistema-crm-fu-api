@@ -2,7 +2,7 @@ package com.cargosyabonos.application.port.in;
 
 import java.util.List;
 
-import com.cargosyabonos.domain.CargosCitasVoc;
+import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitaEntity;
 
@@ -17,7 +17,7 @@ public interface CitaUseCase {
 	public void actualizarCita(CitaEntity a);
 	public void actualizarNoShow(int idCita,int idUsuario,String motivo);
 	public void eliminarCita(int idCita,int idUsuario);
-	public List<CargosCitasVoc> obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,
+	public CargosCitasVocCabecera obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,
 			String tipo);
 	public void actualizarPagado(boolean pagado,int idCita,int idUsuario);
 	
@@ -25,6 +25,5 @@ public interface CitaUseCase {
 	public List<Cita> obtenerCitasDeUsuarioPorSemana(String fecha,int idUsuario,int noShow);
 
 	public boolean envioRecordatorio(int idEvento);
-	public boolean envioRecordatorios(String fecha,int idUsuario);
 
 }

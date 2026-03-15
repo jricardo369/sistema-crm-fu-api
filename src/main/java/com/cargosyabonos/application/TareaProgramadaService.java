@@ -17,7 +17,7 @@ import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.in.TareaProgramadaUseCase;
 import com.cargosyabonos.application.port.out.ConfiguracionPort;
-import com.cargosyabonos.application.port.out.EnviarCorreoPort;
+import com.cargosyabonos.application.port.out.CorreosPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.MovimientosPort;
 import com.cargosyabonos.application.port.out.MsgPort;
@@ -58,7 +58,7 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	private EventoSolicitudPort evPort;
 
 	@Autowired
-	private EnviarCorreoPort envCorrPort;
+	private CorreosPort correosPort;
 
 	@Autowired
 	private ConfiguracionPort confPort;
@@ -145,7 +145,7 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 											monto = UtilidadesAdapter.currencyFormat(a.getdeuda());
 											params.put("${monto}", monto);
 											params.put("${tipo-servicio}", a.gettipo());
-											envCorrPort.enviarCorreoSaldoVencido(a.getemail(), params);
+											correosPort.enviarCorreoSaldoVencido(a.getemail(), params);
 										}
 									}
 
@@ -199,14 +199,9 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 
 						if (difDias > diasPago) {
 
-							Map<String, Object> params = new HashMap<>();
 							UsuarioEntity us = usPort.buscarPorId(s.getUsuarioRevisando());
-							params.put("${usuario}", us.getNombre());
-							params.put("${num-solicitud}", s.getIdSolicitud());
-							params.put("${days}", difDias);
 
-							envCorrPort.enviarCorreoRetrasoSolicitudes(us.getCorreoElectronico(), params,
-									s.getIdSolicitud());
+							correoUs.enviarCorreoRetrasoSolicitudes(us.getCorreoElectronico(),s.getIdSolicitud(),us.getNombre(),difDias);
 
 						}
 

@@ -5,9 +5,10 @@
 		CONCAT(s.cliente, ' ', s.apellidos),
 		s.telefono,
 		s.email,
-		s.amount AS monto_solicitado,
+		COALESCE(s.amount, 0) AS monto_solicitado,
 		COALESCE(p.total_pagos, 0) AS total_pagos,
-		s.amount - COALESCE(p.total_pagos, 0) AS deuda
+		COALESCE(s.amount, 0) - COALESCE(p.total_pagos, 0) AS deuda
+		
 	FROM solicitud s
 	LEFT JOIN (
 		SELECT 

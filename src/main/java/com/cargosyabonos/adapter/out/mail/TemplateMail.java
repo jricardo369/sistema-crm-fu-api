@@ -35,6 +35,7 @@ public class TemplateMail {
 
 	public String solveTemplate(String templateName, Map<String, Object> customParams) throws Exception {
 
+		//String template = getTemplateNew(templateName);
 		String template = getTemplate(templateName);
 
 		Map<String, Object> params = new HashMap<>();
@@ -49,6 +50,45 @@ public class TemplateMail {
 		}
 
 		return template;
+
+	}
+
+	private String getTemplateNew(String templateName) throws Exception {
+
+		
+		
+		String assetFolderFinal = "";
+		if("qas".equals(ambiente)){
+			assetFolderFinal = assetsFolderQas;
+		}else if("pro".equals(ambiente)){
+			assetFolderFinal =  assetsFolderPro;
+		}else{
+			assetFolderFinal =  assetsFolder;
+		}
+		
+		log.info("assets_folder:"+assetFolderFinal);
+
+		File templateFile = new File(assetFolderFinal+"/"+templateName);
+		
+		if(!templateFile.canRead())
+			templateFile.setReadable(true);
+
+		if (!templateFile.exists()) throw new Exception("No se encontró el archivo plantilla en la dirección <" + templateFile.getAbsolutePath() + ">");
+
+		try (InputStream stream = new FileInputStream(templateFile)) {
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			int b;
+			while ((b = stream.read()) >= 0)
+				baos.write(b);
+			
+			String html = new String(baos.toByteArray(), "UTF-8");
+			return html;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Exception( "Ocurrió un error al leer la plantilla; " + e.getMessage());
+		}
 	}
 	
 	private String getTemplate(String templateName) throws Exception {

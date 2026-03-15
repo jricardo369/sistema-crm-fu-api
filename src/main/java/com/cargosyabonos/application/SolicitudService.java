@@ -556,11 +556,11 @@ public class SolicitudService implements SolicitudUseCase {
 					// Enviar notificacion a cliente
 					if (horaConvertidaFlag) {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida,
-								tipoConvertido, s.getEmail(), s.getIdSolicitud(), "US");
+								tipoConvertido, s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 
 					} else {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo,
-								s.getEmail(), s.getIdSolicitud(), "US");
+								s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 					}
 
 				}
@@ -568,7 +568,7 @@ public class SolicitudService implements SolicitudUseCase {
 				// Enviar notificacion a entrevisador
 				if (us != null) {
 					
-					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US");
+					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 					
 					// Enviar correo Amanda por cita
 					UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
@@ -706,16 +706,16 @@ public class SolicitudService implements SolicitudUseCase {
 					if (horaConvertidaFlag) {
 
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida, tipoConvertido,
-								s.getEmail(), s.getIdSolicitud(), "US");
+								s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
 
 					} else {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo, s.getEmail(),
-								s.getIdSolicitud(), "US");
+								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
 					}
 
 					// Enviar notificacion a entrevisador
 					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
-							s.getIdSolicitud(), "US");
+							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
 				}
 				// Enviar mensaje a cliente
 				if (horaConvertidaFlag) {
@@ -781,7 +781,7 @@ public class SolicitudService implements SolicitudUseCase {
 		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
-		EventoSolicitudEntity eventoScalesSchedule = null;
+		EventoSolicitudEntity eventoClncSchedule = null;
 
 		if (disp != null) {
 			
@@ -821,7 +821,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 			// Agregar evento
 			zonaHoraria = zonaHoraria == null ? "" : zonaHoraria;
-			eventoScalesSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
+			eventoClncSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
 					"Scheduled clinician appointment " + fecha + ", " + hora + " " + tipo + " " + zonaHoraria + " to "
 							+ disp.getUsuario().getUsuario(),
 					"Schedule", usCambio.getUsuario(), disp.getFecha(), disp.getHora(), disp.getTipo(),
@@ -835,16 +835,16 @@ public class SolicitudService implements SolicitudUseCase {
 					if (horaConvertidaFlag) {
 
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida, tipoConvertido,
-								s.getEmail(), s.getIdSolicitud(), "US");
+								s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 
 					} else {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo, s.getEmail(),
-								s.getIdSolicitud(), "US");
+								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 					}
 
 					// Enviar notificacion a entrevisador
 					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
-							s.getIdSolicitud(), "US");
+							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 				}
 				// Enviar mensaje a cliente
 				if (horaConvertidaFlag) {
@@ -880,7 +880,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 				reqPort.actualizarUsuarioRevisando(idUsuarioRevisando, idSolicitud);
 				reqPort.actualizarFinAsgClnc("1", idSolicitud);
-				evPort.actualizarFinSchedule("1", eventoScalesSchedule.getIdEvento());
+				evPort.actualizarFinSchedule("1", eventoClncSchedule.getIdEvento());
 
 			}
 
@@ -1358,25 +1358,27 @@ public class SolicitudService implements SolicitudUseCase {
 
 						if (!fechaAnterior) {
 
+							// Enviar notificacion a entrevisador
+							UsuarioEntity us = usPort.buscarPorId(idUsuarioRevisando);
+
 							if (s.getEmail() != null) {
 
 								// Enviar notificacion a cliente
 								if (horaConvertidaFlag) {
 									correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida,
-											tipoConvertido, s.getEmail(), s.getIdSolicitud(), "US");
+											tipoConvertido, s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 
 								} else {
 									correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo,
-											s.getEmail(), s.getIdSolicitud(), "US");
+											s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 								}
 
 							}
 
-							// Enviar notificacion a entrevisador
-							UsuarioEntity us = usPort.buscarPorId(idUsuarioRevisando);
+							
 							if (us != null) {
 								
-								correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US");
+								correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
 								
 								// Enviar correo Amanda por cita
 								UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
@@ -1924,6 +1926,7 @@ public class SolicitudService implements SolicitudUseCase {
 	public void rejectSolicitud(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
 
 		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+		UsuarioEntity usRevisor = usPort.buscarPorId(idUsuario);
 		String rol = usEnvio.getRol();
 
 		boolean esClinicianComoCaseManager = false;
@@ -1969,7 +1972,8 @@ public class SolicitudService implements SolicitudUseCase {
 
 		if (evSol != null) {
 
-			correoUs.enviarCorreoNoShow(usEnvio.getCorreoElectronico(), usEnvio.getNombre(), s, evSol);
+			correoUs.enviarCorreoReject(usRevisor.getCorreoElectronico(), usEnvio.getCorreoElectronico(),
+					usRevisor.getNombre(), usEnvio.getNombre(), s, evSol, motivoTrim);
 			if (s.getTelefono() != null) {
 				if (!"".equals(s.getTelefono())) {
 
@@ -1988,6 +1992,13 @@ public class SolicitudService implements SolicitudUseCase {
 			logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
 			evSol.setEstatusSchedule("0");
 			evPort.actualizarEventoSolicitud(evSol);
+
+			// Correo cancelacion entrevista a cliente
+			String fecha = UtilidadesAdapter.formatearFechaUS(evSol.getFecha());
+			correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, evSol.getHoraSchedule(),
+					evSol.getTipoSchedule(), s.getEmail(), s.getEstado(),
+					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),
+					UtilidadesAdapter.formarUidEvento(evSol), true);
 
 		}
 
@@ -2027,9 +2038,10 @@ public class SolicitudService implements SolicitudUseCase {
 
 	}
 
-	public void reasignar(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
+	/*public void reasignar(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
 
 		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+		
 
 		if (!usEnvio.getRol().equals("8")) {
 			reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
@@ -2058,6 +2070,7 @@ public class SolicitudService implements SolicitudUseCase {
 				}
 
 				SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+				UsuarioEntity usRevisor = usPort.buscarPorId(s.getUsuarioRevisor());
 
 				evPort.ingresarEventoDeSolicitud("Reject File", motivo, "Reject File", usEnvio.getUsuario(), s);
 
@@ -2071,7 +2084,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 				if (evSol != null) {
 					// Enviar mail
-					correoUs.enviarCorreoNoShow(usEnvio.getCorreoElectronico(), usEnvio.getNombre(), s, evSol);
+					correoUs.enviarCorreoNoShow(usRevisor.getCorreoElectronico(),usEnvio.getCorreoElectronico(), usRevisor.getNombre(),usEnvio.getNombre(), s, evSol,motivo);
 					// Enviar mensaje texto
 					if (s.getTelefono() != null) {
 						if (!"".equals(s.getTelefono())) {
@@ -2141,7 +2154,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 			}
 
-	}
+	}*/
 	
 	public void noShow(String motivo, int idSolicitud, int idUsuarioEnvio) {
 		
@@ -2168,7 +2181,6 @@ public class SolicitudService implements SolicitudUseCase {
 		
 		UsuarioEntity rolInt = usPort.buscarPorId(s.getUsuarioInterview());
 		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
-
 		esClinicianComoCaseManager = "11".equals(rolUsCasManager);
 
 		EventoSolicitudEntity evSol = null;
@@ -2186,11 +2198,10 @@ public class SolicitudService implements SolicitudUseCase {
 
 		if (evSol != null) {
 
-			//reqPort.actualizarImportante("No show", s.getIdSolicitud());
-			UsuarioEntity uRev = usPort.buscarPorId(s.getUsuarioRevisor());
+			UsuarioEntity usRevisor = usPort.buscarPorId(s.getUsuarioRevisor());
 			
 			// Enviar mail
-			correoUs.enviarCorreoNoShow(uRev.getCorreoElectronico(), uRev.getNombre(), s, evSol);
+			correoUs.enviarCorreoNoShow(usRevisor.getCorreoElectronico(),u.getCorreoElectronico(),usRevisor.getNombre(), u.getNombre(), s, evSol,motivo);
 			
 			// Enviar mensaje texto
 			if (s.getTelefono() != null) {
@@ -2198,7 +2209,7 @@ public class SolicitudService implements SolicitudUseCase {
 					if (evSol != null) {					
 						String f = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule()) + " "
 								+ evSol.getHoraSchedule() + " " + evSol.getTipoSchedule();
-						msgPort.envioMensaje(uRev.getTelefono(),
+						msgPort.envioMensaje(usRevisor.getTelefono(),
 								" The client " + s.getCliente()
 										+ " did not show up for the interview scheduled for request "
 										+ s.getIdSolicitud() + " in the date " + f + ".",
@@ -2210,6 +2221,14 @@ public class SolicitudService implements SolicitudUseCase {
 			logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
 			evSol.setEstatusSchedule("0");
 			evPort.actualizarEventoSolicitud(evSol);
+
+			// Correo cancelacion entrevista a cliente
+			String fecha = UtilidadesAdapter.formatearFechaUS(evSol.getFecha());
+			correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, evSol.getHoraSchedule(),
+					evSol.getTipoSchedule(), s.getEmail(), s.getEstado(),
+					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),
+					UtilidadesAdapter.formarUidEvento(evSol), true);
+
 		}
 
 		actualizarUsuarioRevisando = !"8".equals(rol);
@@ -2277,7 +2296,7 @@ public class SolicitudService implements SolicitudUseCase {
 	}
 
 	public void pintarLog(String mensaje, StringBuilder sb) {
-		if (ambiente.equals("test")) {
+		if (ambiente.equals("local")) {
 			// if(false){
 			// logger.info(mensaje);
 			// sb.append(mensaje+"\n");
@@ -2609,7 +2628,7 @@ public class SolicitudService implements SolicitudUseCase {
 									telefono = telefono.replaceAll("-", "");
 								}
 								pintarLog("Telefono final:" + telefono, sb);
-								if (ambiente.equals("test")) {
+								if (ambiente.equals("local")) {
 									r.setTelefono("0000000000");
 								} else {
 									r.setTelefono(telefono);
@@ -2619,7 +2638,7 @@ public class SolicitudService implements SolicitudUseCase {
 							}
 							if (row.getCell(3) != null && row.getCell(3).getCellType() == CellType.STRING) {
 								pintarLog("Email cliente:" + row.getCell(3).getStringCellValue(), sb);
-								if (ambiente.equals("test")) {
+								if (ambiente.equals("local")) {
 									r.setEmail("test@gm.com");
 								} else {
 									r.setEmail(row.getCell(3).getStringCellValue());
@@ -2627,7 +2646,7 @@ public class SolicitudService implements SolicitudUseCase {
 							}
 							if (row.getCell(4) != null && row.getCell(4).getCellType() == CellType.STRING) {
 								pintarLog("Email lawyer:" + row.getCell(4).getStringCellValue(), sb);
-								if (ambiente.equals("test")) {
+								if (ambiente.equals("local")) {
 									r.setEmail_abogado("t");
 								} else {
 									r.setEmail_abogado(row.getCell(4).getStringCellValue());
@@ -2990,7 +3009,7 @@ public class SolicitudService implements SolicitudUseCase {
 		case "pro":
 			rutaServidorFinal = rutaServidorPro;
 			break;
-		case "test":
+		case "local":
 			rutaServidorFinal = rutaServidor;
 			break;
 		}

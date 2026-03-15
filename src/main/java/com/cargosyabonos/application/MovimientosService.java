@@ -15,8 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cargosyabonos.UtilidadesAdapter;
+import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.in.MovimientosUseCase;
-import com.cargosyabonos.application.port.out.EnviarCorreoPort;
+import com.cargosyabonos.application.port.out.CorreosPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.MovimientosPort;
 import com.cargosyabonos.application.port.out.MsgPort;
@@ -42,7 +43,7 @@ public class MovimientosService implements MovimientosUseCase{
 	private MovimientosPort movPort;
 	
 	@Autowired
-	private EnviarCorreoPort envCorrPort;
+	private CorreoElectronicoUseCase correosPort;
 	
 	@Autowired
 	private SolicitudPort reqPort;
@@ -184,7 +185,7 @@ public class MovimientosService implements MovimientosUseCase{
 				String telefono = me.getSolicitud().getTelefono() ==  null ? "" : me.getSolicitud().getTelefono();
 
 				if(!"".equals(email)){
-					envCorrPort.enviarCorreoMovimiento(me.getSolicitud().getEmail(), params);
+					correosPort.enviarCorreoMovimiento(me.getSolicitud().getEmail(), me.getSolicitud().obtenerClienteParaMail(),mov.getMonto(),me.getTipo());
 				}
 				
 				if(!"".equals(telefono)){

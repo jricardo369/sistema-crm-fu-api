@@ -176,15 +176,16 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 		}
 
-		esPort.crearEventoSolicitud(e);
+		EventoSolicitudEntity ev = esPort.crearEventoSolicitud(e);
 
 		if (tipoEvento.equals("Schedule")) {
 
 			// Enviar notificacion a cliente
 			correoUs.enviarCorreoCita(sol.getNombreClienteCompleto(), fechaString, es.getHora(), es.getTipo(),
-					sol.getEmail(), sol.getIdSolicitud(), null);
+					sol.getEmail(), sol.getIdSolicitud(), null,"",UtilidadesAdapter.formarUidEvento(ev));
 
 		}
+
 		if (tipoEvento.equals("Suicide")) {
 
 			// Correo y mensaje a revisor
@@ -289,7 +290,14 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 		e.setEstatusSchedule(estatusSchedule);
 		esPort.actualizarEventoSolicitud(e);
 
-		//correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, e.getHoraSchedule(), e.getTipoSchedule(), s.getEmail(),s.getEstado(), s.getIdSolicitud(), "US", e.getTimeZoneSchedule() );
+		// Correo cancelacion entrevista a entrevistador
+		correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, e.getHoraSchedule(), e.getTipoSchedule(), usuarioEvento.getCorreoElectronico(),s.getEstado(), 
+		s.getIdSolicitud(), "US", e.getTimeZoneSchedule(),e.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),false);
+
+		// Correo cancelacion entrevista a cliente
+		correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, e.getHoraSchedule(), e.getTipoSchedule(), s.getEmail(),s.getEstado(), 
+		s.getIdSolicitud(), "US", e.getTimeZoneSchedule(),e.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),true);
+		
 
 	}
 

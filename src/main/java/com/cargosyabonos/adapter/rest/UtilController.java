@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.in.EventoSolicitudUseCase;
-import com.cargosyabonos.application.port.out.EnviarCorreoPort;
+import com.cargosyabonos.application.port.out.CorreosPort;
 import com.cargosyabonos.application.port.out.MsgPort;
 import com.cargosyabonos.application.port.out.SolicitudPort;
 import com.cargosyabonos.application.port.out.TextosPort;
@@ -31,7 +31,7 @@ public class UtilController {
 	Logger log = LoggerFactory.getLogger(UtilController.class);
 
 	@Autowired
-	private EnviarCorreoPort envCorrPort;
+	private CorreosPort correosPort;
 
 	@Autowired
 	private CorreoElectronicoUseCase ceUc;
@@ -54,25 +54,12 @@ public class UtilController {
 		params.put("${cliente}", "Jose");
 		params.put("${fecha}", "2024-09-10");
 		params.put("${servicio}", "Visa U");
-		envCorrPort.enviarCorreoDeLayout(email, "Test", params, "email-recordatorio-cita");
-	}
-
-	@GetMapping("envio-correo-test/{email}")
-	public void envioCorreoTestNew(@PathVariable("email") String email, @RequestParam("tipo") String tipo,
-			@RequestParam(required = false) String fecha, @RequestParam(required = false) String hora,
-			@RequestParam(required = false) String tipoH, @RequestParam(required = false) String estado,
-			@RequestParam(required = false) String zonaHoraria) {
-		envCorrPort.testMail(email, tipo, fecha, hora, tipoH, estado, zonaHoraria);
-	}
-
-	@GetMapping("envio-correo-calendar-sinc-citas/{email}")
-	public void envioCorreoCalendarSincCitas(@PathVariable("email") String email) {
-		envCorrPort.enviarCorreoSincronizacionCitas("email-recordatorios-citas", "2026-02-18", 23, "US");
+		correosPort.enviarCorreoDeLayout(email, "Test", params, "email-recordatorio-cita");
 	}
 
 	@GetMapping("envio-correo-cita-cancelacion/{email}")
 	public void envioCorreoCitaCancelacion(@PathVariable("email") String email) {
-		ceUc.enviarCorreoCitaCancelacion("Jose Vazquez", "2026-02-18", "09:00", "AM", email, "FL", 123, "US", "");
+		ceUc.enviarCorreoCitaCancelacion("Jose Vazquez", "2026-02-18", "09:00", "AM", email, "FL", 123, "US", "","Entrevistador",null,false);
 	}
 
 	@GetMapping("envio-correo-pdf/{idSolicitud}/{email}")
@@ -109,7 +96,7 @@ public class UtilController {
 		Date d = UtilidadesAdapter.fechaActualDate();
 		System.out.println("date:"+d);
 		EventoSolicitud es = new EventoSolicitud();
-		es.setEvento("test");
+		es.setEvento("local");
 		es.setTipo("Update");
 		es.setDescripcion("Test desc");
 		es.setIdSolicitud(4);

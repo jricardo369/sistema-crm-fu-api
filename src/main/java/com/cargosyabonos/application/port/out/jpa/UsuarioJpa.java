@@ -24,6 +24,9 @@ public interface UsuarioJpa extends CrudRepository<UsuarioEntity, Serializable> 
 	public UsuarioEntity findByNombre(String nombre);
 	
 	public UsuarioEntity findBycorreoElectronico(String correo);
+
+	@Query(value = "SELECT * FROM usuario WHERE correo_electronico like %?1% LIMIT 1", nativeQuery = true)
+	public UsuarioEntity findBycorreoElectronicoWithLike(String correo);
 	
 	@Query(value = "SELECT * FROM usuario WHERE estatus NOT IN(4)", nativeQuery = true)
 	public List<UsuarioEntity> obtenerTodosUsuariosActivos();

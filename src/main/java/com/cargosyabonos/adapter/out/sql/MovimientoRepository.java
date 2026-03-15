@@ -33,6 +33,9 @@ public class MovimientoRepository implements MovimientosPort {
 	@Value("classpath:/querys/queryPagosPendientes.txt")
     private Resource queryPagosPendientes;
 
+	@Value("classpath:/querys/queryPagosAll.txt")
+    private Resource queryPagosAll;
+
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -189,7 +192,13 @@ public class MovimientoRepository implements MovimientosPort {
 			} catch (Exception e) {
 				throw new RuntimeException("Error al leer el archivo", e);
 			}
-		}
+		} else if (tipo.equals("All")) {
+			try (Scanner scanner = new Scanner(queryPagosAll.getInputStream(), StandardCharsets.UTF_8.name())) {
+				queryS = scanner.useDelimiter("\\A").next();
+			} catch (Exception e) {
+				throw new RuntimeException("Error al leer el archivo", e);
+			}
+		} 
 		
 		if(!fechai.equals("")){
 			sbW.append(" fecha_inicio BETWEEN :fechai AND :fechaf ");
@@ -229,20 +238,32 @@ public class MovimientoRepository implements MovimientosPort {
 			}
 		}	
 		
-		if (sbW.length() != 0) {
-			if(tipo.equals("Unpaid")){
+		if(tipo.equals("All") && rol.equals("Asesor")){
+			if (sbW.length() != 0) {
 				String where = " WHERE " + sbW.toString() + " AND ";
 				queryS = queryS.replace("$whereAdicional", where);
 			}else{
-				String where = " WHERE " + sbW.toString();
-				queryS = queryS.replace("$whereAdicional", where);
-			}
-		}else{
-			if(tipo.equals("Unpaid")){
 				queryS = queryS.replace("$whereAdicional", " WHERE ");
-			}else{
-				queryS = queryS.replace("$whereAdicional", " ");
 			}
+
+		}else{
+
+			if (sbW.length() != 0) {
+				if(tipo.equals("Unpaid")){
+					String where = " WHERE " + sbW.toString() + " AND ";
+					queryS = queryS.replace("$whereAdicional", where);
+				}else{
+					String where = " WHERE " + sbW.toString();
+					queryS = queryS.replace("$whereAdicional", where);
+				}
+			}else{
+				if(tipo.equals("Unpaid")){
+					queryS = queryS.replace("$whereAdicional", " WHERE ");
+				}else{
+					queryS = queryS.replace("$whereAdicional", " ");
+				}
+			}
+
 		}
 		
 		UtilidadesAdapter.pintarLog("query:" + queryS);

@@ -609,7 +609,7 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 											telefono = telefono.replaceAll("-", "");
 										}
 										pintarLog("Telefono final:" + telefono, sb);
-										if (ambiente.equals("test")) {
+										if (ambiente.equals("local")) {
 											r.setTelefono("0000000000");
 										} else {
 											r.setTelefono(telefono);
@@ -874,7 +874,7 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 	}
 
 	public void pintarLog(String mensaje, StringBuilder sb) {
-		if (ambiente.equals("test")) {
+		if (ambiente.equals("local")) {
 			// if(false){
 			// UtilidadesAdapter.pintarLog(mensaje);
 			sb.append(mensaje + "\n");

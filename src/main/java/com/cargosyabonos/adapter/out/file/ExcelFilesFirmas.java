@@ -96,7 +96,7 @@ public class ExcelFilesFirmas {
 		FilesFirmaAbogadoObj o = new FilesFirmaAbogadoObj(1,"email","cliente","abo","emailAbo","TX","",0);
 		l.add(o);
 		try {
-			generarExcelFirmas(l,"test");
+			generarExcelFirmas(l,"local");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

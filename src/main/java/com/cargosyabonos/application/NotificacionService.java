@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cargosyabonos.application.port.in.NotificacionUseCase;
-import com.cargosyabonos.application.port.out.EnviarCorreoPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.MsgPort;
 import com.cargosyabonos.application.port.out.SolicitudPort;
@@ -34,9 +33,6 @@ public class NotificacionService implements NotificacionUseCase {
 
 	@Autowired
 	private EventoSolicitudPort evPort;
-
-	@Autowired
-	private EnviarCorreoPort envCorrPort;
 
 	@Autowired
 	private CorreoElectronicoService corrElecServ;
@@ -70,10 +66,10 @@ public class NotificacionService implements NotificacionUseCase {
 				if (envioMensaje) {
 					evPort.ingresarEventoDeSolicitud("Notification", "Notification message was sent to client",
 							"Notification", us.getUsuario(), s);
-				}
+				} 
 			}
 			if (n.isMail()) {
-				envCorrPort.enviarCorreoNotificacion(s.getEmail(), n.getTitulo(), params,archivo,extension,true);
+				corrElecServ.enviarCorreoNotificacion(s.obtenerCliente(),n.getCuerpo(),s.getEmail(), n.getTitulo(),archivo,extension,true);
 			}
 			
 			evPort.ingresarEventoDeSolicitud("Notification", "Notification mail was sent to client", "Notification",
@@ -160,7 +156,7 @@ public class NotificacionService implements NotificacionUseCase {
 		Map<String, Object> params = new HashMap<>();
 		params.put("${cuerpo}", n.getCuerpo());
 		params.put("${cliente}", "");
-		envCorrPort.enviarCorreoNotificacion(correos, n.getTitulo(), params,archivo,extension,true);
+		corrElecServ.enviarCorreoNotificacion("",n.getCuerpo(),correos, n.getTitulo(),archivo,extension,true);
 		
 	}
 

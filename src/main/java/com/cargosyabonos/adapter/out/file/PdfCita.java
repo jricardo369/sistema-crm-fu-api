@@ -394,7 +394,7 @@ public class PdfCita {
 		case "pro":
 			rutaHostFinal = rutaHostPro;
 			break;
-		case "test":
+		case "local":
 			rutaHostFinal = rutaHost;
 			break;
 		}
@@ -410,7 +410,7 @@ public class PdfCita {
 		case "pro":
 			rutaLogoFinal = logoPRO;
 			break;
-		case "test":
+		case "local":
 			rutaLogoFinal = logo;
 			break;
 		}

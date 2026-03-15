@@ -21,6 +21,7 @@ import com.cargosyabonos.adapter.out.file.ExcelVOCCharges;
 import com.cargosyabonos.adapter.out.file.PdfCita;
 import com.cargosyabonos.application.port.in.CitaUseCase;
 import com.cargosyabonos.domain.CargosCitasVoc;
+import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitaEntity;
 import com.itextpdf.text.DocumentException;
@@ -98,7 +99,7 @@ public class CitaController {
 	
 	
 	@GetMapping("/cargos-pendientes")
-	public List<CargosCitasVoc> cargosPendientes(@RequestParam("idUsuario") int idUsuario,@RequestParam("fechai") String fechai,@RequestParam("fechaf") String fechaf,
+	public CargosCitasVocCabecera cargosPendientes(@RequestParam("idUsuario") int idUsuario,@RequestParam("fechai") String fechai,@RequestParam("fechaf") String fechaf,
 			@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,@RequestParam(required = false) String tipo) {
 		logger.info("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
 		return citaUseCase.obtenerCargosPendientes( fechai,  fechaf,  idUsuario,  campo,  valor,
@@ -110,12 +111,13 @@ public class CitaController {
 			@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,@RequestParam(required = false) String tipo) {
 		
 		logger.info("idUsuario:"+idUsuario+"/fechai:"+fechai+"/fechaf:"+fechaf+"/campo:"+campo+"/valor:"+valor+"/tipo:"+tipo);
-		List<CargosCitasVoc> l = citaUseCase.obtenerCargosPendientes( fechai,  fechaf,  idUsuario,  campo,  valor,
+		CargosCitasVocCabecera l = citaUseCase.obtenerCargosPendientes( fechai,  fechaf,  idUsuario,  campo,  valor,
 				 tipo);
-		logger.info("size:"+l.size());
+		List<CargosCitasVoc> cargosCitasVoc = l.getCargoVoc();
+		logger.info("size:"+cargosCitasVoc.size());
 		byte[] s = null;
 		try {
-			s = ExcelVOCCharges.generarExcelVOCCharges(l);
+			s = ExcelVOCCharges.generarExcelVOCCharges(cargosCitasVoc);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -146,12 +148,6 @@ public class CitaController {
 	public boolean envioRecordatorio(@PathVariable("idEvento") int idEvento) {
 		logger.info("idEvento:"+idEvento);
 		return citaUseCase.envioRecordatorio(idEvento);
-	}
-
-	@GetMapping("/recordatorios/{fecha}")
-	public boolean envioRecordatorios(@PathVariable("fecha") String fecha,@RequestParam("idUsuario") int idUsuario) {
-		logger.info("fecha:"+fecha+"|idUsuario:"+idUsuario);
-		return citaUseCase.envioRecordatorios(fecha, idUsuario);
 	}
 
 }

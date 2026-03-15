@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.codec.Hex;
 
+import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
@@ -41,7 +42,7 @@ public class UtilidadesAdapter {
 
 	private static final Logger logger = LoggerFactory.getLogger(UtilidadesAdapter.class);
 
-	public static String ambiente = "test";
+	public static String ambiente = "local";
 
 	public static String currencyFormat(BigDecimal n) {
 		NumberFormat.getInstance(new Locale("es", "MX"));
@@ -954,11 +955,15 @@ public class UtilidadesAdapter {
 
 	public static void pintarLog(String mensaje) {
 
-		if (ambiente.equals("test")) {
+		if (ambiente.equals("local")) {
 			System.out.println(mensaje);
 			// sb.append(mensaje+"\n");
 		}
 
+	}
+
+	public static String formarUidEvento(EventoSolicitudEntity evento) {
+		return evento.getIdEvento() + "-" + evento.getUsuarioSchedule() + "-" + evento.getSolicitud().getIdSolicitud()+ "-" +evento.getFechaSchedule()+ "-" +evento.getHoraSchedule()+ "-" +evento.getTipoSchedule();
 	}
 
 }

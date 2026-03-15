@@ -18,6 +18,7 @@ public interface UsuariosUseCase {
 	public void actualizarUsuario(UsuarioEntity usuario);
 	public void eliminarUsuario(int idUsuario);
 	public UsuarioEntity buscarPorCorreo(String correo);
+	public UsuarioEntity buscarPorCorreoWithLike(String correo);
 	public List<UsuarioEntity> obtenerUsuariosParaSchedules(int idUsuario);
 	public List<UsuarioEntity> obtenerUsuariosParaDash(int idUsuario);
 	public void cargarImagen(MultipartFile archivo,int idUsuario);

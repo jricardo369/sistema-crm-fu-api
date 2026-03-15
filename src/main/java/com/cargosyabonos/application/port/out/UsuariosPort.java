@@ -19,6 +19,7 @@ public interface UsuariosPort {
 	public void actualizarUsuario(UsuarioEntity usuario);
 	public void eliminarUsuario(UsuarioEntity usuario);
 	public UsuarioEntity buscarPorCorreo(String correo);
+	public UsuarioEntity buscarPorCorreoWithLike(String correo);
 	public UsuarioEntity obtenerUsuarioPorRol(int idRol);
 	public List<UsuarioEntity> obtenerUsuariosDeRoles(List<Integer> roles); 
 	public List<UsuarioEntity> obtenerUsuariosDeRolesConDesc(List<Integer> roles); 

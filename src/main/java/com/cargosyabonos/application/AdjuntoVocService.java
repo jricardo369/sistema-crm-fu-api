@@ -83,7 +83,7 @@ public class AdjuntoVocService implements AdjuntoVocUseCase {
 		case "pro":
 			rutaServidorFinal = rutaServidorPro;
 			break;
-		case "test":
+		case "local":
 			rutaServidorFinal = rutaServidor;
 			break;
 		}
@@ -163,7 +163,7 @@ public class AdjuntoVocService implements AdjuntoVocUseCase {
 			System.out.println("Es PRO");
 			rutaArchivosFinal = rutaArchivosPRO + a.getUrlImagen();
 			break;
-		case "test":
+		case "local":
 			System.out.println("Es local");
 			rutaArchivosFinal = rutaArchivos + a.getUrlImagen();
 			break;

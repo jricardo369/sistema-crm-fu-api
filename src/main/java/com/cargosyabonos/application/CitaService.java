@@ -20,7 +20,7 @@ import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
 import com.cargosyabonos.application.port.out.SolicitudVocPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
-import com.cargosyabonos.domain.CargosCitasVoc;
+import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.Cita;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.CitaSql;
@@ -231,7 +231,7 @@ public class CitaService implements CitaUseCase {
 		citaPort.crearCita(a);
 		// Enviar notificacion al usuario
 		correoUs.enviarCorreoCitaVoc(s.getCliente(), a.getFecha(), a.getHora(), a.getTipo(), s.getEmail(),
-				s.getIdSolicitud());
+				s.getIdSolicitud(),null);
 
 	}
 
@@ -287,14 +287,15 @@ public class CitaService implements CitaUseCase {
 	}
 
 	@Override
-	public List<CargosCitasVoc> obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,
+	public CargosCitasVocCabecera obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,
 			String tipo) {
 
 		UsuarioEntity us = usPort.buscarPorId(idUsuario);
-		List<CargosCitasVoc> lista = null;
-			lista = citaPort.obtenerCargosPendientesFiltro( fechai,  fechaf,  idUsuario,  campo,  valor,
+		CargosCitasVocCabecera vocCabecera = null;
+			vocCabecera = citaPort.obtenerCargosPendientesFiltro( fechai,  fechaf,  idUsuario,  campo,  valor,
 					 tipo,  us.getRol());
-		return lista;
+
+		return vocCabecera;
 		
 	}
 
@@ -356,16 +357,8 @@ public class CitaService implements CitaUseCase {
 
 		if(e != null){
 			UsuarioEntity u = usPort.buscarPorId(Integer.valueOf(e.getUsuarioSchedule()));
-			correoUs.enviarCorreoCita(u.getNombre(), UtilidadesAdapter.formatearFecha(e.getFechaSchedule()), e.getHoraSchedule(), e.getTipoSchedule(), u.getCorreoElectronico(), e.getSolicitud().getIdSolicitud(), "US");
+			correoUs.enviarCorreoCita(u.getNombre(), UtilidadesAdapter.formatearFecha(e.getFechaSchedule()), e.getHoraSchedule(), e.getTipoSchedule(), u.getCorreoElectronico(), e.getSolicitud().getIdSolicitud(), "US",u.getNombre(),UtilidadesAdapter.formarUidEvento(e));
 		}
-
-		return true;
-	}
-
-	@Override
-	public boolean envioRecordatorios(String fecha,int idUsuario){
-
-		correoUs.enviarCorreoRecordatoriosCitas(fecha, idUsuario, "US");
 
 		return true;
 	}

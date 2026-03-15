@@ -41,6 +41,11 @@ public class UsuarioRepository implements UsuariosPort {
 	}
 
 	@Override
+	public UsuarioEntity buscarPorCorreoWithLike(String correo) {
+		return usJpa.findBycorreoElectronicoWithLike(correo);
+	}
+
+	@Override
 	public UsuarioEntity crearUsuario(UsuarioEntity usuario) {
 		UsuarioEntity u = usJpa.save(usuario);
 		return u;

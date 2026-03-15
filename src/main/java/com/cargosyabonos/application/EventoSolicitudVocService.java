@@ -93,7 +93,7 @@ public class EventoSolicitudVocService implements EventoSolicitudVocUseCase {
 			UsuarioEntity us = usPort.buscarPorNombre(evSalida.getUsuario());
 			if(us != null){
 				// Enviar notificacion
-				correoUs.enviarCorreoCita(us.getNombre(), fechaString, es.getHora(),es.getTipo(),sol.getEmail(),es.getIdSolicitud(),null);
+				correoUs.enviarCorreoCita(us.getNombre(), fechaString, es.getHora(),es.getTipo(),sol.getEmail(),es.getIdSolicitud(),null,us.getNombre(),null);
 			}
 			
 		}
