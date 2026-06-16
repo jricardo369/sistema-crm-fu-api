@@ -13,17 +13,15 @@ public interface CitaUseCase {
 	public List<Cita> obtenerCitasPorSolicitud(int idSolicitud); 
 	public List<Cita> obtenerCitasDeUsuarioPorFecha(int idUsuario,String fecha);
 	public List<Cita> obtenerCitasDeUsuarioPorSemana(int idUsuario,String fecha,String filtro,boolean disponibilidad,String idRol,String estatusCita,String estado);
-	public void crearCita(CitaEntity a);
+	public void crearCita(Cita a);
 	public void actualizarCita(CitaEntity a);
 	public void actualizarNoShow(int idCita,int idUsuario,String motivo);
 	public void eliminarCita(int idCita,int idUsuario);
-	public CargosCitasVocCabecera obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,
-			String tipo);
+	public CargosCitasVocCabecera obtenerCargosPendientes(String fechai, String fechaf, int idUsuario, String campo, String valor,String tipo);
 	public void actualizarPagado(boolean pagado,int idCita,int idUsuario);
-	
-	
 	public List<Cita> obtenerCitasDeUsuarioPorSemana(String fecha,int idUsuario,int noShow);
-
 	public boolean envioRecordatorio(int idEvento);
+	public void actualizarCita(Cita c,boolean ChangeAllConcurrency,int idUsuarioCambio);
+	public void eliminarCitasRecurrentes(Cita c,boolean ChangeAllConcurrency,String codigoRecurrencia,int idUsuarioCambio); 
 
 }

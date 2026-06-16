@@ -3,6 +3,7 @@ package com.cargosyabonos.application.port.out;
 import java.util.List;
 
 import com.cargosyabonos.domain.EmailAbogadoEntity;
+import com.cargosyabonos.domain.TittleAbogadoEntity;
 
 public interface EmailAbogadoPort {
 	
@@ -13,5 +14,6 @@ public interface EmailAbogadoPort {
 	public void actualizarEmailAbogado(EmailAbogadoEntity ab);
 	public void eliminarEmailAbogado(EmailAbogadoEntity ab);
 	public void eliminarEmailAbogadoByIdAbogado(int idAbogado);
+	public List<TittleAbogadoEntity> obtenerTittlesAbogado();
 
 }

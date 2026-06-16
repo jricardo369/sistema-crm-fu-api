@@ -3,6 +3,9 @@ package com.cargosyabonos.application.port.out.jpa;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -40,5 +43,17 @@ public interface EventoSolicitudVocJpa extends CrudRepository<EventoSolicitudVoc
 	
 	@Query(value = "select count(id_solicitud) from evento_solicitud_voc where tipo = ?1 and id_solicitud = ?2", nativeQuery = true)
 	public int solicitudesSiTieneAlgunEventoDeSolicitud(String tipoEvento,int idSo);
+
+	@Query(value = "SELECT id_evento,fecha,evento, "+
+				"SUBSTRING_INDEX(descripcion, ',', 1) AS descripcion,tipo, usuario,id_solicitud " +
+				"FROM evento_solicitud_voc " + 
+				"WHERE id_solicitud = ?1 AND evento = 'Session Adjustment' " + 
+				"ORDER BY fecha ASC;", nativeQuery = true)
+	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud);
+
+	@Transactional
+	@Query(value = "UPDATE evento_solicitud_voc SET tipo = ?1,descripcion=?2 WHERE id_evento = ?3", nativeQuery = true)
+	@Modifying
+	public void actualizarEstatusEvento(String tipo,String descripcion,int idEvento);
 
 }

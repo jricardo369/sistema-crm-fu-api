@@ -136,6 +136,18 @@ public class SolicitudVocEntity {
 	private String participation;
 	
 	private String recommendations;
+
+	@Column(name = "nombre_del_padre", length = 150)
+	private String nombreDelPadre;
+
+	@Column(name = "consejera", length = 150)
+	private String consejera;
+
+	@Column(name = "nombre_escuela", length = 150)
+	private String nombreEscuela;
+
+	@Column(name = "lenguaje_preferente", length = 2)
+	private String lenguajePreferente;
 	
 	public int getIdSolicitud() {
 		return idSolicitud;
@@ -493,5 +505,39 @@ public class SolicitudVocEntity {
 	public void setRecommendations(String recommendations) {
 		this.recommendations = recommendations;
 	}
+
+	public String getNombreDelPadre() {
+		return nombreDelPadre;
+	}
+
+	public void setNombreDelPadre(String nombreDelPadre) {
+		this.nombreDelPadre = nombreDelPadre;
+	}
+
+	public String getConsejera() {
+		return consejera;
+	}
+
+	public void setConsejera(String consejera) {
+		this.consejera = consejera;
+	}
+
+	public String getNombreEscuela() {
+		return nombreEscuela;
+	}
+
+	public void setNombreEscuela(String nombreEscuela) {
+		this.nombreEscuela = nombreEscuela;
+	}
+
+	public String getLenguajePreferente() {
+		return lenguajePreferente;
+	}
+
+	public void setLenguajePreferente(String lenguajePreferente) {
+		this.lenguajePreferente = lenguajePreferente;
+	}
+
+	
 
 }

@@ -50,9 +50,6 @@ public class CorreosAdapter implements CorreosPort {
 
 	@Autowired
 	private EnvioCorreoAdapter envioCorreo;
-	
-	@Autowired
-	private CorreoElectronicoUseCase correoUs;
 		
 	@Autowired
 	private ConfiguracionPort confPort; 
@@ -182,7 +179,7 @@ public class CorreosAdapter implements CorreosPort {
 		String template = "";
 		try {
 			template = tpMail.solveTemplate("email-templates/" + layout + ".html", params);
-			UtilidadesAdapter.pintarLog("template:"+template);
+			//UtilidadesAdapter.pintarLog("template:"+template);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -200,9 +197,16 @@ public class CorreosAdapter implements CorreosPort {
 			logger.info("hora:"+hora);
 			logger.info("tipo:"+tipo);
 
-			if (tipo.equals("PM")) {
+			String horaT = "";
+			if(horaT.length() <= 4){
+				hora = formatearHora(hora);
+			}
 
+			if (tipo.equals("PM")) {
+					
 				String horaStr = hora.substring(0, 2);
+				
+				
 				int horaInt = Integer.valueOf(horaStr);
 
 				if (horaInt < 12) {
@@ -249,6 +253,25 @@ public class CorreosAdapter implements CorreosPort {
 		} 
 		
 	}
+
+	
+
+	private String formatearHora(String hora) {
+		if (hora == null) {
+			return null;
+		}
+		String h = hora.trim();
+		int idx = h.indexOf(':');
+		if (idx == -1) {
+			// solo hora, sin minutos ("4" -> "04")
+			return String.format("%02d", Integer.parseInt(h));
+		}
+		String soloHora = h.substring(0, idx);
+		String minutos = h.substring(idx + 1);
+		String horaFormateada = String.format("%02d", Integer.parseInt(soloHora));
+		return horaFormateada + ":" + minutos;
+	}
+
 
 	@Override
 	public void enviarCorreoRetrasoSolicitudes(String email, String subject,Map<String, Object> params) {

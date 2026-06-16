@@ -222,7 +222,6 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setParalegalName(r.getParalegalName());
 		s.setParalegalEmails(r.getParalegalEmails());
 		s.setParalegalTelefonos(r.getParalegalTelefonos());
-		s.setImportante(r.getImportante());
 		s.setNumSesiones(r.getNumSesiones());
 		s.setNumSchedules(r.getNumSchedules());
 		s.setSesionesPendientes(r.getSesionesPendientes());
@@ -237,6 +236,10 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setPurposeTreatament(r.getPurposeTreatament());
 		s.setParticipation(r.getParticipation());
 		s.setRecommendations(r.getRecommendations());
+		s.setNombreDelPadre(r.getNombreDelPadre());
+		s.setConsejera(r.getConsejera());
+		s.setNombreEscuela(r.getNombreEscuela());
+		s.setLenguajePreferente(r.getLenguajePreferente());
 
 		return s;
 	}
@@ -330,7 +333,6 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setTipoSolicitud(r.getTipoSolicitud().getNombre());
 		s.setEstatusPago(r.getEstatusPago().getDescripcion());
 		s.setEstatusSolicitud(r.getEstatusSolicitud().getDescripcion());
-		s.setImportante(r.getImportante() == null ? "" : r.getImportante());
 		s.setFechaNacimiento(r.getFechaNacimiento());
 		s.setAdicional(r.getAdicional());
 		s.setIdioma(r.getIdioma());
@@ -340,7 +342,6 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setParalegalName(r.getParalegalName());
 		s.setParalegalEmails(r.getParalegalEmails());
 		s.setParalegalTelefonos(r.getParalegalTelefonos());
-		s.setImportante(r.getImportante());
 		s.setNumSesiones(r.getNumSesiones());
 		s.setNumSchedules(r.getNumSchedules());
 		s.setSesionesPendientes(r.getSesionesPendientes());
@@ -397,336 +398,6 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"There was a problem while reassigning. Please contact the administrator");
 		}
-	}
-
-	@Override
-	public String cargarExcel(MultipartFile archivo) {
-
-		UtilidadesAdapter.pintarLog("Ambiente:" + ambiente);
-		Workbook workbook = null;
-		String salida = "";
-		StringBuilder sb = new StringBuilder();
-
-		try {
-
-			// workbook = WorkbookFactory.create(new
-			// File("/Users/joser.vazquez/ExcelUnif.xlsx"));
-			InputStream is = new ByteArrayInputStream(archivo.getBytes());
-			workbook = WorkbookFactory.create(is);
-
-			UtilidadesAdapter.pintarLog("Number of sheetss: " + workbook.getNumberOfSheets());
-
-			List<TipoSolicitudEntity> ls = tsPort.obtenerTiposSolicitudes();
-			int countGen = 0;
-
-			UtilidadesAdapter.pintarLog("Comenzara a leer sheets");
-
-			int s1 = leerSheet(sb, "Mar25", workbook, ls, 27);
-			int s2 = leerSheet(sb, "Feb25", workbook, ls, 26);
-			int s3 = leerSheet(sb, "Jan25", workbook, ls, 26);
-			int s4 = leerSheet(sb, "Dec24", workbook, ls, 26);
-			int s5 = leerSheet(sb, "Nov24", workbook, ls, 26);
-			int s6 = leerSheet(sb, "Oct24", workbook, ls, 26);
-			int s7 = leerSheet(sb, "Sept24", workbook, ls, 26);
-			int s8 = leerSheet(sb, "Aug24", workbook, ls, 27);
-			int s9 = leerSheet(sb, "Jul24", workbook, ls, 27);
-			int s10 = leerSheet(sb, "Jun24", workbook, ls, 29);
-			int s11 = leerSheet(sb, "May24", workbook, ls, 30);
-			int s12 = leerSheet(sb, "Apr24", workbook, ls, 30);
-			int s13 = leerSheet(sb, "Mar24", workbook, ls, 30);
-			int s14 = leerSheet(sb, "Feb24", workbook, ls, 31);
-			int s15 = leerSheet(sb, "Jan24", workbook, ls, 31);
-
-			countGen = s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + s9 + s10 + s11 + s12 + s13 + s14 + s15;
-
-			salida = "Cargados " + countGen;
-
-			UtilidadesAdapter.pintarLog(salida);
-
-		} catch (EncryptedDocumentException | IOException e) {
-			UtilidadesAdapter.pintarLog(e.getMessage());
-		} finally {
-			try {
-				if (workbook != null)
-					workbook.close();
-			} catch (IOException e) {
-				UtilidadesAdapter.pintarLog(e.getMessage());
-			}
-			UtilidadesAdapter.pintarLog(sb.toString());
-		}
-		return salida;
-	}
-
-	public int leerSheet(StringBuilder sb, String nombre, Workbook workbook, List<TipoSolicitudEntity> ls,
-			int comienza) {
-
-		SolicitudVocEntity solEnc = null;
-		String sheetName = "";
-		BigDecimal pago = BigDecimal.ZERO;
-		String caseNumber = "";
-		String terapeuta = "";
-		String denegado = "";
-		String cliente = "";
-		String telefono = "";
-		String direccion = "";
-		int idUsuarioTerapeuta = 0;
-		int sesiones = 0;
-		//int sesionesTomadas = 0;
-		int cargados = 0;
-		boolean solicitud = false;
-		boolean numericTel = false;
-		boolean finalSheet = false;
-		boolean esDenegado = false;
-
-		String type = "";
-		int idEstatusSolicitud = 0;
-		int idTipoSolicitud = 0;
-		int numeroDeSesiones = 0;
-
-		Date fecha = null;
-		int mes = 0;
-
-		Sheet sheet = workbook.getSheet(nombre);
-		sheetName = sheet.getSheetName();
-		pintarLog("NombreSheet:" + sheetName, sb);
-		UtilidadesAdapter.pintarLog("Leyendo sheet:" + sheetName);
-
-		// UtilidadesAdapter.pintarLog("Sheet:" + i);
-
-		for (Row row : sheet) {
-			SolicitudVoc r = new SolicitudVoc();
-			// UtilidadesAdapter.pintarLog("row:" + row.getRowNum());
-
-			if (row.getRowNum() >= comienza) {
-
-				if (row.getCell(1) != null && !"".equals(row.getCell(1))) {
-
-					if (row.getCell(1) != null && row.getCell(1).getCellType() == CellType.STRING) {
-						pintarLog("Case number:" + row.getCell(1).getStringCellValue() + " | " + nombre, sb);
-						caseNumber = row.getCell(1).getStringCellValue();
-						if (caseNumber.length() > 11) {
-							caseNumber = caseNumber.substring(0, 11);
-						}
-						r.setNumeroDeCaso(caseNumber.trim());
-						solicitud = true;
-						if (caseNumber.contains("COLORS")) {
-							finalSheet = true;
-						}
-
-					}
-
-					if (solicitud) {
-
-						pintarLog("FinalSheet:" + finalSheet, sb);
-						if (!finalSheet) {
-
-							solEnc = reqPort.obtenerSolicitudByNumeroDeCaso(caseNumber);
-
-							if (solEnc == null) {
-
-								pintarLog("##########################", sb);
-								pintarLog("··Llenando datos solicitud", sb);
-
-								if (row.getCell(3) != null) {
-									denegado = valorCell2(row, 3, workbook);
-									pintarLog("Denegado:" + denegado, sb);
-									if (!"".equals(denegado)) {
-										if ("Denied".equals(denegado)) {
-											esDenegado = true;
-										}
-									}
-									if (!"".equals(denegado)) {
-										if ("Not found".equals(denegado)) {
-											esDenegado = true;
-										}
-									}
-								}
-
-								if (row.getCell(22) != null) {
-									denegado = valorCell2(row, 22, workbook);
-									pintarLog("Denegado:" + denegado, sb);
-									if (!"".equals(denegado)) {
-										if ("Denied".equals(denegado)) {
-											esDenegado = true;
-										}
-									}
-								}
-
-								if (!esDenegado) {
-
-									if (row.getCell(4) != null && row.getCell(4).getCellType() == CellType.STRING) {
-
-										pintarLog("Terapueta:" + row.getCell(4).getStringCellValue(), sb);
-										terapeuta = row.getCell(4).getStringCellValue();
-										UsuarioEntity u = usPort.buscarPorNombre(terapeuta);
-										pintarLog("Usuario Terapeuta:" + u, sb);
-										if (u != null) {
-											idUsuarioTerapeuta = u.getIdUsuario();
-										} else {
-											idUsuarioTerapeuta = 44;
-										}
-									}
-
-									r.setTerapeuta(idUsuarioTerapeuta);
-
-									if (row.getCell(15) != null) {
-										pintarLog("Cliente:" + row.getCell(15).getStringCellValue(), sb);
-										cliente = row.getCell(15).getStringCellValue();
-									}
-
-									r.setCliente(cliente);
-									final String typeF = type;
-									TipoSolicitudEntity se = ls.stream().filter(a -> typeF.contains(a.getNombre()))
-											.findAny().orElse(null);
-
-									if (se == null) {
-										idTipoSolicitud = 1;
-									} else {
-										idTipoSolicitud = se.getIdTipoSolicitud();
-									}
-
-									pintarLog("Id tipo solicitud:" + idTipoSolicitud, sb);
-									r.setIdTipoSolicitud(idTipoSolicitud);
-
-									if (row.getCell(16) != null) {
-										if (!numericTel) {
-											try {
-												telefono = row.getCell(16).getStringCellValue();
-											} catch (Exception e) {
-												// UtilidadesAdapter.pintarLog("e:"+e.getMessage());
-												if (e.getMessage().equals(
-														"Cannot get a STRING value from a NUMERIC formula cell")) {
-													telefono = (int) row.getCell(16).getNumericCellValue() + "";
-												}
-											}
-										}
-
-										pintarLog("Telefono inicial:" + telefono, sb);
-										if (telefono.length() > 12) {
-											telefono = telefono.substring(0, 12);
-											telefono = telefono.replaceAll("-", "");
-										} else {
-											telefono = telefono.replaceAll("-", "");
-										}
-										pintarLog("Telefono final:" + telefono, sb);
-										if (ambiente.equals("local")) {
-											r.setTelefono("0000000000");
-										} else {
-											r.setTelefono(telefono);
-										}
-									} else {
-										r.setTelefono("");
-									}
-									if (row.getCell(19) != null) {
-										pintarLog("Direccion:" + row.getCell(19).getStringCellValue(), sb);
-										direccion = row.getCell(19).getStringCellValue();
-										r.setDireccion(direccion);
-									}
-
-									if (row.getCell(22) != null) {
-										pintarLog("Num sesiones:" + row.getCell(22).getNumericCellValue(), sb);
-										sesiones = (int) row.getCell(22).getNumericCellValue();
-										r.setNumSesiones(sesiones);
-									}
-
-									if (row.getCell(26) != null) {
-										pintarLog("Num sesiones tomadas:" + row.getCell(26).getNumericCellValue(), sb);
-										//sesionesTomadas = (int) row.getCell(26).getNumericCellValue();
-										//r.setNumSchedules(sesionesTomadas);
-										//r.setSesionesPendientes(r.getNumSesiones() - r.getNumSchedules());
-									}
-
-									// Estatus pago
-									r.setIdEstatusPago(1);
-
-									pintarLog("idEstatusSolicitud:" + idEstatusSolicitud, sb);
-									if (idEstatusSolicitud == 0) {
-										r.setIdEstatusSolicitud(14);
-									}
-
-									pintarLog("Pago:" + pago, sb);
-									pintarLog("idEstatusSolicitud:" + idEstatusSolicitud, sb);
-
-									try {
-										mes = UtilidadesAdapter.obtenerMesSheet(sheetName.toUpperCase());
-										fecha = UtilidadesAdapter.cadenaAFecha("2024-" + mes + "-15");
-									} catch (ParseException e) {
-										e.printStackTrace();
-									}
-
-									r.setFechaInicio(fecha);
-
-									SolicitudVocEntity s = crearSolicitudMasivo(r, 1);
-									cargados++;
-									int sesionesInsertadas = agregarPago(row, s.getIdSolicitud(), idUsuarioTerapeuta, sb, workbook);
-									
-									pintarLog("Num Sesiones:" + s.getNumSesiones(), sb);
-									pintarLog("Num Sesiones tomadas:" + s.getNumSchedules(), sb);
-									numeroDeSesiones = s.getNumSchedules() + sesionesInsertadas;
-									s.setNumSchedules(numeroDeSesiones);
-									s.setSesionesPendientes(s.getNumSesiones() - s.getNumSchedules());
-									reqPort.actualizarSolicitud(s);
-
-								}
-
-								pintarLog("_______________", sb);
-
-							} else {
-
-								if (row.getCell(4) != null && row.getCell(4).getCellType() == CellType.STRING) {
-
-									pintarLog("Terapueta:" + row.getCell(4).getStringCellValue(), sb);
-									terapeuta = row.getCell(4).getStringCellValue();
-									UsuarioEntity u = usPort.buscarPorNombre(terapeuta);
-									pintarLog("Usuario Terapeuta:" + u, sb);
-									if (u != null) {
-										idUsuarioTerapeuta = u.getIdUsuario();
-									} else {
-										idUsuarioTerapeuta = 44;
-									}
-								}
-
-								pintarLog(
-										"///////////// Se encontro y no se insertara solicitud, se actualiza pagos y sesiones",
-										sb);
-								int sesionesInsertadas = agregarPago(row, solEnc.getIdSolicitud(), idUsuarioTerapeuta,
-										sb, workbook);
-
-								pintarLog("Num Sesiones:" + solEnc.getNumSesiones(), sb);
-								pintarLog("Num Sesiones tomadas:" + solEnc.getNumSchedules(), sb);	
-								numeroDeSesiones = solEnc.getNumSchedules() + sesionesInsertadas;
-								solEnc.setNumSchedules(numeroDeSesiones);
-								solEnc.setSesionesPendientes(solEnc.getNumSesiones() - solEnc.getNumSchedules());
-								reqPort.actualizarSolicitud(solEnc);
-								  
-							}
-
-						}
-
-						//pintarLog(r.toString(), sb);
-						pintarLog("_______________", sb);
-
-					}
-					solicitud = false;
-					pago = BigDecimal.ZERO;
-					idEstatusSolicitud = 0;
-					idTipoSolicitud = 0;
-					type = "";
-					esDenegado = false;
-					solEnc = null;
-
-				}
-			}
-
-			numericTel = false;
-			solEnc = null;
-
-		}
-
-		finalSheet = false;
-
-		pintarLog("cargados:" + cargados, sb);
-		return cargados;
 	}
 
 	public int agregarPago(Row row, int idSolicitud, int idUsuario, StringBuilder sb, Workbook wb) {
@@ -832,6 +503,7 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 	}
 
 	private String valorCell(Row row, int cell) {
+		
 		String salida = "";
 		if (row.getCell(cell).getCellType() == CellType.BLANK)
 			salida = row.getCell(cell).getStringCellValue();

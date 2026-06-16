@@ -26,5 +26,6 @@ public interface CitaSql {
 	 String getcasenumber();
 	 String getcliente();
 	 String getfechaCreacion();
+	 String getCodigoRecurrencia();
 
 }

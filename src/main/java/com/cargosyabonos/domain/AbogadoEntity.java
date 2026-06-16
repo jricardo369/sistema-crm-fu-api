@@ -32,6 +32,10 @@ public class AbogadoEntity {
 	@Column(name = "fecha_cupon", insertable = false, updatable = false)
 	private String fechaCupon;
 
+	private String estado;
+
+	private String referencia;
+
 	public int getIdAbogado() {
 		return idAbogado;
 	}
@@ -95,6 +99,23 @@ public class AbogadoEntity {
 	public void setFechaCupon(String fechaCupon) {
 		this.fechaCupon = fechaCupon;
 	}
+
+	public String getReferencia() {
+		return referencia;
+	}
+
+	public void setReferencia(String referencia) {
+		this.referencia = referencia;
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+	
 	
 	
 }

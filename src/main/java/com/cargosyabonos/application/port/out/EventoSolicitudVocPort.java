@@ -11,6 +11,7 @@ public interface EventoSolicitudVocPort {
 	public List<EventoSolicitudVocEntity> obtenerEventosSolicitudesSinPagos(int idSolicitud);
 	public EventoSolicitudVocEntity crearEventoSolicitud(EventoSolicitudVocEntity es);
 	public void eliminarEventoSolicitud(int idEvento);
+	public EventoSolicitudVocEntity obtenerEventoPorId(int idEvento);
 	public void actualizarEventoSolicitud(EventoSolicitudVocEntity es);
 	public boolean tieneEventoLaSolicitud(int idSolicitud,String evento);
 	public boolean tieneTipoEventoLaSolicitud(int idSolicitud,String evento);
@@ -18,5 +19,7 @@ public interface EventoSolicitudVocPort {
 	public int obtenerSolicitudesSiTieneAlgunEventoDeSolicitud(String tipoEvento,int idSolicitud);
 	public void ingresarEventoDeSolicitud(String envento,String descripcion,String tipo,String usuario,SolicitudVocEntity solicitud);
 	public List<EventoSolicitudVocEntity> obtenerEventosSchedules(String fecha);
+	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud);
+	public void actualizarTipoEvento(int idEvento, String tipoEvento, String decripcion);
 
 }

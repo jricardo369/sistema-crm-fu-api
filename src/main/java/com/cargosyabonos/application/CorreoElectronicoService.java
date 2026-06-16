@@ -316,7 +316,7 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		List<ConfiguracionEntity> confjs = confPort.obtenerConfiguraciones();
 		ConfiguracionEntity cn = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-NOMBRE")).findAny().orElse(null);
 		ConfiguracionEntity ci = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-INFO")).findAny().orElse(null);
-		ConfiguracionEntity co = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-ORG")).findAny().orElse(null);
+		ConfiguracionEntity co = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-PHONE")).findAny().orElse(null);
 		params.put("${nombreContacto}", cn.getValor());
 		params.put("${infoContacto}", ci.getValor());
 		params.put("${suOrganizacion}", co.getValor());
@@ -330,7 +330,7 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		List<ConfiguracionEntity> confjs = confPort.obtenerConfiguraciones();
 		ConfiguracionEntity cn = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-NOMBRE")).findAny().orElse(null);
 		ConfiguracionEntity ci = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-INFO")).findAny().orElse(null);
-		ConfiguracionEntity co = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-ORG")).findAny().orElse(null);
+		ConfiguracionEntity co = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-PHONE")).findAny().orElse(null);
 
 		params.put("${nombreContacto}", cn.getValor());
 		params.put("${infoContacto}", ci.getValor());
@@ -489,6 +489,64 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 		params.put("${tipo}", tipo);
 
 		correosPort.enviarCorreoMovimiento(email, params);
+	}
+
+	@Override
+	public void enviarCorreoReminderLawyerProspect(String email,int idProspectoAbogado,String nombreUsuario,String nombreLawyerProspect,String firma,String fechaAltaLawyerProspects){
+
+		Map<String, Object> params = new HashMap<>();
+		List<ConfiguracionEntity> confjs = confPort.obtenerConfiguraciones();
+		ConfiguracionEntity ci = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-INFO")).findAny().orElse(null);
+
+
+		params.put("${nombreUsuario}", nombreUsuario);
+		params.put("${nombreLawyerProspect}", nombreLawyerProspect);
+		params.put("${firma}", firma);
+		params.put("${fechaAltaLawyerProspects}", fechaAltaLawyerProspects);
+
+		correosPort.enviarCorreoDeLayout(email, "Friendly reminder for attorney prospect "+idProspectoAbogado+" at " + ci.getValor() , params, "correo_recordatorio_prospecto_abogado");
+
+	}
+
+	@Override
+	public void enviarCorreoClienteAProspectoAbogado(String email, String nombreUsuario,
+			int idProspectoAbogado, String nombreProspectoAbogado,
+			String telefonoProspectoAbogado,String lawyerProspectEmail,int idSolicitudRelacionada) {
+		
+				Map<String, Object> params = new HashMap<>();
+		List<ConfiguracionEntity> confjs = confPort.obtenerConfiguraciones();
+		ConfiguracionEntity ci = confjs.stream().filter(a -> a.getCodigo().equals("CONTACT-INFO")).findAny().orElse(null);
+
+
+		params.put("${usuario}", nombreUsuario);
+		params.put("${lawyerProspectId}", idProspectoAbogado);
+		params.put("${lawyerProspectName}", nombreProspectoAbogado);
+		params.put("${lawyerProspectPhone}", telefonoProspectoAbogado);
+		params.put("${idSolicitudRelacionada}", idSolicitudRelacionada);
+		params.put("${lawyerProspectEmail}", lawyerProspectEmail);
+
+		correosPort.enviarCorreoDeLayout(email, "New file created with prospect "+idProspectoAbogado+" at " + ci.getValor() , params, "correo_nuevo_file_prospecto_abogado");
+
+
+	}
+
+	@Override
+	public void enviarCorreoReminderParaEnviarCorreoLiaison(String email,int idProspectoAbogado,String nombreUsuario,
+		String nombreLawyerProspect,String firma,String telefono,String fechaAltaLawyerProspects,String lawyerProspectEmail) {
+		
+		Map<String, Object> params = new HashMap<>();
+
+		params.put("${nombreUsuario}", nombreUsuario);
+		params.put("${lawyerProspectId}", idProspectoAbogado);
+		params.put("${lawyerProspectCreationDate}", fechaAltaLawyerProspects);
+		params.put("${lawyerProspectName}", nombreLawyerProspect);
+		params.put("${lawyerProspectPhone}", telefono);
+		params.put("${lawyerProspectFirma}", firma);
+		params.put("${lawyerProspectEmail}", lawyerProspectEmail);
+		
+		correosPort.enviarCorreoDeLayout(email, "Friendly reminder to send an email to a lawyer prospect "+idProspectoAbogado, params, "correo_recordatorio_prospecto_abogado_liaison");
+
+
 	}
 
 }

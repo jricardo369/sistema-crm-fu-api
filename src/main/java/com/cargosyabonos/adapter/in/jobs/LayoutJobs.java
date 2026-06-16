@@ -53,4 +53,9 @@ public class LayoutJobs {
 		tpUC.solicitudesVocEndingSessions();
 	}
 
+	@Scheduled(cron = "#{@getCronTareaProgramadaRemLawProspectsLiaison}")
+	private void getCronTareaProgramadaRemLawProspectsLiaison(){
+		tpUC.reminderLawyerProspectsLiaison();
+	}
+
 }

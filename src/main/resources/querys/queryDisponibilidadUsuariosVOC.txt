@@ -1,0 +1,17 @@
+SELECT d.id_disponibilidad, d.fecha, d.hora,d.tipo,d.id_usuario,d.zona_horaria,r.nombre,u.resumen,u.nombre as nombreUsuario 
+FROM disponibilidad_usuario d 
+JOIN usuario u on u.id_usuario = d.id_usuario 
+JOIN rol r on u.id_rol = r.id_rol 
+
+LEFT JOIN cita e
+ON e.fecha   = d.fecha
+AND e.hora    = d.hora
+AND e.tipo    = d.tipo
+AND e.id_usuario = u.id_usuario
+AND e.fecha  =  :fecha
+WHERE  d.fecha = :fecha
+AND u.estatus NOT IN(4) 
+AND (e.id_cita IS NULL OR e.no_show = 1)
+AND u.id_rol = 10  $usuario
+
+GROUP BY  d.id_disponibilidad, d.fecha, d.hora,tipo,d.id_usuario,d.zona_horaria,r.nombre,u.resumen,u.nombre

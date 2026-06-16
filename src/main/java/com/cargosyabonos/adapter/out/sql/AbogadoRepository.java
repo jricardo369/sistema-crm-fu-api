@@ -13,14 +13,19 @@ import org.springframework.stereotype.Service;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.AbogadoPort;
 import com.cargosyabonos.application.port.out.jpa.AbogadoJpa;
+import com.cargosyabonos.application.port.out.jpa.FuenteDeReferenciaJpa;
 import com.cargosyabonos.domain.Abogado;
 import com.cargosyabonos.domain.AbogadoEntity;
+import com.cargosyabonos.domain.FuenteDeReferenciaEntity;
 
 @Service
 public class AbogadoRepository implements AbogadoPort{
 
 	@Autowired
 	AbogadoJpa abogadoJpa;
+
+	@Autowired
+	FuenteDeReferenciaJpa fuenteDeReferenciaJpa;
 	
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -70,6 +75,13 @@ public class AbogadoRepository implements AbogadoPort{
 		o.setSinonimos((String) row[5]);
 		return o;
 	}
+
+	private Abogado convertirAAbogadoObj(Object[] row) {
+		Abogado o = new Abogado();
+		o.setIdAbogado((int) row[0]);
+		o.setEmail((String) row[1]);
+		return o;
+	}
 	
 	@SuppressWarnings("unchecked")
 	public List<Object[]> obtenerAbogadosConMailsSql(String valorBusqueda) {
@@ -111,6 +123,78 @@ public class AbogadoRepository implements AbogadoPort{
 	public void actualizarCuponAbogado(int idAbogado) {
 		 abogadoJpa.actualizarCuponAbogado(idAbogado);
 	}
-	
+
+
+	@SuppressWarnings("unchecked")
+	public Object[] obtenerSiExisteEmailAbogadoSQL(String emailAbogado) {
+
+		UtilidadesAdapter.pintarLog("ejecutando query anios");
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("SELECT a.id_abogado,e.email FROM email_abogado e "
+				+"JOIN abogado a "
+				+"WHERE e.email = :emailAbogado LIMIT 1;");
+
+		UtilidadesAdapter.pintarLog("query:" + sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		
+		query.setParameter("emailAbogado",emailAbogado);
+
+		List<Object[]> rows = query.getResultList();
+		if (!rows.isEmpty()) {
+        	return rows.get(0);
+		}
+		return null;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public String obtenerSiExisteNombreAbogadoSQL(String nombreAbogado) {
+		UtilidadesAdapter.pintarLog("ejecutando query anios");
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("SELECT a.nombre FROM abogado a "
+				+ "WHERE a.nombre = :nombreAbogado LIMIT 1;");
+
+		UtilidadesAdapter.pintarLog("query:" + sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("nombreAbogado", nombreAbogado);
+
+		List<String> rows = query.getResultList();
+		if (!rows.isEmpty()) {
+			return rows.get(0);
+		}
+		return null;
+	}
+
+	@Override
+	public Abogado obtenerSiExisteEmailAbogado(String emailAbogado) {
+
+		Object[] row = obtenerSiExisteEmailAbogadoSQL(emailAbogado);
+		if(row == null) {
+			return null;
+		}
+		Abogado result = convertirAAbogadoObj(row);
+		return result;
+
+	}
+
+	@Override
+	public Abogado obtenerSiExisteNombreAbogado(String nombreAbogado) {
+		String nombre = obtenerSiExisteNombreAbogadoSQL(nombreAbogado);
+		if (nombre == null) {
+			return null;
+		}
+		Abogado o = new Abogado();
+		o.setNombre(nombre);
+		return o;
+	}
+
+	@Override
+	public List<FuenteDeReferenciaEntity> obtenerFuentesDeReferencia() {
+		return fuenteDeReferenciaJpa.findAll();
+	}
 
 }

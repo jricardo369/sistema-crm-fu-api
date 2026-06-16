@@ -29,5 +29,8 @@ public interface CorreoElectronicoUseCase {
 	public void enviarResetPassword(String email,String url);
 	public void enviarCorreoRetrasoSolicitudes(String email, int idSolicitud,String nombreUsuario,int dias);
 	public void enviarCorreoMovimiento(String email,String usuario,BigDecimal monto,String tipo);
-	
+	public void enviarCorreoReminderLawyerProspect(String email,int idProspectoAbogado,String nombreUsuario,String nombreLawyerProspects,String firma,String fechaAltaLawyerProspects);
+	public void enviarCorreoClienteAProspectoAbogado(String email,String nombreUsuario,int idProspectoAbogado,String nombreProspectoAbogado,String telefonoProspectoAbogado, String lawyerProspectEmail,int idSolicitudRelacionada);
+	public void enviarCorreoReminderParaEnviarCorreoLiaison(String email,int idProspectoAbogado,String nombreUsuario,String nombreLawyerProspect,String firma,String telefono,String fechaAltaLawyerProspects,String lawyerProspectEmail);
+
 }

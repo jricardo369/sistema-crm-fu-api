@@ -7,5 +7,6 @@ public interface SchedulersActivasDeSolicitud {
     String getnombreUsuario();
     String getrol();
     String getfecha();
+    Integer getidrol();
 	
 }

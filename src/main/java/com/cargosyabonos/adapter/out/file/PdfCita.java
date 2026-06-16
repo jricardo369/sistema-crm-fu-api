@@ -15,10 +15,12 @@ import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.application.port.in.SolicitudVocUseCase;
 import com.cargosyabonos.application.port.out.CitaPort;
+import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
 import com.cargosyabonos.application.port.out.NotaCitaPort;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.NotaCitaEntity;
 import com.cargosyabonos.domain.SolicitudVoc;
+import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -52,6 +54,9 @@ public class PdfCita {
 	
 	@Autowired
 	private CitaPort citaPort;
+
+	@Autowired
+	private EventoSolicitudVocPort evPort;
 	
 	@Autowired
 	private SolicitudVocUseCase solVocUseCase;
@@ -113,6 +118,10 @@ public class PdfCita {
 
 		CitaEntity c = citaPort.obtenerCita(idCita);
 	    SolicitudVoc s = solVocUseCase.obtenerSolicitudObj(c.getIdSolicitud(), idUsuario);
+
+		SolicitudVocEntity se = solVocUseCase.obtenerSolicitud(s.getIdSolicitud());
+
+		evPort.ingresarEventoDeSolicitud("Info", "Download appointment data "+ c.getFecha() + " " + c.getHora() + " " + c.getTipo() +" from file " + se.getIdSolicitud(), "Info", "", se);
 	
 		String coloresRGB = "94,44,126";
 		String[] colors = coloresRGB.split(",");

@@ -205,6 +205,14 @@ public class PEApplication extends SpringBootServletInitializer{
 		logger.info("cron late requests:"+salida);
 		return salida;
 	}
+
+	@Bean
+	public String getCronTareaProgramadaRemLawProspectsLiaison(){
+		String salida = "";
+		salida = "0 0 23 * * *";
+		logger.info("cron rem recordatorio liaison:"+salida);
+		return salida;
+	}
 	
 	@Bean
 	public String getCronRecordatorioCitas(){

@@ -23,6 +23,9 @@ public interface SolicitudUseCase {
 	public List<ReporteContador> obtenerReporteMailsAbogados(String fechai,String fechaf);
 	public List<Solicitud> obtenerSolicitudesV2(int idUsuario,int estatus,String fechai,String fechaf,String ordenarPor,String orden,String campo,String valor, 
 			boolean myFiles,String cerradas, boolean primeraVez,int usuario);
+	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(int idUsuario,String cerradas, boolean primeraVez,String ordenarPor, String orden,
+			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
+		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento);
 	public SolicitudEntity obtenerSolicitud(int idRequest);
 	public Solicitud obtenerSolicitudObjV2(int idRequest,int idUsuario);
 	public void crearSolicitud(Solicitud r,int usuario);
@@ -33,7 +36,7 @@ public interface SolicitudUseCase {
 	public void envioSiguienteProceso(int idSolicitud,int idUsuarioCambio,int idDisponibilidad,boolean fechaAnterior);
 	public void envioInterviewerCaseManager(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,boolean fechaAnterior);
 	public void envioInterviewerScales(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,boolean fechaAnterior);
-	public void envioInterviewerClinician(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,boolean fechaAnterior);
+	public void envioInterviewerClinician(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,boolean fechaAnterior,int idDisponibilidadTraductor);
 	public void envioFinEntrevistaCaseManager(int idSolicitud,int idUsuarioCambio);
 	public void envioFinEntrevistaClinician(int idSolicitud,int idUsuarioCambio);
 
@@ -42,7 +45,6 @@ public interface SolicitudUseCase {
 	public void parcheFinEntrevistaClinician(int idSolicitud,int idUsuarioCambio);
 	public void envioFinEntrevistaScales(int idSolicitud,int idUsuarioCambio);
 	public void envioReadyOnDraft(int idSolicitud,int idUsuario);
-	public String cargarExcel(MultipartFile archivo);
 	public void rejectSolicitud(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
 	public void noShow(String motivo,int idSolicitud,int idUsuarioEnvio);
 	public void cancelTemplate(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
@@ -57,5 +59,7 @@ public interface SolicitudUseCase {
 	public List<DetalleSolsPorFecha> reporteDetalleSolsFecha(String fechai, String fechaf,int usuario);
 	public void actualizarSolicitudConCupon(int idSolicitud,int idUsuario);
 	public void actualizarEmailAbo(String emailsAbogado,int idSolicitud);
+	public void reopen(int idUsuarioEnvio,String motivo,int idSolicitud);
+	public void actualizarInterviewToCaseManager(int idSolicitud,int idUsuario,int idUsuarioEnvio);
 
 }

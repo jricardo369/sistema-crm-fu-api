@@ -41,13 +41,14 @@ public class UsuariosController {
 	}
 
 	@GetMapping("por-usuario")
-	public UsuarioEntity buscarPorUsuario(String usuario) {
+	public UsuarioObj buscarPorUsuario(String usuario) {
 		return usrUseCase.buscarPorUsuario(usuario);
 	}
 	
 	@GetMapping("{idUsuario}")
-	public UsuarioEntity buscarPorUsuario(@PathVariable("idUsuario") int idUsuario) {
-		return usrUseCase.buscarPorId(idUsuario);
+	public UsuarioObj buscarPorUsuario(@PathVariable("idUsuario") int idUsuario) {
+		//return usrUseCase.buscarPorId(idUsuario);
+		return usrUseCase.buscarPorIdObj(idUsuario);
 	}
 	
 	@GetMapping("usuario-obj/{idUsuario}")

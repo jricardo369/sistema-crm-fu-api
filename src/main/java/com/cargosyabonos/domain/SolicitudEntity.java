@@ -164,6 +164,17 @@ public class SolicitudEntity {
 	@Column(name = "signed_clnc")
 	private boolean signedClnc;
 
+	@Column(name = "fecha_de_crimen", length = 10)
+	private String fechaDeCrimen;
+
+	@Column(name = "usuario_traductor")
+	private int usuarioTraductor;
+
+	private boolean consentimiento;
+
+	@Column(name = "verificacion_cliente")
+	private boolean verificacionCliente;
+
 	public boolean isSignedClnc() {
 		return signedClnc;
 	}
@@ -610,6 +621,36 @@ public class SolicitudEntity {
 
 	public void setFinAsgClnc(boolean finAsgClnc) {
 		this.finAsgClnc = finAsgClnc;
+	}
+
+	public String getFechaDeCrimen() {
+		return fechaDeCrimen;
+	}
+	public void setFechaDeCrimen(String fechaDeCrimen) {
+		this.fechaDeCrimen = fechaDeCrimen;
+	}
+
+	public int getUsuarioTraductor() {
+		return usuarioTraductor;
+	}
+
+	public void setUsuarioTraductor(int usuarioTraductor) {
+		this.usuarioTraductor = usuarioTraductor;
+	}
+
+	public boolean getConsentimiento() {
+		return consentimiento;
+	}
+	public void setConsentimiento(boolean consentimiento) {
+		this.consentimiento = consentimiento;
+	}
+
+	public boolean isVerificacionCliente() {
+		return verificacionCliente;
+	}
+
+	public void setVerificacionCliente(boolean verificacionCliente) {
+		this.verificacionCliente = verificacionCliente;
 	}
 
 }

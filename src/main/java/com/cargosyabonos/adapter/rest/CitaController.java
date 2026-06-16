@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.adapter.out.file.ExcelVOCCharges;
 import com.cargosyabonos.adapter.out.file.PdfCita;
 import com.cargosyabonos.application.port.in.CitaUseCase;
@@ -72,7 +71,7 @@ public class CitaController {
 		estado = (estado == null) ? "" : estado;
 		estado = estado.equals("All") ? "" : estado;
 
-		logger.info("idUsuario:"+idUsuario+"|fecha:"+fecha+"|filtro:"+filtro+"|disponibilidad:"+disponibilidad+"|idRol:"+idRol+"|estatusCita:"+estatusCita);
+		logger.info("idUsuario:"+idUs+"|fecha:"+fecha+"|filtro:"+filtro+"|disponibilidad:"+disponibilidad+"|idRol:"+idRol+"|estatusCita:"+estatusCita);
 		return citaUseCase.obtenerCitasDeUsuarioPorSemana(idUs, fecha,filtro,disponibilidad,idRol,estatusCita,estado);
 	}
 	
@@ -125,7 +124,7 @@ public class CitaController {
 	}
 
 	@PostMapping()
-	public void crearCita(@RequestBody CitaEntity c) {
+	public void crearCita(@RequestBody Cita c) {
 		citaUseCase.crearCita(c);
 	}
 	
@@ -148,6 +147,26 @@ public class CitaController {
 	public boolean envioRecordatorio(@PathVariable("idEvento") int idEvento) {
 		logger.info("idEvento:"+idEvento);
 		return citaUseCase.envioRecordatorio(idEvento);
+	}
+
+
+	@PutMapping("/actualizar-cita")
+	public void actualizarCita(@RequestBody Cita c,@RequestParam("ChangeAllConcurrency") boolean ChangeAllConcurrency,@RequestParam("idUsuarioCambio") int idUsuarioCambio) {
+		logger.info("fecha:"+c.getFecha()+"|hora:"+c.getHora()+"|tipo:"+c.getTipo()+"|idCita:"+c.getIdCita()+"|codigoRecurrencia:"+c.getCodigoRecurrencia()
+					+"|idSolicitud:"+c.getIdSolicitud());
+		logger.info("ChangeAllConcurrency:"+ChangeAllConcurrency);
+		logger.info("idUsuarioCambio:"+idUsuarioCambio);
+		citaUseCase.actualizarCita(c, ChangeAllConcurrency, idUsuarioCambio);
+	}
+
+	@PutMapping("/eliminar-cita")
+	public void eliminarCitaConcurrenc(@RequestBody Cita c,@RequestParam("ChangeAllConcurrency") boolean ChangeAllConcurrency,
+	@RequestParam("codigoConcurrencia") String codigoConcurrencia,@RequestParam("idUsuarioCambio") int idUsuarioCambio) {
+		logger.info("fecha:"+c.getFecha()+"|hora:"+c.getHora()+"|tipo:"+c.getTipo()+"|idCita:"+c.getIdCita()+"|codigoRecurrencia:"+c.getCodigoRecurrencia()
+					+"|idSolicitud:"+c.getIdSolicitud());
+		logger.info("ChangeAllConcurrency:"+ChangeAllConcurrency);
+		logger.info("idUsuarioCambio:"+idUsuarioCambio);
+		citaUseCase.eliminarCitasRecurrentes(c, ChangeAllConcurrency,codigoConcurrencia, idUsuarioCambio);
 	}
 
 }

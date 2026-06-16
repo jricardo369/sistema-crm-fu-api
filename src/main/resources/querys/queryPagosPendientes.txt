@@ -6,7 +6,8 @@
 		s.email,
 		COALESCE(s.amount, 0) AS monto_solicitado,
 		COALESCE(p.total_pagos, 0) AS total_pagos,
-		COALESCE(s.amount, 0) - COALESCE(p.total_pagos, 0) AS deuda
+		COALESCE(s.amount, 0) - COALESCE(p.total_pagos, 0) AS deuda,
+		tipos.tipos_pago
 	FROM solicitud s
 	LEFT JOIN (
 		SELECT 
@@ -15,6 +16,16 @@
 		FROM movimiento
 		GROUP BY id_solicitud
 	) p ON s.id_solicitud = p.id_solicitud
+
+	LEFT JOIN (
+    SELECT 
+        m.id_solicitud,
+        GROUP_CONCAT(DISTINCT tp.nombre ORDER BY tp.nombre SEPARATOR ', ') AS tipos_pago
+    FROM movimiento m
+    JOIN tipo_pago tp ON m.id_tipo_pago = tp.id_tipo_pago
+    GROUP BY m.id_solicitud
+	) tipos ON s.id_solicitud = tipos.id_solicitud
+
 	$whereAdicional
 	s.id_estatus_solicitud NOT IN(11)
 	AND NOT EXISTS (

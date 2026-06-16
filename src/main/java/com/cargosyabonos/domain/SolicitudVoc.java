@@ -1,7 +1,10 @@
 package com.cargosyabonos.domain;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
 
 /**
  * @author joser.vazquez
@@ -28,7 +31,6 @@ public class SolicitudVoc {
 	private String estatusPago;
 	private int age;
 	
-	private String importante;
 	private String comentario;
 	private String fechaNacimiento;
 	private String adicional;
@@ -62,8 +64,16 @@ public class SolicitudVoc {
 	private String purposeTreatament;
 	private String participation;
 	private String recommendations;
+	private String importantNotes;
 
 	private int numSesionesSinNota;
+
+	private String nombreDelPadre;
+	private String consejera;
+	private String nombreEscuela;
+	private String lenguajePreferente;
+	private List<String> numCitasTerapeutasPorSolicitud;
+
 	
 	public int getIdSolicitud() {
 		return idSolicitud;
@@ -172,13 +182,6 @@ public class SolicitudVoc {
 	}
 	public void setAge(int age) {
 		this.age = age;
-	}
-	
-	public String getImportante() {
-		return importante;
-	}
-	public void setImportante(String importante) {
-		this.importante = importante;
 	}
 	public String getComentario() {
 		return comentario;
@@ -372,25 +375,42 @@ public class SolicitudVoc {
 	public void setNumSesionesSinNota(int numSesionesSinNota) {
 		this.numSesionesSinNota = numSesionesSinNota;
 	}
-	@Override
-	public String toString() {
-		return "SolicitudVoc [idSolicitud=" + idSolicitud + ", fechaInicio=" + fechaInicio + ", cliente=" + cliente
-				+ ", telefono=" + telefono + ", email=" + email + ", docusign=" + docusign + ", amount=" + amount
-				+ ", abogado=" + abogado + ", email_abogado=" + email_abogado + ", numeroDeCaso=" + numeroDeCaso
-				+ ", idTipoSolicitud=" + idTipoSolicitud + ", idEstatusSolicitud=" + idEstatusSolicitud
-				+ ", idEstatusPago=" + idEstatusPago + ", firmaAbogados=" + firmaAbogados + ", tipoSolicitud="
-				+ tipoSolicitud + ", estatusSolicitud=" + estatusSolicitud + ", estatusPago=" + estatusPago + ", age="
-				+ age + ", importante=" + importante + ", comentario=" + comentario + ", fechaNacimiento="
-				+ fechaNacimiento + ", adicional=" + adicional + ", idioma=" + idioma + ", tipoEntrevista="
-				+ tipoEntrevista + ", direccion=" + direccion + ", estado=" + estado + ", referencia=" + referencia
-				+ ", apellidos=" + apellidos + ", paralegalName=" + paralegalName + ", paralegalEmails="
-				+ paralegalEmails + ", paralegalTelefonos=" + paralegalTelefonos + ", numSesiones=" + numSesiones
-				+ ", numSchedules=" + numSchedules + ", sesionesPendientes=" + sesionesPendientes + ", documento1="
-				+ documento1 + ", fechaDoc1=" + fechaDoc1 + ", documento2=" + documento2 + ", fechaDoc2=" + fechaDoc2
-				+ ", terapeuta=" + terapeuta + ", usuarioRevisando=" + usuarioRevisando + ", nombreTerapeuta="
-				+ nombreTerapeuta + ", code=" + code + ", info=" + info + "]";
+
+	public String getImportantNotes() {
+		return importantNotes;
 	}
-	
-	
+	public void setImportantNotes(String importantNotes) {
+		this.importantNotes = importantNotes;
+	}
+	public String getNombreDelPadre() {
+		return nombreDelPadre;
+	}
+	public void setNombreDelPadre(String nombreDelPadre) {
+		this.nombreDelPadre = nombreDelPadre;
+	}
+	public String getConsejera() {
+		return consejera;
+	}
+	public void setConsejera(String consejera) {
+		this.consejera = consejera;
+	}
+	public String getNombreEscuela() {
+		return nombreEscuela;
+	}
+	public void setNombreEscuela(String nombreEscuela) {
+		this.nombreEscuela = nombreEscuela;
+	}
+	public String getLenguajePreferente() {
+		return lenguajePreferente;
+	}
+	public void setLenguajePreferente(String lenguajePreferente) {
+		this.lenguajePreferente = lenguajePreferente;
+	}
+	public List<String> getNumCitasTerapeutasPorSolicitud() {
+		return numCitasTerapeutasPorSolicitud;
+	}
+	public void setNumCitasTerapeutasPorSolicitud(List<String> numCitasTerapeutasPorSolicitud) {
+		this.numCitasTerapeutasPorSolicitud = numCitasTerapeutasPorSolicitud;
+	}
 	
 }

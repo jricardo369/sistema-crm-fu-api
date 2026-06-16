@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.application.port.out.jpa.EventoSolicitudJpa;
@@ -157,6 +156,11 @@ public class EventoRepository implements EventoSolicitudPort {
 	public EventoSolicitudEntity obtenerUltimoScheduleClinician(int idSolicitud,String estatus){
 		return eSolJpa.obtenerUltimoScheduleClinician(idSolicitud, estatus);
 	}
+
+	@Override
+	public EventoSolicitudEntity obtenerScheduleTraductor(int idSolicitud,String estatus,int idUsuario, String fecha){
+		return eSolJpa.obtenerScheduleTraductor(idSolicitud, estatus, idUsuario, fecha);
+	}
 	
 	@Override
 	public String saberQueSchedulesInterviewSeTienen(int idSolicitud){
@@ -251,6 +255,7 @@ public class EventoRepository implements EventoSolicitudPort {
 		o.setIdEstaSol((Integer) row[9]);
 		o.setImportante((String) row[10]);
 		o.setIdEvento((Integer) row[11]);
+		o.setCitaTraductor(Integer.valueOf(row[12].toString()) == 0 ? false : true);
 		
 		return o;
 	}
@@ -377,8 +382,8 @@ public class EventoRepository implements EventoSolicitudPort {
 	}
 	
 	@Override
-	public void actualizarFinScheduleDeSolicitud(int idSolicitud) {
-		eSolJpa.actualizarFinScheduleDeSolicitud(idSolicitud);
+	public void actualizarEstatusEvento(int estatus,int idEvento){
+		eSolJpa.actualizarEstatusEvento(estatus,idEvento);
 	}
 	
 	private EventoSolicitud convertirAEventosSolicitud(Object[] row) {
@@ -508,5 +513,15 @@ public class EventoRepository implements EventoSolicitudPort {
 		return result;
 	}
 
+	@Override
+	public List<SchedulersActivasDeSolicitud> obtenerSchedulesActivasDeSolicitudAll(int idSolicitud){
+		return eSolJpa.obtenerSchedulesActivasDeSolicitudAll(idSolicitud);
+	}
+
+	@Override
+	public EventoSolicitudEntity existeEventoSchedulePortipo(String fecha, String hora, String tipoSchedule, int idUsuario,
+			String estatusSchedule, String descripcion) {
+		return eSolJpa.existeEventoSchedulePortipo(fecha, hora, tipoSchedule, idUsuario, estatusSchedule, descripcion);
+	}
 
 }

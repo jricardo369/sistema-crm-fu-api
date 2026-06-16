@@ -34,6 +34,7 @@ public interface EventoSolicitudPort {
 	public EventoSolicitudEntity obtenerUltimoScheduleInterviewClinicianByUser(int idSolicitud,String estatus,int idUsuaroSchedule);
 	public EventoSolicitudEntity obtenerUltimoScheduleScales(int idSolicitud,String estatus);
 	public EventoSolicitudEntity obtenerUltimoScheduleClinician(int idSolicitud,String estatus);
+	public EventoSolicitudEntity obtenerScheduleTraductor(int idSolicitud,String estatus,int idUsuario, String fecha);
 	public String saberQueSchedulesInterviewSeTienen(int idSolicitud);
 	public List<ReporteSolsUsuario> obtenerNumeroSolicitudesAtendidasPorEntrevistadores(String tipoEvento, String estatusSchedule, Date fi,Date ff);
 	public List<ReporteSolsDeUsuario> obtenerSolicitudesAtendidasPorEntrevistador(Date fi, Date ff,int idUsuario);
@@ -44,7 +45,10 @@ public interface EventoSolicitudPort {
 	public List<Cita> obtenerCitasInterviewer(String fecha,int idUsuario, String estatusCita,String estado);
 	public List<EventoRecordatorioCita> obtenerRecordatoriosCitasDeUsuario(String fecha,int idUsuario);
 	public void actualizarFinSchedule(String finSchedule,int idEvento);
-	public void actualizarFinScheduleDeSolicitud(int idSolicitud);	
+	public void actualizarEstatusEvento(int estatus,int idEvento);	
 	public List<EventoSolicitud> obtenerEventosDash(String fechai, String fechaf, int tileDash,int idUsuario,int usuario);
+	public List<SchedulersActivasDeSolicitud> obtenerSchedulesActivasDeSolicitudAll(int idSolicitud);
+	public EventoSolicitudEntity existeEventoSchedulePortipo(String fecha, String hora, String tipoSchedule, int idUsuario,
+			String estatusSchedule,String descripcion);
 
 }

@@ -20,13 +20,13 @@ public interface AbogadoJpa extends CrudRepository<AbogadoEntity, Serializable> 
 	
 	public AbogadoEntity findByNombre(String nombre);
 	
-	@Query(value = "SELECT id_abogado,firma,nombre,email,telefono,sinonimos,SUBSTRING(fecha_creacion, 1, 10) as fecha_creacion,cupon,SUBSTRING(fecha_cupon, 1, 10) as fecha_cupon FROM abogado ", nativeQuery = true)
+	@Query(value = "SELECT id_abogado,firma,nombre,email,telefono,sinonimos,SUBSTRING(fecha_creacion, 1, 10) as fecha_creacion,cupon,SUBSTRING(fecha_cupon, 1, 10) as fecha_cupon,estado,referencia FROM abogado ", nativeQuery = true)
 	public List<AbogadoEntity> obtenerTodosAbogadosActivos();
 	
 	@Query(value = "SELECT * FROM abogado WHERE nombre LIKE %?1% OR sinonimos LIKE %?1% OR email LIKE %?1%" , nativeQuery = true)
 	public List<AbogadoEntity> obtenerAbogadosPorNombreYSinonimo(String nombre);
 	
-	@Query(value = "SELECT a.id_abogado,a.firma,a.nombre,a.telefono,a.sinonimos,a.fecha_creacion,a.cupon,a.fecha_cupon " +
+	@Query(value = "SELECT a.id_abogado,a.firma,a.nombre,a.telefono,a.sinonimos,a.fecha_creacion,a.cupon,a.fecha_cupon,a.estado,a.referencia " +
 			"FROM abogado a JOIN email_abogado e ON e.id_abogado = a.id_abogado WHERE e.email = ?1", nativeQuery = true)
 	public AbogadoEntity obtenerAbogadoByEmail(String email);
 	

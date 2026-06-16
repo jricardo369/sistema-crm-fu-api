@@ -18,10 +18,12 @@ import org.springframework.stereotype.Service;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.jpa.CitaJpa;
+import com.cargosyabonos.application.port.out.jpa.UsuarioJpa;
 import com.cargosyabonos.domain.CargosCitasVocCabecera;
 import com.cargosyabonos.domain.CargosCitasVoc;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.CitaSql;
+import com.cargosyabonos.domain.UsuarioEntity;
 
 @Service
 public class CitaRepository implements CitaPort{
@@ -33,6 +35,9 @@ public class CitaRepository implements CitaPort{
 
 	@Autowired
 	CitaJpa citaJpa;
+
+	@Autowired
+	UsuarioJpa usJpa;
 
 	@Override
 	public List<CitaSql> obtenerCitasPorSolicitud(int idSolicitud) {
@@ -239,6 +244,8 @@ public class CitaRepository implements CitaPort{
 			sb.append(" WHERE " + sbW.toString());
 		}
 
+		sb.append(" ORDER BY c.fecha ASC ");
+
 
 		UtilidadesAdapter.pintarLog("query:" + sb.toString());
 
@@ -257,11 +264,36 @@ public class CitaRepository implements CitaPort{
 	@Override
 	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(String fecha, int idUsuario, int noShow) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-		LocalDate referencia   = LocalDate.parse(fecha, formatter);             
+		LocalDate referencia = LocalDate.parse(fecha, formatter);
 		LocalDate inicioSemana = referencia.with(DayOfWeek.MONDAY);
-		LocalDate finSemana    = inicioSemana.plusDays(6);
+		LocalDate finSemana = inicioSemana.plusDays(6);
 		UtilidadesAdapter.pintarLog("fecha:" + fecha + " inicioSemana:" + inicioSemana + " finSemana:" + finSemana);
-		return citaJpa.obtenerCitasDeUsuarioPorSemana(inicioSemana, finSemana, idUsuario, noShow);
+		UsuarioEntity ue = usJpa.findByIdUsuario(idUsuario);
+		if (ue.getRol().equals("6")) {
+			return citaJpa.obtenerCitasDeUsuarioPorSemanaVoc(inicioSemana, finSemana, noShow);
+		} else {
+			return citaJpa.obtenerCitasDeUsuarioPorSemanaTerapeuta(inicioSemana, finSemana, idUsuario, noShow);
+		}
+	}
+
+	@Override
+	public List<String> obtenerNumeroCitasTerapeutasPorSolicitud(int idSolicitud){
+		return citaJpa.obtenerNumeroCitasTerapeutasPorSolicitud(idSolicitud);
+	}
+
+	@Override
+	public CitaEntity obtenerCitaPorRecurrenciaYIdCita(String codigoRecurrencia,int idCita){
+		return citaJpa.obtenerCitaPorRecurrenciaYIdCita(codigoRecurrencia, idCita);
+	} 
+
+	@Override
+	public List<CitaEntity> obtenerCitaPorRecurrenciaYFecha(String codigoRecurrencia,String fecha){
+		return citaJpa.obtenerCitaPorRecurrenciaYFecha(codigoRecurrencia, fecha);
+	}
+
+	@Override
+	public void eliminarCitasRecurrentes(String codigoRecurrencia,String fecha){
+		citaJpa.eliminarCitasRecurrentes(codigoRecurrencia, fecha);
 	}
 
 }

@@ -1,7 +1,17 @@
  
 SELECT s.id_solicitud,s.fecha_inicio,s.cliente,s.telefono,s.email, s.docusign,s.abogado,s.email_abogado,s.firma_de_abogados,s.numero_de_caso,s.id_tipo_solicitud, s.id_estatus_solicitud,s.id_estatus_pago,s.fecha_nacimiento,
-s.adicional,s.idioma,s.direccion,s.estado,s.apellidos,s.parelegal_name,s.parelegal_emails,s.parelegal_telefonos, s.importante,s.num_sesiones,s.num_schedules,s.sesiones_pendientes,s.documento_1,s.fecha_doc_1,
+s.adicional,s.idioma,s.direccion,s.estado,s.apellidos,s.parelegal_name,s.parelegal_emails,s.parelegal_telefonos,
+
+ (
+  SELECT GROUP_CONCAT(descripcion SEPARATOR ', ')
+  FROM evento_solicitud_voc
+  WHERE tipo IN ('Important','Suicide')
+    AND id_solicitud = s.id_solicitud
+) AS importantNotes
+
+,s.num_sesiones,s.num_schedules,s.sesiones_pendientes,s.documento_1,s.fecha_doc_1,
 s.documento_2,s.fecha_doc_2,s.terapeuta,s.usuario_revisando,s.code, ts.nombre tsNombre,ep.descripcion as esDesc,es.descripcion as esolDesc,ut.nombre,s.sexo,s.purpose_treatament,s.participation,s.recommendations,
+nombre_del_padre,consejera,nombre_escuela,lenguaje_preferente,
 
 -- Subconsulta para contar citas y notas
     (

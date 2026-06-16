@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.UtilidadesAdapter;
+import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.EstatusPagoPort;
 import com.cargosyabonos.application.port.out.EstatusSolicitudPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
@@ -69,9 +70,12 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	
 	@Autowired
 	private UsuariosPort uPort;
+
+	@Autowired
+	private CitaPort citaPort;
 	
-	 @Autowired
-	    private Validator validator; 
+	@Autowired
+    private Validator validator; 
 	
 	@Override
 	public List<SolicitudVocEntity> obtenerSolicitudesDeUsuario(int idUsuario,int estatus) {	
@@ -107,6 +111,9 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 				ePort.ingresarEventoDeSolicitud("Request creation", "The request was created", "Info", u.getUsuario(), e);
 			}
 		}
+
+		ePort.ingresarEventoDeSolicitud("Session Adjustment", "Initial sessions "+r.getNumSesiones(), "Initial sessions", u.getUsuario(), e);
+
 		return e;
 	}
 
@@ -304,30 +311,27 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 					break;
 				case "File Status":
 					UtilidadesAdapter.pintarLog("Busqueda por file estatus:" + valor);
-					if (valor.equals("No show") || valor.equals("Won") | valor.equals("Lost")) {
-						if (sbW.length() != 0)
-							sbW.append(" AND ");
-						sbW.append("e.descripcion LIKE '%"+valor+"%'  ");
-					} else if (valor.equals("Refused")) {
-						if (sbW.length() != 0)
-							sbW.append(" AND ");
-						sbW.append("e.evento LIKE '%"+valor+"%' ");
-					} else {
 		
 						String es = "";
 						if (valor.equals("All")) {
-							es = "1,2,3,10";
+							es = "1,6,13,14";
 						} else {
+
+							if(valor.equals("Open")){
+								es = "14";
+							}else{
 		
-							EstatusSolicitudEntity estSol = esPort.obtenerEstatusSolicitudPorDescripcion(valor);
-							es= ""+estSol.getIdEstatusSolicitud();
+								EstatusSolicitudEntity estSol = esPort.obtenerEstatusSolicitudPorDescripcion(valor);
+								es= ""+estSol.getIdEstatusSolicitud();
+
+							}
 		
 						}
 						UtilidadesAdapter.pintarLog("Buscar file estatus:" + es);
 						if (sbW.length() != 0)
 							sbW.append(" AND ");
 						sbW.append("s.id_estatus_solicitud IN("+es+") ");
-					}
+					
 					break;
 				case "Payment Status":
 		
@@ -532,6 +536,7 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			
 			SolicitudVoc s = new SolicitudVoc();
 			StringBuilder sb = new StringBuilder();
+			List<String> nc = null;
 			
 			s.setIdSolicitud((Integer)row[0]);
 			s.setFechaInicio((Date)row[1]);
@@ -555,7 +560,7 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			s.setParalegalName((String)row[19]);
 			s.setParalegalEmails((String)row[20]);
 			s.setParalegalTelefonos((String)row[21]);
-			s.setImportante((String)row[22]);
+			s.setImportantNotes((String) row[22] == null ? "" : (String) row[22]);
 			s.setNumSesiones((Integer)row[23]);
 			s.setNumSchedules((Integer)row[24]);
 			s.setSesionesPendientes((Integer)row[25]);
@@ -574,6 +579,10 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			s.setPurposeTreatament((String)row[38]);
 			s.setParticipation((String)row[39]);
 			s.setRecommendations((String)row[40]);
+			s.setNombreDelPadre((String)row[41]);
+			s.setConsejera((String)row[42]);
+			s.setNombreEscuela((String)row[43]);
+			s.setLenguajePreferente((String)row[44]);
 			
 			LocalDate fechaLimite = LocalDate.of(2025, 11, 1);
 	        
@@ -589,10 +598,10 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	        
 	        	//UtilidadesAdapter.pintarLog("Nuevo calculo");
 				//Apartir de nov 2025
-				BigDecimal ns = (BigDecimal)row[41];
+				BigDecimal ns = (BigDecimal)row[45];
 				s.setNumSchedules(ns == null ? 0 : ns.intValue());
 				s.setSesionesPendientes(s.getNumSesiones()-s.getNumSchedules());
-				BigDecimal ssn = (BigDecimal)row[42];
+				BigDecimal ssn = (BigDecimal)row[46];
 				s.setNumSesionesSinNota(ssn == null ? 0 : ssn.intValue());
 				
 			}
@@ -600,6 +609,10 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			
 			if (!soloUno) {
 				s.setCliente(s.getNombreClienteCompleto());
+				
+			}else{
+				nc = citaPort.obtenerNumeroCitasTerapeutasPorSolicitud(s.getIdSolicitud());
+				s.setNumCitasTerapeutasPorSolicitud(nc);
 			}
 			
 			if(s.getNumSchedules() >= 2){
@@ -610,9 +623,9 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			
 			if(s.getSesionesPendientes() < 10){
 				if (sb.length() != 0){
-					sb.append(", there are few sessions left to use");
+					sb.append(", there are "+s.getSesionesPendientes()+" sessions left to use");
 				}else{
-					sb.append("There are few sessions left to use");
+					sb.append("There are "+s.getSesionesPendientes()+" sessions left to use");
 				}
 				
 			}

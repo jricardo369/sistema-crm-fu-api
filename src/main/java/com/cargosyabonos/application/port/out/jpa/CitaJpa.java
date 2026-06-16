@@ -22,7 +22,8 @@ public interface CitaJpa extends CrudRepository<CitaEntity, Serializable> {
 	public CitaEntity obtenerPorId(int idCita);
 	
 	@Query(value = " SELECT c.id_cita as idCita,c.comentario,c.fecha,c.hora,c.tipo,c.dos_citas as dosCitas,c.id_usuario as idUsuario,c.id_solicitud as idSolicitud, " 
-				 +"c.no_show as noShow,c.amount,c.pagado,c.fecha_pagado as fechaPagado,(SELECT COUNT(*)  FROM nota_cita WHERE id_cita = c.id_cita ) as tieneNota,c.fecha_creacion as fechaCreacion "
+				 +"c.no_show as noShow,c.amount,c.pagado,c.fecha_pagado as fechaPagado,(SELECT COUNT(*)  FROM nota_cita WHERE id_cita = c.id_cita ) as tieneNota,c.fecha_creacion as fechaCreacion,"
+				+"c.codigo_recurrencia as codigoRecurrencia "
 				 +"FROM cita c "
 				 +"WHERE id_solicitud = ?1 "
 				 +"ORDER BY fecha DESC", nativeQuery = true)
@@ -46,16 +47,40 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 	
 	@Query(value = "SELECT * FROM cita WHERE yearweek(`fecha`) = yearweek(?1) AND no_show = ?2", nativeQuery = true)
 	public List<CitaEntity> obtenerTodasCitasPorSemana(String fecha, int noShow);
+
+	@Query(value = "SELECT * FROM cita WHERE  codigo_recurrencia = ?1 AND id_cita = ?2", nativeQuery = true)
+	public CitaEntity obtenerCitaPorRecurrenciaYIdCita(String codigoRecurrencia,int idCita);
+
+	@Query(value = "SELECT * FROM cita WHERE codigo_recurrencia = ?1 AND fecha >= ?2", nativeQuery = true)
+	public List<CitaEntity> obtenerCitaPorRecurrenciaYFecha(String codigoRecurrencia,String fecha);
 	
 	@Query(value = " SELECT c.id_cita as idCita,c.comentario,c.fecha,c.hora,c.tipo,c.dos_citas as dosCitas,c.id_usuario as idUsuario,c.id_solicitud as idSolicitud, " 
 			 +"c.no_show as noShow,c.amount,c.pagado,c.fecha_pagado as fechaPagado,"
-			 + "(SELECT COUNT(*)  FROM nota_cita WHERE id_cita = c.id_cita ) as tieneNota,u.color, s.numero_de_caso as casenumber,s.cliente,u.nombre as nombreUsuario   "
+			 + "(SELECT COUNT(*)  FROM nota_cita WHERE id_cita = c.id_cita ) as tieneNota,u.color, s.numero_de_caso as casenumber,s.cliente,u.nombre as nombreUsuario, c.codigo_recurrencia as codigoRecurrencia   "
 			 +"FROM cita c "
 			 +"LEFT JOIN solicitud_voc s ON s.id_solicitud= c.id_solicitud "
 			 +"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario "
 			 +"WHERE fecha >= ?1 AND  fecha < ?2 "
 			 +"AND c.id_usuario = ?3 AND no_show = ?4", nativeQuery = true)
-	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(LocalDate inicioSemana, LocalDate finSemana,int idUsuario,int noShow);
+	public List<CitaSql> obtenerCitasDeUsuarioPorSemanaTerapeuta(LocalDate inicioSemana, LocalDate finSemana,int idUsuario,int noShow);
+
+	@Query(value = " SELECT c.id_cita as idCita,c.comentario,c.fecha,c.hora,c.tipo,c.dos_citas as dosCitas,c.id_usuario as idUsuario,c.id_solicitud as idSolicitud, " 
+			 +"c.no_show as noShow,c.amount,c.pagado,c.fecha_pagado as fechaPagado,"
+			 + "(SELECT COUNT(*)  FROM nota_cita WHERE id_cita = c.id_cita ) as tieneNota,u.color, s.numero_de_caso as casenumber,s.cliente,u.nombre as nombreUsuario,c.codigo_recurrencia as codigoRecurrencia  "
+			 +"FROM cita c "
+			 +"LEFT JOIN solicitud_voc s ON s.id_solicitud= c.id_solicitud "
+			 +"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario "
+			 +"WHERE fecha >= ?1 AND  fecha < ?2 "
+			 +"AND no_show = ?3", nativeQuery = true)
+	public List<CitaSql> obtenerCitasDeUsuarioPorSemanaVoc(LocalDate inicioSemana, LocalDate finSemana,int noShow);
+
+	@Query(value = "SELECT CONCAT(u.nombre, ',', COUNT(*),' schedules') AS usuarioYSesiones " + 
+				"FROM cita c " +
+				"JOIN nota_cita n ON n.id_cita = c.id_cita " + 
+				"JOIN usuario u ON u.id_usuario = c.id_usuario " + 
+				"WHERE id_solicitud = ?1 " + 
+				"GROUP BY u.nombre", nativeQuery = true)
+	public List<String> obtenerNumeroCitasTerapeutasPorSolicitud(int idSolicitud);
 	
 	@Transactional
 	@Query(value = "UPDATE cita SET no_show  = ?1 WHERE id_cita = ?2", nativeQuery = true)
@@ -66,5 +91,10 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 	@Query(value = "UPDATE cita SET pagado  = ?1,fecha_pagado = ?2 WHERE id_cita = ?3", nativeQuery = true)
 	@Modifying
 	public void actualizarPagado(boolean pagado,String fechPagado,int idCita);
+
+	@Transactional
+	@Query(value = "DELETE  FROM cita WHERE codigo_recurrencia = ?1 AND fecha >= ?2", nativeQuery = true)
+	@Modifying
+	public void eliminarCitasRecurrentes(String codigoRecurrencia,String fecha);
 
 }

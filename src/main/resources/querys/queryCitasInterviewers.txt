@@ -9,7 +9,11 @@ e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud
     )
     THEN 'x' ELSE ''
   END AS tieneImportant,
-    e.id_evento
+    e.id_evento,
+    CASE 
+        WHEN e.descripcion LIKE '%translator%' THEN 1
+        ELSE 0
+    END AS esTranslator
 
 FROM evento_solicitud e 
 JOIN usuario u ON u.id_usuario = usuario_schedule 

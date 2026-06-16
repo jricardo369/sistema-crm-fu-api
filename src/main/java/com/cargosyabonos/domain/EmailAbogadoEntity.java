@@ -24,6 +24,10 @@ public class EmailAbogadoEntity {
 	@Column(name = "email", length = 150)
 	private String email;
 
+	private String nombre;
+
+	private String tipo;
+
 	public int getIdEmailAbo() {
 		return idEmailAbo;
 	}
@@ -47,5 +51,23 @@ public class EmailAbogadoEntity {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+
+	public String getNombre() {
+		return nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public String getTipo() {
+		return tipo;
+	}
+
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
+
+	
 
 }

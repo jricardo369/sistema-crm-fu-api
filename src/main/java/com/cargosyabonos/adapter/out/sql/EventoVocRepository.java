@@ -89,5 +89,19 @@ public class EventoVocRepository implements EventoSolicitudVocPort {
 		return eSolJpa.obtenerEventosSchedules(fecha);
 	}
 
+	@Override
+	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud) {
+		return eSolJpa.obtenerHistorialNumSesionesDeSolicitud(idSolicitud);
+	}
+
+	@Override
+	public void actualizarTipoEvento(int idEvento, String tipoEvento, String decripcion){
+		eSolJpa.actualizarEstatusEvento(tipoEvento, decripcion, idEvento);
+	}
+
+	@Override
+	public EventoSolicitudVocEntity obtenerEventoPorId(int idEvento) {
+		return eSolJpa.findById(idEvento).orElse(null);
+	}
 
 }

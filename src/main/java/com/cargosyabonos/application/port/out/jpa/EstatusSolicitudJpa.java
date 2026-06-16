@@ -17,7 +17,7 @@ public interface EstatusSolicitudJpa extends CrudRepository<EstatusSolicitudEnti
 	@Query(value = "SELECT * FROM estatus_solicitud WHERE id_estatus_solicitud = ?1", nativeQuery = true)
 	public EstatusSolicitudEntity obtenerEstatusSolicitudPorId(int idEstatusSolicitud);
 	
-	@Query(value = "SELECT * FROM estatus_solicitud WHERE id_estatus_solicitud IN(1,6,11,13,14)", nativeQuery = true)
+	@Query(value = "SELECT * FROM estatus_solicitud WHERE id_estatus_solicitud IN(1,6,11,13,14,15,16)", nativeQuery = true)
 	public List<EstatusSolicitudEntity> obtenerEstatusSolicitudesVoc();
 	
 	@Query(value = "SELECT * FROM estatus_solicitud WHERE id_estatus_solicitud NOT IN(6,12,13,14)", nativeQuery = true)

@@ -63,11 +63,26 @@ public class UsuariosService implements UsuariosUseCase {
 	}
 
 	@Override
-	public UsuarioEntity buscarPorUsuario(String usuario) {
-		UsuarioEntity u = usrPort.buscarPorUsuario(usuario);
+	public UsuarioObj buscarPorUsuario(String usuario) {
+		/*UsuarioEntity u = usrPort.buscarPorUsuario(usuario);
 		String rutaServidorFinal = rutaServidorFinal();
 		u.setImage(rutaServidorFinal+u.getImage());
-		return u;
+		return u;*/
+
+		UsuarioObj uo = usrPort.obtenerUsuariosObj(0,usuario).get(0);
+
+		List<PermisoUsuario> permisos = new ArrayList<>();
+		PermisoUsuario p = null;
+		List<PermisoUsuarioEntity> p1 = puPort.obtenerPermisosDeUsuario(uo.getIdUsuario());
+		for (PermisoUsuarioEntity pe : p1) {
+			p = new PermisoUsuario();
+			p.setId(pe.getId());
+			p.setNombre(pe.getNombre());
+			permisos.add(p);
+		}
+		uo.setPermisos(permisos);
+		
+		return uo;
 	}
 	
 	@Override
@@ -107,9 +122,11 @@ public class UsuariosService implements UsuariosUseCase {
 			p.setNombre(pe.getNombre());
 			permisos.add(p);
 		}
-		UsuarioEntity u = usrPort.buscarPorId(idUsuario);
+		/*UsuarioEntity u = usrPort.buscarPorId(idUsuario);
 		u.setPermisos(permisos);
-		UsuarioObj uo = converterUsEntityToUsObj(u);
+		UsuarioObj uo = converterUsEntityToUsObj(u);*/
+		UsuarioObj uo = usrPort.obtenerUsuariosObj(idUsuario,"").get(0);
+		uo.setPermisos(permisos);
 		return uo;
 	}
 
@@ -148,7 +165,7 @@ public class UsuariosService implements UsuariosUseCase {
 		String contExistente = u.getContrasenia();
 		String contNueva = UtilidadesAdapter.sha256(usuario.getUsuario(), usuario.getContrasenia()); 
 		UtilidadesAdapter.pintarLog("Contraseña entrante:"+contEntrante);
-		UtilidadesAdapter.pintarLog("Contraseña existente:"+usuario.getContrasenia());
+		UtilidadesAdapter.pintarLog("Contraseña existente:"+u.getContrasenia());
 		//Validar si cambiaron contrasenia
 		if(!contExistente.equals(contEntrante)){
 			usuario.setContrasenia(contNueva);

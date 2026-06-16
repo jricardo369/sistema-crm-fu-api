@@ -1,5 +1,6 @@
 package com.cargosyabonos.adapter.out.sql;
 
+import com.cargosyabonos.adapter.out.file.PdfCita;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -42,10 +43,14 @@ import com.cargosyabonos.domain.SolicitudEntity;
 import com.cargosyabonos.domain.TelefonosSolicitudes;
 import com.cargosyabonos.domain.UltimoUsuarioRevisor;
 import com.cargosyabonos.domain.UsuarioEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Service
 public class SolicitudRepository implements SolicitudPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(SolicitudRepository.class);
 
 	@Autowired
 	SolicitudJpa reqJpa;
@@ -97,8 +102,6 @@ public class SolicitudRepository implements SolicitudPort {
 
 	@Value("classpath:/querys/whereDash3.txt")
     private Resource whereDash3;
-
-
 
 	@Override
 	public List<SolicitudEntity> obtenerSolicitudesPorFecha(Date fechai, Date fechaf) {
@@ -355,6 +358,11 @@ public class SolicitudRepository implements SolicitudPort {
 	} 
 
 	@Override
+	public void actualizarUsuarioTraductor(int idUsuario,int idSolicitud) {
+		reqJpa.actualizarUsuarioTraductor(idUsuario, idSolicitud);
+	}
+
+	@Override
 	public void actualizarAsignacionIntScReset(int idSolicitud) {
 		reqJpa.actualizarAsignacionIntScReset(idSolicitud);
 	}
@@ -540,6 +548,63 @@ public class SolicitudRepository implements SolicitudPort {
 		return result;
 	}
 
+	@Override
+	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(boolean soloUnObjeto, UsuarioEntity us, String cerradas,
+			boolean primeraVez, String ordenarPor, String orden,
+			String fechai, String fechaf, int idSolicitud, String cliente, String telefono, String email, String estado,
+			int idEstatusSolicitud, int idEstatusPago,
+			int idTipoSolicitud, String waiver, String noshow, String importante, String asignado,String zipcodes,String consentimiento) {
+
+		List<Solicitud> result = null;
+		UtilidadesAdapter.pintarLog("idSol:" + idSolicitud);
+		
+		/*boolean soloUnObjeto = false;
+
+		boolean filtrosSinSolicitudConDatos = hayFiltrosActivos(cliente, telefono, email, estado, idEstatusSolicitud, idEstatusPago, idTipoSolicitud, waiver, noshow, importante, asignado, zipcodes);
+		if(!filtrosSinSolicitudConDatos){
+			if (idSolicitud > 0) {
+				soloUnObjeto = true;
+			}
+		}*/
+
+		logger.info("Obteniendo solicitudes con filtros - soloUnObjeto: " + soloUnObjeto + ", idSolicitud: " + idSolicitud);
+
+		List<Object[]> rows = obtenerSolsConVariosFiltros(soloUnObjeto, us, cerradas, primeraVez, ordenarPor, orden,
+				fechai, fechaf, idSolicitud,
+				cliente, telefono, email, estado, idEstatusSolicitud, idEstatusPago, idTipoSolicitud, waiver, noshow,
+				importante, asignado,zipcodes, consentimiento);
+		result = new ArrayList<>(rows.size());
+
+
+
+		for (Object[] row : rows) {
+			result.add(convertirSolQueryASolicitud(row, soloUnObjeto));
+		}
+
+		return result;
+	}
+
+	/**
+     * Verifica si todos los filtros están vacíos, nulos o en cero.
+     */
+    public static boolean hayFiltrosActivos(String cliente, String telefono, String email, String estado,
+            int idEstatusSolicitud, int idEstatusPago, int idTipoSolicitud, String waiver, String noshow, String importante, String asignado, String zipcodes) {
+        return (
+            (cliente != null && !cliente.trim().isEmpty()) ||
+            (telefono != null && !telefono.trim().isEmpty()) ||
+            (email != null && !email.trim().isEmpty()) ||
+            (estado != null && !estado.trim().isEmpty()) ||
+            idEstatusSolicitud != 0 ||
+            idEstatusPago != 0 ||
+            idTipoSolicitud != 0 ||
+            (waiver != null && !waiver.trim().isEmpty()) ||
+            (noshow != null && !noshow.trim().isEmpty()) ||
+            (importante != null && !importante.trim().isEmpty()) ||
+            (asignado != null && !asignado.trim().isEmpty()) ||
+            (zipcodes != null && !zipcodes.trim().isEmpty())
+        );
+    }
+
 	private Solicitud convertirSolQueryASolicitud(Object[] row, boolean soloUno) {
 
 		Solicitud s = new Solicitud();
@@ -641,10 +706,450 @@ public class SolicitudRepository implements SolicitudPort {
 		s.setFechaClinicianAppo((String) row[67] == null ? "" : (String) row[67]);
 		s.setImportantNotes((String) row[68] == null ? "" : (String) row[68]);
 		s.setSignedClnc(Integer.valueOf(row[69].toString()) == 0 ? false : true);
-		
+		s.setFechaDeCrimen((String) row[70] == null ? "" : (String) row[70]);
+		s.setIdUsuarioTraductor(Integer.valueOf(row[71].toString()));
+		s.setUsuarioTraductorNombre((String) row[72]);
+		s.setNoShow(row[73] !=  null ? Integer.valueOf(row[73].toString()) == 0 ? false : true : false);
+		s.setInicialesInterview((String) row[74] == null ? "" : (String) row[74]);
+		s.setInicialesClinician((String) row[75] == null ? "" : (String) row[75]);
+		s.setInicialesIntSc((String) row[76] == null ? "" : (String) row[76]);
+		s.setInicialesTemplate((String) row[77] == null ? "" : (String) row[77]);
+		s.setTiposPagosRealizados(((String) row[78] == null ? "" : (String) row[78]));
+		s.setConsentimiento(Integer.valueOf(row[79].toString()) == 0 ? false : true);
+		s.setVerificacionCliente(Integer.valueOf(row[80].toString()) == 0 ? false : true);
 
 		return s;
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerSolsConVariosFiltros(boolean soloUnObjeto, UsuarioEntity us, String cerradas, boolean primeraVez,String ordenarPor, String orden,
+			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
+		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento) {
+
+		boolean isRevisor = us.isRevisor();
+		String rol = us.getRol();
+		int idUsuario = us.getIdUsuario();
+		boolean seUsaronFilros = false;
+
+		UtilidadesAdapter.pintarLog("Solo un objeto:"+soloUnObjeto);
+		UtilidadesAdapter.pintarLog("ejecutando query filtro | rol:"+rol+" | isRevisor:"+isRevisor+" | fechai:"+fechai+" | fechaf:"+fechaf+" | idUsuario:"+idUsuario+" | idSolicitud:"+idSolicitud+" | cerradas:"+cerradas+" | ordenarPor:"+ordenarPor+" | orden:"+orden+" | campo:"+cliente+" | valor:"+telefono+" | primeraVez:"+primeraVez+
+			" | Estado:"+estado+" | idEstatusSolicitud:"+idEstatusSolicitud+" | idEstatusPago:"+idEstatusPago+" | idTipoSolicitud:"+idTipoSolicitud+" | waiver:"+waiver+" | noshow:"+noshow+" | importante:"+importante+" | asignado:"+asignado
+		);
+		StringBuilder sb = new StringBuilder();
+		StringBuilder sbW = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(querySolicitudes.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		//log.info("Query solicitudes:"+queryS);
+		sb.append(queryS);
+			
+		if (idSolicitud == 0) {
+			if(!rol.equals("11")){
+				if (sbW.length() != 0)
+				sbW.append(" AND ");
+				sbW.append("OPEN".equals(cerradas)?" s.id_estatus_solicitud <> 11 ":" s.id_estatus_solicitud = 11 ");
+			}
+		}	
+		
+		
+
+		if (!soloUnObjeto) {
+
+			if (!"".equals(fechai)) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.fecha_inicio BETWEEN :fechai AND :fechaf ");
+			}
+
+			if (idSolicitud != 0) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" CAST(s.id_solicitud AS CHAR) LIKE :idSolicitud ");
+				seUsaronFilros = true;
+			}
+
+			if (cliente != null && !"".equals(cliente)) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" ( s.cliente LIKE :cliente OR s.apellidos LIKE :cliente ) ");
+				seUsaronFilros = true;
+			}
+
+			if (telefono != null && !"".equals(telefono)) {
+
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.telefono LIKE :telefono ");
+				seUsaronFilros = true;
+			}
+
+			if (email != null && !"".equals(email)) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.email LIKE :email ");
+				seUsaronFilros = true;
+			}
+
+			if (estado != null && !"".equals(estado)) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.estado = :estado ");
+				seUsaronFilros = true;
+			}
+
+			if (idEstatusSolicitud != 0) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.id_estatus_solicitud = :idEstatusSolicitud ");
+				seUsaronFilros = true;
+			}
+
+			if (idEstatusPago != 0) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.id_estatus_pago = :idEstatusPago ");
+				seUsaronFilros = true;
+			}
+
+			if (idTipoSolicitud != 0) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.id_tipo_solicitud = :idTipoSolicitud ");
+				seUsaronFilros = true;
+			}
+
+			if (waiver != null && !waiver.isEmpty()) {
+				if ("Yes".equals(waiver)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.waiver = 1 ");
+					seUsaronFilros = true;
+				}
+				if ("No".equals(waiver)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.waiver = 0 ");
+					seUsaronFilros = true;
+				}
+			}
+
+			if (noshow != null && !noshow.isEmpty()) {
+				if ("Yes".equalsIgnoreCase(noshow)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" EXISTS (" +
+							"  SELECT 1" +
+							"  FROM evento_solicitud e2 " +
+							"  WHERE e2.id_solicitud = s.id_solicitud " +
+							"    AND LOWER(e2.descripcion) LIKE '%no show%' " +
+							"    AND LOWER(e2.descripcion) NOT LIKE '%re-scheduled%' " +
+							"    AND LOWER(e2.descripcion) NOT LIKE '%was changed%'" +
+							") ");
+					seUsaronFilros = true;
+				}
+				if ("No".equalsIgnoreCase(noshow)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" NOT EXISTS (" +
+							"  SELECT 1" +
+							"  FROM evento_solicitud e2 " +
+							"  WHERE e2.id_solicitud = s.id_solicitud " +
+							"    AND LOWER(e2.descripcion) LIKE '%no show%' " +
+							"    AND LOWER(e2.descripcion) NOT LIKE '%re-scheduled%' " +
+							"    AND LOWER(e2.descripcion) NOT LIKE '%was changed%'" +
+							") ");
+					seUsaronFilros = true;
+				}
+			}
+
+			if (importante != null && !importante.isEmpty()) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				if ("Yes".equalsIgnoreCase(importante)) {
+					sbW.append(
+							" EXISTS (SELECT 1 FROM evento_solicitud evImp WHERE evImp.id_solicitud = s.id_solicitud AND evImp.tipo IN ('Important','Suicide')) ");
+				} else if ("No".equalsIgnoreCase(importante)) {
+					sbW.append(
+							" NOT EXISTS (SELECT 1 FROM evento_solicitud evImp WHERE evImp.id_solicitud = s.id_solicitud AND evImp.tipo IN ('Important','Suicide')) ");
+				}
+				seUsaronFilros = true;
+			}
+
+			if (consentimiento != null && !consentimiento.isEmpty()) {
+				if ("Yes".equals(consentimiento)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.consentimiento = 1 ");
+					seUsaronFilros = true;
+				}
+				if ("No".equals(consentimiento)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.consentimiento = 0 ");
+					seUsaronFilros = true;
+				}
+			}
+
+			if (asignado != null && !"".equals(asignado)) {
+
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(
+						" (ucl.nombre LIKE :asignado OR uri.nombre LIKE :asignado OR us.nombre LIKE :asignado OR urt.nombre LIKE :asignado) ");
+				seUsaronFilros = true;
+
+			}
+
+			if (zipcodes != null && !"".equals(zipcodes)) {
+
+				String zcodes = buildZipCodeFilter(zipcodes);
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(zcodes);
+				seUsaronFilros = true;
+
+			}
+
+		}else{
+
+			if (idSolicitud != 0) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" s.id_solicitud = :idSolicitud ");
+			}
+
+		}
+		
+
+		if (idSolicitud == 0) {
+
+			if ("CLOSED".equals(cerradas)) {
+
+				if (!"".equals(fechai)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.fecha_inicio BETWEEN :fechai AND :fechaf ");
+				}
+
+			} else {
+
+				if (primeraVez) {
+					if (!seUsaronFilros) {
+						if (rol.equals("4")) {
+							if (isRevisor) {
+								if (sbW.length() != 0)
+									sbW.append(" AND ");
+								sbW.append(" s.usuario_revisando = :idUsuario AND ( s.usuario_template = 0 || s.id_estatus_solicitud = 10) ");
+							
+							} else {
+								if (sbW.length() != 0)
+									sbW.append(" AND ");
+								sbW.append(
+										" usuario_revisor = :idUsuario AND s.id_estatus_solicitud NOT IN(11,2,3) OR s.asignacion_int_sc = 0 ");
+							}
+						} else if (rol.equals("7")) {
+							if (sbW.length() != 0)
+								sbW.append(" AND ");
+							sbW.append(" s.usuario_template = :idUsuario AND s.fin_asg_tmp = 0 ");
+						} else if (rol.equals("9")) {
+							if (sbW.length() != 0)
+								sbW.append(" AND ");
+							sbW.append(" usuario_external = :idUsuario  ");
+						} else if (rol.equals("5")) {
+							if (sbW.length() != 0)
+								sbW.append(" AND ");
+							sbW.append(" s.usuario_interview = :idUsuario AND s.fin_int_ini = 0 ");
+						} else if (rol.equals("8")) {
+							if (sbW.length() != 0)
+								sbW.append(" AND ");
+							sbW.append(" s.usuario_int_sc = :idUsuario AND s.fin_int_sc = 0 ");
+						}
+
+					}
+
+				}
+
+				if (!"".equals(fechai)) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(" s.fecha_inicio BETWEEN :fechai AND :fechaf ");
+				}
+
+			}
+			
+			if (rol.equals("11")) {
+				if (sbW.length() != 0)
+					sbW.append(" AND ");
+				sbW.append(" ( s.assigned_clinician = :idUsuario AND s.fin_asg_clnc = 0 ) OR ( s.usuario_interview = :idUsuario AND s.fin_int_ini = 0 )  ");
+			}
+			
+		} 
+		/*else {
+			UtilidadesAdapter.pintarLog("Agregar id solicitud al query");
+			if (sbW.length() != 0)
+				sbW.append(" AND ");
+			sbW.append(" s.id_solicitud = :idSolicitud ");
+		}*/
+
+
+		sb.append("\n");
+		if (sbW.length() != 0) {
+			sb.append(" WHERE " + sbW.toString());
+		}
+
+		sb.append("\n");
+			sb.append(" GROUP BY id_solicitud,cliente ");
+		
+
+		sb.append("\n");
+		
+		if (!"".equals(ordenarPor)) {
+			if ("".equals(orden)) {
+				orden = "ASC";
+			}
+			if (ordenarPor.equals("File")) {
+				sb.append(" ORDER BY s.id_solicitud " + orden);
+			}
+			if (ordenarPor.equals("Creation Date")) {
+				sb.append(" ORDER BY fecha_inicio " + orden);
+			}
+			if (ordenarPor.equals("Due date")) {
+				sb.append(" ORDER BY due_date " + orden);
+			}
+			if (ordenarPor.equals("Additional")) {
+				sb.append(" ORDER BY adicional " + orden);
+			}
+			if (ordenarPor.equals("Importance")) {
+				sb.append(" ORDER BY importante " + orden);
+			}
+			if (ordenarPor.equals("Interview Appointment")) {
+				sb.append(" ORDER BY fechaint " + orden);
+			}
+			if (ordenarPor.equals("Scales Appointment")) {
+				sb.append(" ORDER BY fechascale " + orden);
+			}
+			if (ordenarPor.equals("Interview review")) {
+				sb.append(" ORDER BY interview_master " + orden);
+			}
+			if (ordenarPor.equals("Interview Scale")) {
+				sb.append(" ORDER BY fechascale " + orden);
+			}
+
+		} else {
+
+			if (rol.equals("1") || rol.equals("3")) {
+				sb.append("  ORDER BY s.fecha_inicio DESC ");
+			} else if (rol.equals("4")) {
+				if (isRevisor) {
+					sb.append("  ORDER BY dueDate DESC");
+				} else {
+					sb.append("  ORDER BY s.fecha_inicio DESC ");
+				}
+			} else if (rol.equals("5") || rol.equals("7")) {
+				sb.append("  ORDER BY fechaint DESC ");
+			} else if (rol.equals("9")) {
+				sb.append("  ORDER BY s.fecha_inicio DESC ");
+			} else if (rol.equals("8")) {
+				sb.append("  ORDER BY fechascale DESC ");
+			} else {
+				sb.append("  ORDER BY s.fecha_inicio DESC ");
+			}
+
+		}
+	
+
+		UtilidadesAdapter.pintarLog("query:\n" + sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+
+		if (!soloUnObjeto) {
+
+			if (idSolicitud == 0) {
+				if (!rol.equals("11")) {
+					if (sbW.length() != 0)
+						sbW.append(" AND ");
+					sbW.append(cerradas.equals("OPEN") ? " s.id_estatus_solicitud <> 11 "
+							: " s.id_estatus_solicitud = 11 ");
+				}
+			}
+
+			if (idSolicitud != 0) {
+				if(soloUnObjeto){
+					query.setParameter("idSolicitud",idSolicitud);
+				}else{
+					query.setParameter("idSolicitud", "%" + idSolicitud + "%" );
+				}
+			}
+
+			if (cliente != null && !"".equals(cliente)) {
+				query.setParameter("cliente", "%" + cliente + "%");
+			}
+
+			if (telefono != null && !"".equals(telefono)) {
+				telefono = UtilidadesAdapter.soloNumeros(telefono);
+				//System.out.println("Telefono solo numeros:"+telefono);
+				query.setParameter("telefono", "%" + telefono + "%");
+			}
+
+			if (email != null && !"".equals(email)) {
+				query.setParameter("email", "%" + email + "%");
+			}
+
+			if (estado != null && !"".equals(estado)) {
+				query.setParameter("estado", estado);
+			}
+
+			if (idEstatusSolicitud != 0) {
+				query.setParameter("idEstatusSolicitud", idEstatusSolicitud);
+			}
+
+			if (idEstatusPago != 0) {
+				query.setParameter("idEstatusPago", idEstatusPago);
+			}
+
+			if (idTipoSolicitud != 0) {
+				query.setParameter("idTipoSolicitud", idTipoSolicitud);
+			}
+
+			if (importante != null && !importante.isEmpty() && !"Yes".equalsIgnoreCase(importante)
+					&& !"No".equalsIgnoreCase(importante)) {
+				query.setParameter("importante", "%" + importante + "%");
+			}
+
+			if (asignado != null && !"".equals(asignado)) {
+				query.setParameter("asignado", "%" + asignado + "%");
+			}
+
+			if (!"".equals(fechai)) {
+				query.setParameter("fechai", fechai);
+				query.setParameter("fechaf", fechaf);
+			}
+
+			if (primeraVez) {
+				if (!seUsaronFilros) {
+					if (rol.equals("4") || rol.equals("5") || rol.equals("7") || rol.equals("8") || rol.equals("9")) {
+						query.setParameter("idUsuario", idUsuario);
+					}
+				}
+			}
+
+			if (rol.equals("11")) {
+				query.setParameter("idUsuario", idUsuario);
+			}
+
+		} else {
+			query.setParameter("idSolicitud", idSolicitud);
+		}
+
+		List<Object[]> rows = query.getResultList();
+		return rows;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1313,6 +1818,23 @@ public class SolicitudRepository implements SolicitudPort {
 		return rows;
 	}
 
+	public String buildZipCodeFilter(String zipcodes) {
+		if (zipcodes == null || zipcodes.trim().isEmpty()) {
+			return "";
+		}
+		String[] parts = zipcodes.split(",");
+		StringBuilder sb = new StringBuilder(" (");
+		for (int i = 0; i < parts.length; i++) {
+			String zip = parts[i].trim();
+			if (i > 0) {
+				sb.append(" OR ");
+			}
+			sb.append("s.direccion LIKE '%").append(zip).append("%'");
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+
 	public String getApellidosSinNull(String apellidos) {
 		String salida = "";
 		if (apellidos == null) {
@@ -1375,7 +1897,9 @@ public class SolicitudRepository implements SolicitudPort {
 			s.setFecha_schedule((String) row[23]);
 			s.setFecha_schedule_scales((String) row[24]);
 			s.setUsuarioCreacion((String) row[25]);
+			s.setTiposPagosRealizados((String) row[27]);
 		}
+		
 
 		return s;
 	}
@@ -1595,7 +2119,6 @@ public class SolicitudRepository implements SolicitudPort {
 	@SuppressWarnings("unchecked")
 	public List<Object[]> obtenerNumFilesAbo(String fechai, String fechaf) {
 
-		UtilidadesAdapter.pintarLog("ejecutando query num files abo");
 		StringBuilder sb = new StringBuilder();
 
 		String queryS = "";
@@ -1637,5 +2160,6 @@ public class SolicitudRepository implements SolicitudPort {
 	public int esFinEntrevistasWithoutClinician(int idSolicitud) {
 		return reqJpa.esFinEntrevistasWithoutClinician(idSolicitud);	
 	}
+	
 
 }

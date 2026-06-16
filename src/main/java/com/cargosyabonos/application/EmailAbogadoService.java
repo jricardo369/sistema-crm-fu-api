@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.cargosyabonos.application.port.in.EmailAbogadoUseCase;
 import com.cargosyabonos.application.port.out.EmailAbogadoPort;
 import com.cargosyabonos.domain.EmailAbogadoEntity;
+import com.cargosyabonos.domain.TittleAbogadoEntity;
 
 @Service
 public class EmailAbogadoService implements EmailAbogadoUseCase {
@@ -52,6 +53,11 @@ public class EmailAbogadoService implements EmailAbogadoUseCase {
 	public void eliminarEmailAbogado(int idEmailAbogado) {
 		EmailAbogadoEntity ab = emailAboPort.obtenerPorIdAbogado(idEmailAbogado);
 		emailAboPort.eliminarEmailAbogado(ab);
+	}
+
+	@Override
+	public List<TittleAbogadoEntity> obtenerTittlesAbogado() {
+		return emailAboPort.obtenerTittlesAbogado();
 	}
 
 	

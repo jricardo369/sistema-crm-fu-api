@@ -3,6 +3,8 @@ package com.cargosyabonos.domain;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class UsuarioObj {
 
 	private int idUsuario;
@@ -21,6 +23,7 @@ public class UsuarioObj {
 
 	private String correoElectronico;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date fechaCreacion;
 
 	private String rol;
@@ -58,6 +61,12 @@ public class UsuarioObj {
 	private boolean withSupervision;
 	
 	private String supervisor;
+
+	private boolean unpaidVocFlag;
+
+	private String estado;
+
+	private String contrasenia;
 
 	public int getIdUsuario() {
 		return idUsuario;
@@ -274,5 +283,32 @@ public class UsuarioObj {
 	public void setSupervisor(String supervisor) {
 		this.supervisor = supervisor;
 	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public boolean isUnpaidVocFlag() {
+		return unpaidVocFlag;
+	}
+
+	public void setUnpaidVocFlag(boolean unpaidVocFlag) {
+		this.unpaidVocFlag = unpaidVocFlag;
+	}
+
+	public String getContrasenia() {
+		return contrasenia;
+	}
+
+	public void setContrasenia(String contrasenia) {
+		this.contrasenia = contrasenia;
+	}
+
+	
+	
 
 }

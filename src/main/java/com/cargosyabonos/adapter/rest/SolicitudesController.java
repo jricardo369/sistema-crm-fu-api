@@ -1,6 +1,8 @@
 package com.cargosyabonos.adapter.rest;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.cargosyabonos.UtilidadesAdapter;
+import com.cargosyabonos.adapter.out.file.ExcelSolicitudes;
 import com.cargosyabonos.application.port.in.SolicitudUseCase;
 import com.cargosyabonos.domain.ReporteComparacionAnios;
 import com.cargosyabonos.domain.Solicitud;
@@ -24,6 +26,8 @@ import com.cargosyabonos.domain.TelefonosSolicitudes;
 @RequestMapping("/solicitudes")
 @RestController
 public class SolicitudesController {
+
+	Logger log = Logger.getLogger(SolicitudesController.class.getName());
 
 
 	@Autowired
@@ -44,6 +48,66 @@ public class SolicitudesController {
 		
 		return oCase.obtenerSolicitudesV2(idUsuario, e, fechai, fechaf, ordenarPor, orden, campo, valor, myFiles, cerradas, primeraVez,0);
 		
+	}
+	@GetMapping("solicitudes-de-usuario-filtros/{idUsuario}")
+	public List<Solicitud> obtenerSolicitudesDeUsuarioFiltros(@PathVariable("idUsuario") int idUsuario,@RequestParam(required = false) boolean primeraVez,@RequestParam(required = false) String cerradas,
+			@RequestParam(required = false) String ordenarPor,@RequestParam(required = false) String orden,
+			@RequestParam(required = false) String fechai,@RequestParam(required = false) String fechaf,
+			@RequestParam(required = false) Integer idSolicitud,@RequestParam(required = false) String cliente,
+			@RequestParam(required = false) String telefono,@RequestParam(required = false) String email,
+			@RequestParam(required = false) String estado,@RequestParam(required = false) Integer idEstatusPago,
+			@RequestParam(required = false) Integer idEstatusSolicitud,
+			@RequestParam(required = false) Integer idTipoSolicitud,@RequestParam(required = false) String waiver,
+		    @RequestParam(required = false) String noShow,@RequestParam(required = false) String importante,
+			@RequestParam(required = false) String asignado,
+			@RequestParam(required = false) String zipcodes,
+		    @RequestParam(required = false) String consentimiento) {
+
+		int idSolicitudFiltro = idSolicitud == null ? 0 : idSolicitud;
+		int idEstatusPagoFiltro = idEstatusPago == null ? 0 : idEstatusPago;
+		int idTipoSolicitudFiltro = idTipoSolicitud == null ? 0 : idTipoSolicitud;
+		int idEstatusSolicitudFiltro = idEstatusSolicitud == null ? 0 : idEstatusSolicitud;
+
+		log.info("Estatus:" + estado + "|Fechai:" + fechai + "|Fechaf:" + fechaf + "|OrdenarPor:" + ordenarPor + "|Campo:" + cliente + "|Valor:" + telefono + "|Cerradas:" + cerradas + "|PrimeraVez:" + primeraVez
+				+ "|idSolicitud:" + idSolicitudFiltro + "|email:" + email + "|idEstatusPago:" + idEstatusPagoFiltro
+				+ "|idEstatusSolicitud:" + idEstatusSolicitudFiltro + "|idTipoSolicitud:" + idTipoSolicitudFiltro
+				+ "|waiver:" + waiver + "|noShow:" + noShow + "|importante:" + importante + "|asignado:" + asignado);
+
+		return oCase.obtenerSolicitudesDeUsuarioQueryFiltros(idUsuario, cerradas, primeraVez, ordenarPor, orden, fechai, fechaf, idSolicitudFiltro, cliente, telefono, email, estado, idEstatusSolicitudFiltro, idEstatusPagoFiltro, idTipoSolicitudFiltro, waiver, noShow, importante, asignado,zipcodes, consentimiento);
+	}
+
+	@GetMapping("solicitudes-de-usuario-filtros-excel/{idUsuario}")
+	public byte[] obtenerSolicitudesDeUsuarioFiltrosExcel(@PathVariable("idUsuario") int idUsuario,@RequestParam(required = false) boolean primeraVez,@RequestParam(required = false) String cerradas,
+			@RequestParam(required = false) String ordenarPor,@RequestParam(required = false) String orden,
+			@RequestParam(required = false) String fechai,@RequestParam(required = false) String fechaf,
+			@RequestParam(required = false) Integer idSolicitud,@RequestParam(required = false) String cliente,
+			@RequestParam(required = false) String telefono,@RequestParam(required = false) String email,
+			@RequestParam(required = false) String estado,@RequestParam(required = false) Integer idEstatusPago,
+			@RequestParam(required = false) Integer idEstatusSolicitud,
+			@RequestParam(required = false) Integer idTipoSolicitud,@RequestParam(required = false) String waiver,
+		    @RequestParam(required = false) String noShow,@RequestParam(required = false) String importante,
+			@RequestParam(required = false) String asignado,
+			@RequestParam(required = false) String zipcodes,
+			@RequestParam(required = false) String consentimiento) {
+
+		int idSolicitudFiltro = idSolicitud == null ? 0 : idSolicitud;
+		int idEstatusPagoFiltro = idEstatusPago == null ? 0 : idEstatusPago;
+		int idTipoSolicitudFiltro = idTipoSolicitud == null ? 0 : idTipoSolicitud;
+		int idEstatusSolicitudFiltro = idEstatusSolicitud == null ? 0 : idEstatusSolicitud;
+
+		log.info("Estatus:" + estado + "|Fechai:" + fechai + "|Fechaf:" + fechaf + "|OrdenarPor:" + ordenarPor + "|Campo:" + cliente + "|Valor:" + telefono + "|Cerradas:" + cerradas + "|PrimeraVez:" + primeraVez
+				+ "|idSolicitud:" + idSolicitudFiltro + "|email:" + email + "|idEstatusPago:" + idEstatusPagoFiltro
+				+ "|idEstatusSolicitud:" + idEstatusSolicitudFiltro + "|idTipoSolicitud:" + idTipoSolicitudFiltro
+				+ "|waiver:" + waiver + "|noShow:" + noShow + "|importante:" + importante + "|asignado:" + asignado);
+
+		List<Solicitud> solicitudes = oCase.obtenerSolicitudesDeUsuarioQueryFiltros(idUsuario, cerradas, primeraVez, ordenarPor, orden, fechai, fechaf, idSolicitudFiltro, cliente, telefono, email, estado, idEstatusSolicitudFiltro, idEstatusPagoFiltro, idTipoSolicitudFiltro, waiver, noShow, importante, asignado,zipcodes, consentimiento);
+		byte[] s = null;
+		try {
+			s = ExcelSolicitudes.generarExcelSolicitudes(solicitudes);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return s;
 	}
 
 	@GetMapping("/{idSolicitud}")
@@ -144,14 +208,18 @@ public class SolicitudesController {
 	public void envioInterviewerClinician(@PathVariable("idSolicitud") int idSolicitud,
 			@RequestParam("idUsuarioCambio") int idUsuarioCambio,
 			@RequestParam("idDisponibilidad") String idDisponibilidad,
-			@RequestParam(required = false) boolean fechaAnterior) {
+			@RequestParam(required = false) boolean fechaAnterior,
+			@RequestParam(required = false) int idDisponibilidadTraductor
+		) {
 		
 		int idDisp = 0;
-		UtilidadesAdapter.pintarLog("Envio int clinician idDisponibilidad:" + idDisponibilidad+"|idUsuarioCambio:" + idUsuarioCambio+"|fechaAnterior:" + fechaAnterior);
+		UtilidadesAdapter.pintarLog("Envio int clinician idDisponibilidad:" + idDisponibilidad+"|idUsuarioCambio:" + idUsuarioCambio+"|fechaAnterior:" + fechaAnterior+
+				"|idDisponibilidadTraductor:" + idDisponibilidadTraductor
+		);
 		if (idDisponibilidad != null) {
 			idDisp = Integer.valueOf(idDisponibilidad);
 		}
-		oCase.envioInterviewerClinician(idSolicitud, idUsuarioCambio, idDisp,fechaAnterior);
+		oCase.envioInterviewerClinician(idSolicitud, idUsuarioCambio, idDisp,fechaAnterior,idDisponibilidadTraductor);
 		
 	}
 
@@ -213,11 +281,6 @@ public class SolicitudesController {
 		oCase.noShow(motivo, idSolicitud, idUsuarioEnvio);
 	}
 	
-	@PostMapping("/excel/carga")
-	public String cargarExcel(@RequestParam(value = "archivo", required = false) MultipartFile archivo) {
-		return oCase.cargarExcel(archivo);
-	}
-	
 	@GetMapping("reporte-anios/{anio}")
 	public ReporteComparacionAnios obtenerReporteAnios(@PathVariable("anio") int anio,@RequestParam(required = true) String filtro) {
 		return oCase.reporteDeAnio(anio,filtro); 
@@ -241,6 +304,16 @@ public class SolicitudesController {
 	@PutMapping("/actualizar-emails-abo-sel/{idSolicitud}")
 	public void actualizarEmailsAboSel(@PathVariable("idSolicitud") int idSolicitud,@RequestParam("emails") String emailsAbogado) {
 		oCase.actualizarEmailAbo(emailsAbogado, idSolicitud);
+	}
+
+	@PutMapping("/reopen/{idSolicitud}/{idUsuarioEnvio}")
+	public void reopenSolicitud( @PathVariable("idUsuarioEnvio") int idUsuarioEnvio,@PathVariable("idSolicitud") int idSolicitud,@RequestParam(required = false) String motivo) {
+		oCase.reopen(idUsuarioEnvio, motivo, idSolicitud);
+	}
+
+	@PutMapping("actualizar-interview-to-case-manager/{idSolicitud}/{idUsuario}")
+	public void actualizarInterviewToCaseManager(@PathVariable("idUsuario") int idUsuario,@PathVariable("idSolicitud") int idSolicitud,@RequestParam("idUsuarioEnvio") int idUsuarioEnvio) {
+		oCase.actualizarInterviewToCaseManager(idSolicitud, idUsuario, idUsuarioEnvio);
 	}
 	
 

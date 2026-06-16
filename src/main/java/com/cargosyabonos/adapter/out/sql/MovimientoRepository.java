@@ -171,6 +171,7 @@ public class MovimientoRepository implements MovimientosPort {
 		d.setAmount((BigDecimal) row[5]);
 		d.setPagado((BigDecimal) row[6]);
 		d.setAdeudo((BigDecimal) row[7]);
+		d.setTipoPago((String) row[8]);
 		return d;
 	}
 

@@ -1,5 +1,7 @@
 package com.cargosyabonos.domain;
 
+import java.util.List;
+
 public class Abogado {
 	
 	private int idAbogado;
@@ -15,6 +17,16 @@ public class Abogado {
 	private String sinonimos;
 	
 	private String fechaCreacion;
+
+	private boolean cupon;
+	
+	private String fechaCupon;
+
+	private String estado;
+
+	private String referencia;
+
+	private List<EmailAbogado> emailsAbogado;
 
 	public int getIdAbogado() {
 		return idAbogado;
@@ -74,4 +86,46 @@ public class Abogado {
 	
 	
 	
+	public List<EmailAbogado> getEmailsAbogado() {
+		return emailsAbogado;
+	}
+
+	public void setEmailsAbogado(List<EmailAbogado> emailsAbogado) {
+		this.emailsAbogado = emailsAbogado;
+	}
+
+	public boolean isCupon() {
+		return cupon;
+	}
+
+	public void setCupon(boolean cupon) {
+		this.cupon = cupon;
+	}
+
+	public String getFechaCupon() {
+		return fechaCupon;
+	}
+
+	public void setFechaCupon(String fechaCupon) {
+		this.fechaCupon = fechaCupon;
+	}
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
+	public String getReferencia() {
+		return referencia;
+	}
+
+	public void setReferencia(String referencia) {
+		this.referencia = referencia;
+	}
+
+	
+
 }

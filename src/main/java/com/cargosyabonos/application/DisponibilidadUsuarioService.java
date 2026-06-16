@@ -3,11 +3,16 @@ package com.cargosyabonos.application;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.text.ParseException;
 import java.util.List;
 
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -97,21 +102,31 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 	}
 
 	@Override
-	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,String estado) {
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,boolean fechaAnterior,int idSolicitud,String estado,int idUsuarioTraductor) {
 		
 		List<DisponibilidadUsuario> salida = null;
 		
-		salida = duPort.obtenerDisponibilidadUsuarioPorFecha(fecha,rol,idSolicitud,fechaAnterior,estado);
+		salida = duPort.obtenerDisponibilidadUsuarioPorFecha(fecha,rol,idSolicitud,fechaAnterior,estado,idUsuarioTraductor);
 		
+		return salida;
+	}
+	
+	@Override
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioVocPorFecha(String fecha,int idUsuario) {
+
+		List<DisponibilidadUsuario> salida = null;	
+		salida = duPort.obtenerDisponibilidadUsuarioVocPorFecha(fecha,idUsuario);
 		return salida;
 	}
 	
 	public DisponibilidadUsuarioEntity convertirDUtoEntity(DisponibilidadUsuario du){
 		DisponibilidadUsuarioEntity due = new DisponibilidadUsuarioEntity();
-		try {
-			due.setFecha(UtilidadesAdapter.cadenaAFecha(du.getFecha()));
-		} catch (ParseException e) {
-			e.printStackTrace();
+		if (du.getFecha() != null && !du.getFecha().trim().isEmpty()) {
+			try {
+				due.setFecha(UtilidadesAdapter.cadenaAFecha(du.getFecha()));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 		}
 		due.setHora(du.getHora());
 		UsuarioEntity us = usPort.buscarPorId(du.getIdUsuario());
@@ -134,6 +149,8 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 			System.out.println("Number of sheetss: " + workbook.getNumberOfSheets());
 
 			StringBuilder sb = new StringBuilder();
+			StringBuilder sbErroresFecha = new StringBuilder();
+			StringBuilder sbInsertados = new StringBuilder();
 			//workbook.forEach(sheet -> {
 			Sheet sheet = workbook.getSheetAt(0);
 			
@@ -145,6 +162,7 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 				String ho = "";
 				boolean hora = false;
 				boolean seLlenoFecha = false;
+				int renglonesvaciosSeguidos = 0;
 				
 				for (Row row : sheet) {
 					
@@ -154,12 +172,37 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 
 					System.out.println("row:" + index);
 
+					boolean col0Vacia = row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK;
+					boolean col1Vacia = row.getCell(1) == null || row.getCell(1).getCellType() == CellType.BLANK;
+					boolean col2Vacia = row.getCell(2) == null || row.getCell(2).getCellType() == CellType.BLANK;
+
+					if (col0Vacia && col1Vacia && col2Vacia) {
+						renglonesvaciosSeguidos++;
+						if (renglonesvaciosSeguidos >= 5) {
+							System.out.println("5 consecutive empty rows, stopping.");
+							break;
+						}
+						index++;
+						continue;
+					} else {
+						renglonesvaciosSeguidos = 0;
+					}
+
 					if (row.getCell(0) != null && row.getCell(0).getCellType() == CellType.STRING) {
 
 						if (row.getCell(0).getStringCellValue().equals("HORA")) {
-							fecha = row.getCell(2).getStringCellValue();
-							System.out.println("----------------Fecha:" + fecha);
-							seLlenoFecha = true;
+							try {
+								fecha = obtenerFechaValidaDesdeCelda(row.getCell(2));
+								System.out.println("----------------Fecha:" + fecha);
+								seLlenoFecha = true;
+							} catch (ResponseStatusException ex) {
+								seLlenoFecha = false;
+								fecha = "";
+								f = "";
+								sbErroresFecha.append("fila ").append(row.getRowNum() + 1).append(" (")
+										.append(ex.getReason()).append("),");
+								continue;
+							}
 						}
 					}
 
@@ -169,7 +212,7 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 						f = fecha;
 					}
 
-					if (fecha != "") {
+					if (!"".equals(fecha)) {
 						index++;
 						fecha = "";
 						continue;
@@ -241,6 +284,12 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 						}
 
 						d.setIdUsuario(idUsuario);
+
+						if (d.getFecha() == null || d.getFecha().trim().isEmpty()) {
+							index++;
+							continue;
+						}
+
 						int existe = duPort.obtenerDisponibilidadPorTodo(d.getFecha(), d.getHora(), d.getTipo(),
 								idUsuario);
 						// int existe = 1;
@@ -250,16 +299,17 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 
 							System.out.println("Fecha:" + d.getFecha() + "|Hora:" + d.getHora() + "|Tipo:" + d.getTipo()
 									+ "|Us:" + d.getIdUsuario());
-							if (d.getFecha() != null) {
-								duPort.crearDisponibilidadUsuario(convertirDUtoEntity(d));
-
-							}
+							duPort.crearDisponibilidadUsuario(convertirDUtoEntity(d));
 							cargados++;
+							sbInsertados.append("[")
+									.append(d.getFecha()).append("|")
+									.append(d.getHora()).append("|")
+									.append(d.getTipo()).append("],");
 
 						} else {
 
 							System.out.println("Ya existe");
-							sb.append(d.getHora() + " " + d.getTipo() + ",");
+							sb.append(d.getFecha() + " " + d.getHora() + " " + d.getTipo() + ",");
 
 						}
 
@@ -270,17 +320,27 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 				}
 
 				
-				if(!seLlenoFecha){
-					sb.append("El formato del excel es el incorrecto, puede descargarlo dendro del portal ");
+				if(!seLlenoFecha && sbErroresFecha.length() == 0){
+					sb.append("The Excel format is incorrect, you can download it from the portal ");
 				} 
 				
-			if (sb.length() > 0) {
-				if (!seLlenoFecha) {
-					salidaL[0] = sb.toString().substring(0, sb.length() - 1);
-				} else {
-					salidaL[0] = cargados + " records were registered, duplication error in: "
-							+ sb.toString().substring(0, sb.length() - 1);
+			boolean hayErrores = sb.length() > 0 || sbErroresFecha.length() > 0;
+			if (sb.length() > 0 || sbErroresFecha.length() > 0 || sbInsertados.length() > 0) {
+				StringBuilder resumen = new StringBuilder();
+				resumen.append(cargados).append(" records were registered");
+				if (sbInsertados.length() > 0) {
+					resumen.append(", inserted: ")
+							.append(sbInsertados.toString().substring(0, sbInsertados.length() - 1));
 				}
+				if (sb.length() > 0) {
+					resumen.append(", duplication error in: ")
+							.append(sb.toString().substring(0, sb.length() - 1));
+				}
+				if (sbErroresFecha.length() > 0) {
+					resumen.append(", date format error: ")
+							.append(sbErroresFecha.toString().substring(0, sbErroresFecha.length() - 1));
+				}
+				salidaL[0] = resumen.toString();
 			}
 
 			//});
@@ -289,7 +349,7 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 	        salida = salidaL[0];
 	        //System.out.println("Salida:"+salida);
 	        
-	        if(salida != null){
+	        if(hayErrores && salida != null){
 	        	 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, salida);
 	        }
 	       
@@ -305,6 +365,35 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 	        }
 	    }
 	    return salida;
+	}
+
+	private String obtenerFechaValidaDesdeCelda(Cell celdaFecha) {
+		if (celdaFecha == null) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+					"The date format is incorrect, it must be YYYY-MM-DD, date: [empty]");
+		}
+
+		String fechaCandidata;
+		if (celdaFecha.getCellType() == CellType.STRING) {
+			fechaCandidata = celdaFecha.getStringCellValue();
+		} else if (celdaFecha.getCellType() == CellType.NUMERIC && HSSFDateUtil.isCellDateFormatted(celdaFecha)) {
+			LocalDate localDate = celdaFecha.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			fechaCandidata = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		} else {
+			fechaCandidata = celdaFecha.toString();
+		}
+
+		if (fechaCandidata != null) {
+			fechaCandidata = fechaCandidata.trim();
+		}
+
+		try {
+			LocalDate.parse(fechaCandidata, DateTimeFormatter.ISO_LOCAL_DATE);
+			return fechaCandidata;
+		} catch (DateTimeParseException e) {
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+					"The date format is incorrect, it must be YYYY-MM-DD, date: " + fechaCandidata);
+		}
 	}
 
 	@Override

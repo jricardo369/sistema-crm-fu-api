@@ -49,6 +49,9 @@ public class CitaEntity {
 	@Column(name = "fecha_pagado")
 	private String fechaPagado;
 
+	@Column(name = "codigo_recurrencia")
+	private String codigoRecurrencia;
+
 	public int getIdCita() {
 		return idCita;
 	}
@@ -143,6 +146,14 @@ public class CitaEntity {
 
 	public void setFechaPagado(String fechaPagado) {
 		this.fechaPagado = fechaPagado;
+	}
+
+	public String getCodigoRecurrencia() {
+		return codigoRecurrencia;
+	}
+
+	public void setCodigoRecurrencia(String codigoRecurrencia) {
+		this.codigoRecurrencia = codigoRecurrencia;
 	}
 
 }

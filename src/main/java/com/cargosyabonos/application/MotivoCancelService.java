@@ -33,6 +33,10 @@ public class MotivoCancelService implements MotivoCancelUseCase {
 			rol = "TMP";
 		}else if(usEnt.getRol().equals("11")){
 			rol = "CLN";
+		}else if(usEnt.getRol().equals("12")){
+			rol = "MAR";
+		}else if(usEnt.getRol().equals("13")){
+			rol = "MARR";
 		}else{
 			rol = "GEN";
 		}

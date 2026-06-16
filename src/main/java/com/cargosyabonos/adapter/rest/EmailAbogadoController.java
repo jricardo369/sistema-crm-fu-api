@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cargosyabonos.application.port.in.EmailAbogadoUseCase;
 import com.cargosyabonos.domain.EmailAbogadoEntity;
+import com.cargosyabonos.domain.TittleAbogadoEntity;
 
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET,RequestMethod.PUT,RequestMethod.POST,RequestMethod.OPTIONS})
 @RequestMapping("/email-abogado")
@@ -48,6 +49,11 @@ public class EmailAbogadoController {
 	@DeleteMapping("{idEmailAbogado}")
 	public void eliminarEmailAbogado(@PathVariable("idEmailAbogado") int idEmailAbogado) { 
 		emAbUC.eliminarEmailAbogado(idEmailAbogado);
+	}
+
+	@GetMapping("tittles")
+	public List<TittleAbogadoEntity> obtenerTittlesEmailsAbogado() { 
+		return emAbUC.obtenerTittlesAbogado();
 	}
 
 }

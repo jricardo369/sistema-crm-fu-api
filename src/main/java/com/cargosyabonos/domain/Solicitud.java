@@ -94,6 +94,23 @@ public class Solicitud {
 
 	private boolean signedClnc;
 
+	private String fechaDeCrimen;
+
+	private int idUsuarioTraductor;
+
+	private String usuarioTraductorNombre;
+
+	private String tiposPagosRealizados;
+
+	private String inicialesInterview;
+	private String inicialesClinician;
+	private String inicialesIntSc;
+	private String inicialesTemplate;
+
+	private boolean consentimiento;
+	private boolean verificacionCliente;
+
+
 	public boolean isSignedClnc() {
 		return signedClnc;
 	}
@@ -567,5 +584,70 @@ public class Solicitud {
 	public void setFechaClinicianAppo(String fechaClinicianAppo) {
 		this.fechaClinicianAppo = fechaClinicianAppo;
 	}
+	public String getFechaDeCrimen() {
+		return fechaDeCrimen;
+	}
+	public void setFechaDeCrimen(String fechaDeCrimen) {
+		this.fechaDeCrimen = fechaDeCrimen;
+	}
+	public int getIdUsuarioTraductor() {
+		return idUsuarioTraductor;
+	}
+	public void setIdUsuarioTraductor(int idUsuarioTraductor) {
+		this.idUsuarioTraductor = idUsuarioTraductor;
+	}
+	public String getUsuarioTraductorNombre() {
+		return usuarioTraductorNombre;
+	}
+	public void setUsuarioTraductorNombre(String usuarioTraductorNombre) {
+		this.usuarioTraductorNombre = usuarioTraductorNombre;
+	}
+	public String getTiposPagosRealizados() {
+		return tiposPagosRealizados;
+	}
+	public void setTiposPagosRealizados(String tiposPagosRealizados) {
+		this.tiposPagosRealizados = tiposPagosRealizados;
+	}
+	public String getInicialesInterview() {
+		return inicialesInterview;
+	}
+	public void setInicialesInterview(String inicialesInterview) {
+		this.inicialesInterview = inicialesInterview;
+	}
+	public String getInicialesClinician() {
+		return inicialesClinician;
+	}
+	public void setInicialesClinician(String inicialesClinician) {
+		this.inicialesClinician = inicialesClinician;
+	}
+	public String getInicialesIntSc() {
+		return inicialesIntSc;
+	}
+	public void setInicialesIntSc(String inicialesIntSc) {
+		this.inicialesIntSc = inicialesIntSc;
+	}
+	public String getInicialesTemplate() {
+		return inicialesTemplate;
+	}
+	public void setInicialesTemplate(String inicialesTemplate) {
+		this.inicialesTemplate = inicialesTemplate;
+	}
+	public boolean getConsentimiento() {
+		return consentimiento;
+	}
+	public void setConsentimiento(boolean consentimiento) {
+		this.consentimiento = consentimiento;
+	}
+	public boolean isVerificacionCliente() {
+		return verificacionCliente;
+	}
+	public void setVerificacionCliente(boolean verificacionCliente) {
+		this.verificacionCliente = verificacionCliente;
+	}
+	
+	
+
+	
+	
 	
 }

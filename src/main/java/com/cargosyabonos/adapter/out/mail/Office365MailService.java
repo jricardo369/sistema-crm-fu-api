@@ -92,6 +92,11 @@ public class Office365MailService {
 
         if (enviarCorreos) {
 
+            if(to == null || to.trim().isEmpty()) {
+                logger.info("No se proporcionó destinatario en 'to'. No se enviará el correo.");
+                return;
+            }
+
             // Soportar uno o varios correos separados por coma
             String[] destinatarios = to.split(",");
             List<String> correosValidos = new ArrayList<>();
@@ -184,6 +189,7 @@ public class Office365MailService {
             logger.info("Ojbeto json");
 
             rest.postForEntity(url, httpEntity, Void.class);
+
 
         } else {
             logger.warning("Email sending is disabled by configuration. No email will be sent.");

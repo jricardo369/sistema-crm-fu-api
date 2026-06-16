@@ -68,7 +68,9 @@ WHERE e.evento = 'Request creation' AND su.id_solicitud = s.id_solicitud
 LEFT JOIN solicitud su on su.id_solicitud = e.id_solicitud
 WHERE e.evento = 'Request creation' AND su.id_solicitud = s.id_solicitud
         LIMIT 1
-    ) AS descripcion
+    ) AS descripcion,
+tipos.tipos_pago
+    
 
 # FROM Y JOINS
 
@@ -82,6 +84,16 @@ LEFT JOIN estatus_pago ep
 
 LEFT JOIN estatus_solicitud es 
        ON es.id_estatus_solicitud = s.id_estatus_solicitud
+
+
+LEFT JOIN (
+    SELECT 
+        m.id_solicitud,
+        GROUP_CONCAT(DISTINCT tp.nombre ORDER BY tp.nombre SEPARATOR ', ') AS tipos_pago
+    FROM movimiento m
+    JOIN tipo_pago tp ON m.id_tipo_pago = tp.id_tipo_pago
+    GROUP BY m.id_solicitud
+	) tipos ON s.id_solicitud = tipos.id_solicitud
 
 # WHERE
 

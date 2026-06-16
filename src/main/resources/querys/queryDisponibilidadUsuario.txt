@@ -6,7 +6,8 @@ SELECT
     u.id_usuario AS usuario,
     u.nombre      AS nombreUsuario,
     u.color,
-    d.zona_horaria
+    d.zona_horaria,
+    d.id_disponibilidad
 FROM disponibilidad_usuario d
 JOIN usuario u
     ON u.id_usuario = d.id_usuario
@@ -31,4 +32,5 @@ GROUP BY
     u.id_usuario,
     u.nombre,
     u.color,
-    d.zona_horaria;
+    d.zona_horaria,
+    d.id_disponibilidad;

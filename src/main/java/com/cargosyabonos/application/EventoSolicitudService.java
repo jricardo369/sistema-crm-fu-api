@@ -299,6 +299,24 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 		s.getIdSolicitud(), "US", e.getTimeZoneSchedule(),e.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),true);
 		
 
+		if(s.getUsuarioTraductor() != 0){
+
+			String fechaEvT = UtilidadesAdapter.formatearFecha(e.getFechaSchedule());
+
+			log.info("Solicitud:" + s.getIdSolicitud()+"|traductor:" + s.getUsuarioTraductor() + "|fecha:" + fechaEvT);
+			EventoSolicitudEntity evTraductor = esPort.obtenerScheduleTraductor(s.getIdSolicitud(), "1", s.getUsuarioTraductor(), fechaEvT);
+			UsuarioEntity usTraductor = usPort.buscarPorId(s.getUsuarioTraductor());
+
+			// Correo cancelacion entrevista a traductor
+			correoUs.enviarCorreoCitaCancelacion(usTraductor.getNombre(), fecha, evTraductor.getHoraSchedule(), evTraductor.getTipoSchedule(), usTraductor.getCorreoElectronico(),s.getEstado(), 
+			s.getIdSolicitud(), "US", evTraductor.getTimeZoneSchedule(),evTraductor.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),false);
+
+			solPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
+			evTraductor.setEstatusSchedule("0");
+			esPort.actualizarEventoSolicitud(evTraductor);
+
+		}
+
 	}
 
 	@Override

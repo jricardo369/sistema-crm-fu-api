@@ -24,7 +24,6 @@ public interface SolicitudVocUseCase {
 	public void reasginar(int idUsuario,String motivo,int idSolicitud,int idUsuarioEnvio);
 	public void actualizarUsuarioTerapeuta(int idUsuario,int idSolicitud,int idUsuarioEntrada);
 	public List<SolicitudVoc> obtenerSolicitudesFiltroV2(int idUsuario, String campo,String valor,String fecha1,String fecha2);
-	public String cargarExcel(MultipartFile archivo);
 	public List<NumeroCasosSolicitudes> obtenerNumerosCaso(String numeroCaso);
 	public void syncNumSesiones(int idSolicitud, int idUsuario);
 

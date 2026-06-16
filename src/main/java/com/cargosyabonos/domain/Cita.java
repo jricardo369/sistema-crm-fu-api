@@ -29,7 +29,17 @@ public class Cita {
 	private String fechaCreacion;
 	private String zonaHoraria;
 	private int idEvento;
+	private boolean citaTraductor;
+	private int idDisponibilidad;
+	private boolean recurrente;
+	private String codigoRecurrencia;
 	
+	public int getIdDisponibilidad() {
+		return idDisponibilidad;
+	}
+	public void setIdDisponibilidad(int idDisponibilidad) {
+		this.idDisponibilidad = idDisponibilidad;
+	}
 	public int getIdEvento() {
 		return idEvento;
 	}
@@ -174,6 +184,26 @@ public class Cita {
 	public void setFechaCreacion(String fechaCreacion) {
 		this.fechaCreacion = fechaCreacion;
 	}
+	public boolean isCitaTraductor() {
+		return citaTraductor;
+	}
+	public void setCitaTraductor(boolean citaTraductor) {
+		this.citaTraductor = citaTraductor;
+	}
+	public boolean isRecurrente() {
+		return recurrente;
+	}
+	public void setRecurrente(boolean recurrente) {
+		this.recurrente = recurrente;
+	}
+	public String getCodigoRecurrencia() {
+		return codigoRecurrencia;
+	}
+	public void setCodigoRecurrencia(String codigoRecurrencia) {
+		this.codigoRecurrencia = codigoRecurrencia;
+	}
+
+	
 	
 	
 

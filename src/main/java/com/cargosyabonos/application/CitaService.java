@@ -1,6 +1,8 @@
 package com.cargosyabonos.application;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -123,7 +125,8 @@ public class CitaService implements CitaUseCase {
 		cs.setNombreUsuario(c.getnombreUsuario());
 		cs.setImportante("");
 		cs.setFechaCreacion(c.getfechaCreacion() != null ? c.getfechaCreacion().substring(0, 10) : "");
-		
+		cs.setCodigoRecurrencia(c.getCodigoRecurrencia());
+
 		return cs;
 	}
 	
@@ -149,11 +152,13 @@ public class CitaService implements CitaUseCase {
 		
 		if (disponibilidad) {
 
-			if (ue.getRol().equals("2") || ue.getRol().equals("3") || ue.getRol().equals("4")) {
+			logger.info("Rol de usuario solicitante:"+ue.getRol());
+			if (ue.getRol().equals("2") || ue.getRol().equals("3") || ue.getRol().equals("4")  ) {
 				if(idRol != null && !idRol.equals("")){
 					if(idRol.equals("0")){
 						idRol = "5,8,11";
-					}	
+					}
+					logger.info("iRol si viene vacio o 0:"+idRol);	
 				}
 				if (!"".equals(filtro)) {
 					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, Integer.valueOf(filtro),idRol,estado);
@@ -161,6 +166,13 @@ public class CitaService implements CitaUseCase {
 					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, 0,idRol,estado);
 				}
 			} else if (ue.getRol().equals("5") || ue.getRol().equals("8") || ue.getRol().equals("11")) {
+				sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, idUsuario,idRol,estado);
+			}
+
+			if (ue.getRol().equals("6")  ) {
+					sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, idUsuario,idRol,estado);
+				
+			} else if (ue.getRol().equals("10")) {
 				sce = dispPort.obtenerDisponibilidadesTodosUsuarios(fecha, idUsuario,idRol,estado);
 			}
 
@@ -175,6 +187,9 @@ public class CitaService implements CitaUseCase {
 				
 			}else if(ue.getRol().equals("5")||ue.getRol().equals("8")|| ue.getRol().equals("11")){
 				sce =  evPort.obtenerCitasInterviewer(fecha, idUsuario,estatusCita, estado);
+			}else if(ue.getRol().equals("6")){
+				List<Cita> se =  citaUseCase.obtenerCitasDeUsuarioPorSemana(fecha, idUsuario, 0);
+				sce.addAll(se);
 			}else{
 				List<Cita> se =  citaUseCase.obtenerCitasDeUsuarioPorSemana(fecha, idUsuario, 0);
 				sce.addAll(se);
@@ -184,11 +199,13 @@ public class CitaService implements CitaUseCase {
 	}
 
 	@Override
-	public void crearCita(CitaEntity a) {
+	public void crearCita(Cita a) {
 		
+		SolicitudVocEntity v = solPort.obtenerSolicitud(a.getIdSolicitud());
+
 		UsuarioEntity u = usPort.buscarPorId(a.getIdUsuario());
 		if (!u.getRol().equals("10")) {
-			SolicitudVocEntity v = solPort.obtenerSolicitud(a.getIdSolicitud());
+			
 			logger.info("Terapeuta:" + v.getTerapeuta());
 			if (v.getTerapeuta() != 0) {
 				a.setIdUsuario(v.getTerapeuta());
@@ -199,9 +216,11 @@ public class CitaService implements CitaUseCase {
 				}
 			}
 
-			evVocPort.ingresarEventoDeSolicitud("Add schedule",
-					"The user " + u.getNombre() + " add new schedule in date " + a.getFecha(), "Info", u.getNombre(),
-					v);
+			if(!a.isRecurrente()){
+				evVocPort.ingresarEventoDeSolicitud("Add schedule",
+						"The user " + u.getNombre() + " add new schedule in date " + a.getFecha(), "Info", u.getNombre(),
+						v);
+			}
 		}
 
 		BigDecimal amount = BigDecimal.ZERO;
@@ -228,7 +247,32 @@ public class CitaService implements CitaUseCase {
 		logger.info("nsesions:" + nsesions + "|spend:" + spend);
 
 		solPort.actualizarNumSesiones(nsesions, spend, a.getIdSolicitud());
-		citaPort.crearCita(a);
+		
+		CitaEntity ce = convertirACitaEntity(a);
+
+		logger.info("Recurrente? "+a.isRecurrente());
+		if(a.isRecurrente()){
+
+			String codigoRecurrencia = UtilidadesAdapter.generarCodigoAlfanumerico10();
+			
+			List<String> salida = obtenerFechasMismoDiaSemana(a.getFecha(), s.getSesionesPendientes());
+			String fechasRangoSalida = salida.get(0)+ " to " + salida.get(salida.size()-1);
+			logger.info("Fechas recurrentes: " + fechasRangoSalida);
+			for (String ss : salida) {
+				logger.info(ss);
+				CitaEntity citaRecurrente = convertirACitaEntity(a);
+				citaRecurrente.setFecha(ss);
+				citaRecurrente.setCodigoRecurrencia(codigoRecurrencia);
+				citaPort.crearCita(citaRecurrente);
+			}
+
+			evVocPort.ingresarEventoDeSolicitud("Add schedule",
+						"The user " + u.getNombre() + " added a concurrent appointment on the dates " + fechasRangoSalida, "Info", u.getNombre(),
+						v);
+		}else{
+			citaPort.crearCita(ce);
+		}
+	
 		// Enviar notificacion al usuario
 		correoUs.enviarCorreoCitaVoc(s.getCliente(), a.getFecha(), a.getHora(), a.getTipo(), s.getEmail(),
 				s.getIdSolicitud(),null);
@@ -299,6 +343,26 @@ public class CitaService implements CitaUseCase {
 		
 	}
 
+	private CitaEntity convertirACitaEntity(Cita ce){
+		
+		CitaEntity c = new CitaEntity();
+		c.setAmount(ce.getAmount());
+		c.setComentario(ce.getComentario());
+		c.setDosCitas(ce.isDosCitas());
+		c.setFecha(ce.getFecha());
+		c.setHora(ce.getHora());
+		c.setIdCita(ce.getIdCita());
+		c.setIdSolicitud(ce.getIdSolicitud());
+		c.setIdUsuario(ce.getIdUsuario());
+		c.setNoShow(ce.isNoShow());
+		c.setPagado(ce.isPagado());
+		c.setTipo(ce.getTipo());
+		c.setFechaPagado(ce.getFechaPagado());
+		
+		return c;
+
+	}
+
 	private Cita convertirACita(CitaEntity ce){
 		Cita c = new Cita();
 		c.setAmount(ce.getAmount());
@@ -350,6 +414,25 @@ public class CitaService implements CitaUseCase {
 		return sce;
 	}
 
+	public List<String> obtenerFechasMismoDiaSemana(String fechaBase, int numeroSemanas) {
+		if (fechaBase == null || "".equals(fechaBase.trim())) {
+			throw new IllegalArgumentException("La fecha base es obligatoria");
+		}
+
+		if (numeroSemanas < 0) {
+			throw new IllegalArgumentException("El numero de semanas no puede ser negativo");
+		}
+
+		LocalDate fecha = LocalDate.parse(fechaBase, DateTimeFormatter.ISO_LOCAL_DATE);
+		List<String> fechas = new ArrayList<>();
+
+		for (int i = 0; i <= numeroSemanas; i++) {
+			fechas.add(fecha.plusWeeks(i).format(DateTimeFormatter.ISO_LOCAL_DATE));
+		}
+
+		return fechas;
+	}
+
 	@Override
 	public boolean envioRecordatorio(int idEvento){
 
@@ -361,6 +444,87 @@ public class CitaService implements CitaUseCase {
 		}
 
 		return true;
+	}
+
+	@Override
+	public void actualizarCita(Cita c, boolean ChangeAllConcurrency, int idUsuarioCambio) {
+
+		CitaEntity ce = citaPort.obtenerCitaPorRecurrenciaYIdCita(c.getCodigoRecurrencia(), c.getIdCita());
+
+		if (ChangeAllConcurrency) {
+
+			logger.info("Actualizando las citas concurrentes");
+			List<CitaEntity> citasRecurrentes = citaPort.obtenerCitaPorRecurrenciaYFecha(c.getCodigoRecurrencia(),
+					c.getFecha());
+
+			int nCitas = citasRecurrentes.size()-1;
+			List<String> salida = obtenerFechasMismoDiaSemana(c.getFecha(), nCitas);
+			String salidaCsv = String.join(",", salida);
+			logger.info("Fechas recurrentes: " + salidaCsv);
+
+			citaPort.eliminarCitasRecurrentes(c.getCodigoRecurrencia(),c.getFecha());
+			logger.info("Se eliminaron las citas recurrentes a partir de la fecha: " + c.getFecha());
+
+			for (String ss : salida) {
+
+				logger.info(ss);
+				CitaEntity citaRecurrente = new CitaEntity();
+				citaRecurrente.setFecha(ss);
+				citaRecurrente.setHora(c.getHora());
+				citaRecurrente.setTipo(c.getTipo());
+				citaRecurrente.setIdSolicitud(c.getIdSolicitud());
+				citaRecurrente.setCodigoRecurrencia(c.getCodigoRecurrencia());
+				citaRecurrente.setComentario(ce.getComentario());
+				citaRecurrente.setAmount(ce.getAmount());
+				citaRecurrente.setIdUsuario(ce.getIdUsuario());
+
+				citaPort.crearCita(citaRecurrente);
+
+			}
+
+
+			SolicitudVocEntity s = solPort.obtenerSolicitud(c.getIdSolicitud());
+			UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
+			evVocPort.ingresarEventoDeSolicitud("Update",
+					"Schedule (" + c.getFecha() + ") was updated. And Change all concurrencys", "Info", u.getNombre(),
+					s);
+		} else {
+			logger.info("Actualizando solo una cita");
+			
+			ce.setFecha(c.getFecha());
+			ce.setHora(c.getHora());
+			ce.setTipo(c.getTipo());
+			citaPort.actualizarCita(ce);
+
+			SolicitudVocEntity s = solPort.obtenerSolicitud(c.getIdSolicitud());
+			UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
+			evVocPort.ingresarEventoDeSolicitud("Update", "Schedule (" + c.getFecha() + ") was updated", "Info",
+					u.getNombre(), s);
+		}
+
+	}
+
+	@Override
+	public void eliminarCitasRecurrentes(Cita c,boolean ChangeAllConcurrency,String codigoRecurrencia,int idUsuarioCambio) {
+
+		if (ChangeAllConcurrency) {
+			logger.info("Eliminando las citas concurrentes");
+			citaPort.eliminarCitasRecurrentes(codigoRecurrencia, c.getFecha());
+			logger.info("Se eliminaron las citas recurrentes de codigo: " + codigoRecurrencia
+					+ " a partir de la fecha: " + c.getFecha());
+			UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
+			SolicitudVocEntity s = solPort.obtenerSolicitud(c.getIdSolicitud());
+			evVocPort.ingresarEventoDeSolicitud("Update",
+					"Appointment with recurrence deleted on date " + c.getFecha() + " " + c.getHora() + " "
+							+ c.getTipo(),
+					"Info",
+					u.getNombre(), s);
+		} else {
+			logger.info("Eliminando solo una cita");
+			CitaEntity ce = citaPort.obtenerCita(c.getIdCita());
+			citaPort.eliminarCita(ce);
+		}
+
 	}
 	
 

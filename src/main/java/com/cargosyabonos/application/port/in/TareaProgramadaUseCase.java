@@ -14,5 +14,6 @@ public interface TareaProgramadaUseCase {
 	public void limpiezaDisponibilidad();
 	public void validacionMsms();
 	public void solicitudesVocEndingSessions();
+	public void reminderLawyerProspectsLiaison();
 
 }

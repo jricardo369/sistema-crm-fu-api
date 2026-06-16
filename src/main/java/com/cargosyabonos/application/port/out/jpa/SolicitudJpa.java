@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cargosyabonos.domain.CorreosFirmas;
-import com.cargosyabonos.domain.NumFilesAbogados;
 import com.cargosyabonos.domain.ReporteSolsDeUsuario;
 import com.cargosyabonos.domain.ReporteSolsUsuario;
 import com.cargosyabonos.domain.SchedulersSolicitudes;
@@ -159,16 +158,18 @@ public List<ReporteSolsDeUsuario> obtenerSolicitudesDeUsuarioTemplate(Date fecha
 			+ "GROUP BY usuario_revisando ", nativeQuery = true)
 	public List<ReporteSolsUsuario> obtenerSolicitudesRevisoresAd(Date fechai, Date fechaf);
 	
-	@Query(value = "SELECT u.color,u.image,assigned_clinician AS id_usuario,u.nombre as usuario,COUNT(assigned_clinician) AS numero, r.nombre as rol  " 
-			+"FROM solicitud s "
-			+"JOIN usuario u ON u.id_usuario = s.assigned_clinician "
-			+"JOIN rol r ON r.id_rol = u.id_rol "
-			+"WHERE fecha_inicio BETWEEN ?1 AND ?2 "
-			+"GROUP BY s.assigned_clinician ", nativeQuery = true)
+	@Query(value = "SELECT u.color,u.image,u.id_usuario,u.nombre as usuario,count(*) as numero, r.nombre as rol " + 
+				"FROM evento_solicitud e " + 
+				"JOIN usuario u ON u.id_usuario = e.usuario_schedule JOIN rol r ON r.id_rol = u.id_rol " + 
+				"WHERE  tipo =  'Schedule' AND estatus_schedule = '1'  AND fecha_schedule BETWEEN ?1 AND ?2 AND e.fin_schedule = 1 AND r.id_rol = 11 " + 
+				"GROUP BY usuario_schedule", nativeQuery = true)
 	public List<ReporteSolsUsuario> obtenerSolicitudesClinicians(Date fechai, Date fechaf);
 	
-	@Query(value = "SELECT s.id_solicitud,s.fecha_inicio as fecha FROM solicitud s  "
-			+"WHERE fecha_inicio BETWEEN ?1 AND ?2 AND s.assigned_clinician = ?3 ", nativeQuery = true)
+	@Query(value = "SELECT e.id_solicitud,e.fecha " + 
+				"FROM evento_solicitud e " + 
+				"JOIN usuario u ON u.id_usuario = e.usuario_schedule JOIN rol r ON r.id_rol = u.id_rol " + 
+				"WHERE  tipo = 'Schedule' AND estatus_schedule = 1 AND fecha_schedule BETWEEN ?1 AND ?2 AND e.fin_schedule = 1 AND id_usuario = ?3 " + 
+				"GROUP BY e.id_solicitud,e.fecha ", nativeQuery = true)
 	public List<ReporteSolsDeUsuario> obtenerSolicitudesClinician(Date fechai, Date fechaf,int idUsuario);
 	
 	@Query(value = "SELECT s.id_solicitud, s.fecha_inicio as fecha FROM solicitud s "
@@ -221,6 +222,11 @@ public List<ReporteSolsDeUsuario> obtenerSolicitudesDeUsuarioTemplate(Date fecha
 	@Query(value = "UPDATE solicitud SET assigned_clinician = ?1 WHERE id_solicitud = ?2", nativeQuery = true)
 	@Modifying
 	public void actualizarAsignacionClnc(int idUsuario, int idSolicitud);
+
+	@Transactional
+	@Query(value = "UPDATE solicitud SET usuario_traductor = ?1 WHERE id_solicitud = ?2", nativeQuery = true)
+	@Modifying
+	public void actualizarUsuarioTraductor(int idUsuario, int idSolicitud);
 
 	@Transactional
 	@Query(value = "UPDATE solicitud SET asignacion_int_sc = 0,usuario_int_sc = 0,fin_int_sc = 0 WHERE id_solicitud = ?1", nativeQuery = true)

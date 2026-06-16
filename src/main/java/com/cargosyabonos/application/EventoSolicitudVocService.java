@@ -113,4 +113,60 @@ public class EventoSolicitudVocService implements EventoSolicitudVocUseCase {
 	}
 	
 
+	@Override
+	public void ajusteSesionesVOC(int idSolicitud, int numSesiones, String motivo, int usuarioEnvio,String tipo) {
+
+		// Obtener el usuario que realiza el ajuste
+		UsuarioEntity usuario = usPort.buscarPorId(usuarioEnvio);
+		if (usuario == null) {
+			log.error("No se encontró el usuario con id {}", usuarioEnvio);
+			return;
+		}
+
+		// Obtener la solicitud
+		SolicitudVocEntity solicitud = solPort.obtenerSolicitud(idSolicitud);
+		if (solicitud == null) {
+			log.error("No se encontró la solicitud con id {}", idSolicitud);
+			return;
+		}
+
+		// Ajustar el número de sesiones
+		if(tipo.equals("ASA")){
+			solicitud.setNumSesiones(numSesiones);
+		}else if(tipo.equals("ATP")){
+			int numSesionesActual = solicitud.getNumSesiones();
+			int numSesionesTotales = numSesionesActual + numSesiones;
+			solicitud.setNumSesiones(numSesionesTotales);
+		}
+		solPort.actualizarSolicitud(solicitud);
+
+		// Registrar el ajuste como evento
+		EventoSolicitudVocEntity evento = new EventoSolicitudVocEntity();
+		evento.setSolicitud(solicitud);
+		evento.setFecha(new Date());
+		
+		if(tipo.equals("ASA")){
+			evento.setTipo("Approved Sessions Adjustment");
+			evento.setDescripcion("Adjusted sessions to " + numSesiones + ", reason: " + motivo);
+		}else if(tipo.equals("ATP")){
+			evento.setTipo("Additional Treatment Plan");
+			evento.setDescripcion("New treatment plan of " + numSesiones + ", reason: " + motivo);
+		}
+		evento.setEvento("Session Adjustment");
+		evento.setUsuario(usuario.getNombre()); 
+		esPort.crearEventoSolicitud(evento);
+		log.info("Ajuste de sesiones VOC realizado para solicitud {}: {} sesiones. Motivo: {}", idSolicitud, numSesiones, motivo);
+	}
+
+	@Override
+	public void actualizarTipoEvento(int idEvento, String tipoEvento){
+		EventoSolicitudVocEntity evento = esPort.obtenerEventoPorId(idEvento);
+		esPort.actualizarTipoEvento(idEvento, tipoEvento, evento.getDescripcion()+" | The type was changed from important to info");
+	}
+
+	@Override
+	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud) {
+		return esPort.obtenerHistorialNumSesionesDeSolicitud(idSolicitud);	
+	}
+
 }

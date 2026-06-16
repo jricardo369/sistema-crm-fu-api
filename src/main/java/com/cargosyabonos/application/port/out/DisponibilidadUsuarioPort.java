@@ -10,8 +10,7 @@ import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 public interface DisponibilidadUsuarioPort {
 	
 	public List<DisponibilidadUsuarioEntity> obtenerDisponibilidadUsuario(int idUsuario); 
-	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,int idSolicitud,boolean fechaAnterior,String estado);
-	//public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFechaConAnteriores(String fecha,int rol,int idSolicitud);
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioPorFecha(String fecha,int rol,int idSolicitud,boolean fechaAnterior,String estado,int idUsuarioTraductor);
 	public DisponibilidadUsuarioEntity obtenerDisponibilidadPorId(int idDisponibilidad); 
 	public void crearDisponibilidadUsuario(DisponibilidadUsuarioEntity es);
 	public void actualizarDisponibilidadUsuario(DisponibilidadUsuarioEntity es);
@@ -19,5 +18,6 @@ public interface DisponibilidadUsuarioPort {
 	public int obtenerDisponibilidadPorTodo(String fecha,String hora,String tipo,int idUsuario);
 	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario);
 	public List<Cita> obtenerDisponibilidadesTodosUsuarios(String fecha,int idUsuario, String idRol,String estado);
+	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioVocPorFecha(String fecha,int idUsuario); 
 
 }

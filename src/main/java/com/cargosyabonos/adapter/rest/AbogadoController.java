@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.adapter.out.file.ExcelAbogados;
 import com.cargosyabonos.application.port.in.AbogadoUseCase;
 import com.cargosyabonos.domain.Abogado;
 import com.cargosyabonos.domain.AbogadoEntity;
+import com.cargosyabonos.domain.FuenteDeReferenciaEntity;
 
 @RequestMapping("/abogados")
 @RestController
@@ -55,9 +55,8 @@ public class AbogadoController {
 	}
 
 	@PostMapping
-	public void crearAbogado(@RequestBody AbogadoEntity a,@RequestParam("idUsuario") int idUsuario,@RequestParam("emailsAbogado") String emailsAbogado) {
-		UtilidadesAdapter.pintarLog("emailsAbogado:"+emailsAbogado);
-		aboUseCase.crearAbogado(a,emailsAbogado);
+	public void crearAbogado(@RequestBody Abogado a,@RequestParam("idUsuario") int idUsuario,@RequestParam("idProspectoAbogado") int idProspectoAbogado,@RequestParam(required = false) int idSolicitud) {
+		aboUseCase.crearAbogado(a,idUsuario,idProspectoAbogado,idSolicitud);
 	}
 	
 	@PutMapping
@@ -90,6 +89,11 @@ public class AbogadoController {
 
 		    return new ResponseEntity<>(contenidoExcel, headers, HttpStatus.OK);
 		    
+	}
+
+	@GetMapping("fuentes-de-referencia")
+	public List<FuenteDeReferenciaEntity> obtenerFuentesDeReferencia() {
+		return aboUseCase.obtenerFuentesDeReferencia();
 	}
 
 }

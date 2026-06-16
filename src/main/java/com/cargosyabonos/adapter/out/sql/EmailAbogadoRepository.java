@@ -7,13 +7,19 @@ import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.application.port.out.EmailAbogadoPort;
 import com.cargosyabonos.application.port.out.jpa.EmailAbogadoJpa;
+import com.cargosyabonos.application.port.out.jpa.TittleAbogadoJpa;
 import com.cargosyabonos.domain.EmailAbogadoEntity;
+import com.cargosyabonos.domain.TittleAbogadoEntity;
 
 @Service
 public class EmailAbogadoRepository implements EmailAbogadoPort {
 
 	@Autowired
 	EmailAbogadoJpa emailAboJpa;
+
+
+	@Autowired
+	TittleAbogadoJpa tittleAbogadoJpa;
 
 	@Override
 	public List<EmailAbogadoEntity> obtenerEmailsDeAbogado(int idAbogado) {
@@ -48,6 +54,11 @@ public class EmailAbogadoRepository implements EmailAbogadoPort {
 	@Override
 	public void eliminarEmailAbogadoByIdAbogado(int idAbogado) {
 		 emailAboJpa.eliminarEmailByIdAbogado(idAbogado);
+	}
+
+	@Override
+	public List<TittleAbogadoEntity> obtenerTittlesAbogado() {
+		return tittleAbogadoJpa.findAll();
 	}
 
 }

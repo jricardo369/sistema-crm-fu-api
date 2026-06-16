@@ -1,0 +1,37 @@
+SELECT
+    DATE_FORMAT(d.fecha, '%Y-%m-%d') AS fecha,
+    d.hora,
+    d.tipo,
+    u.id_usuario AS solicitud,
+    u.id_usuario AS usuario,
+    u.nombre      AS nombreUsuario,
+    u.color,
+    d.zona_horaria,
+    d.id_disponibilidad
+FROM disponibilidad_usuario d
+JOIN usuario u
+    ON u.id_usuario = d.id_usuario
+    
+LEFT JOIN cita e
+   ON e.fecha   = d.fecha
+   AND e.hora    = d.hora
+   AND e.tipo    = d.tipo
+   AND e.id_usuario = u.id_usuario
+   AND e.fecha  >= :inicioSemana
+   AND e.fecha  <= :finSemana
+WHERE d.fecha >= :inicioSemana
+  AND d.fecha <= :finSemana
+  AND u.estatus != 4
+  $wUsuario
+  AND (e.id_cita IS NULL OR e.no_show = 1)
+
+
+GROUP BY
+    d.fecha,
+    d.hora,
+    d.tipo,
+    u.id_usuario,
+    u.nombre,
+    u.color,
+    d.zona_horaria,
+    d.id_disponibilidad;

@@ -2,9 +2,11 @@ package com.cargosyabonos.application;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +20,11 @@ import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.in.TareaProgramadaUseCase;
 import com.cargosyabonos.application.port.out.ConfiguracionPort;
 import com.cargosyabonos.application.port.out.CorreosPort;
+import com.cargosyabonos.application.port.out.EmailProspectoAbogadoPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.MovimientosPort;
 import com.cargosyabonos.application.port.out.MsgPort;
+import com.cargosyabonos.application.port.out.ProspectoAbogadoPort;
 import com.cargosyabonos.application.port.out.SolicitudPort;
 import com.cargosyabonos.application.port.out.SolicitudVocPort;
 import com.cargosyabonos.application.port.out.TareaProgramadaPort;
@@ -28,7 +32,10 @@ import com.cargosyabonos.application.port.out.TextosPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.domain.AdeudoSolicitudes;
 import com.cargosyabonos.domain.ConfiguracionEntity;
+import com.cargosyabonos.domain.EmailProspectoAbogadoEntity;
 import com.cargosyabonos.domain.EventoSolicitudEntity;
+import com.cargosyabonos.domain.ProspectoAbogado;
+import com.cargosyabonos.domain.ProspectoAbogadoEntity;
 import com.cargosyabonos.domain.SolicitudEntity;
 import com.cargosyabonos.domain.SolicitudVocEndingSessions;
 import com.cargosyabonos.domain.TareaProgramadaEntity;
@@ -43,7 +50,7 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	@Value("${ambiente}")
 	private String ambiente;
 	
-	private static String amb = "pro";
+	private static String amb = "local";
 
 	@Autowired
 	private TareaProgramadaPort tPort;
@@ -80,6 +87,12 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 
 	@Autowired
 	private TextosPort textosPort;
+
+	@Autowired
+	private ProspectoAbogadoPort prosAboPort;
+
+	@Autowired
+	private EmailProspectoAbogadoPort emAProsboPort;
 
 	@Override
 	public List<TareaProgramadaEntity> obtenerTareasProgramadas() {
@@ -295,6 +308,12 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 					solicitudesVocEndingSessions();
 				}
 			}
+		}  else if(codigoTarea.equals("rem-law-prospcts-liaison")){
+			if (tp.isActivo()) {
+				if(ambiente.equals(amb)){
+					reminderLawyerProspectsLiaison();
+				}
+			}
 		}
 
 	}
@@ -341,24 +360,59 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 
 		ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("VOC-ADMIN-MAIL");
 		String correoAdminVOC = confj.getValor();
-		UtilidadesAdapter.pintarLog("Correo admin voc " + correoAdminVOC);		
+		UtilidadesAdapter.pintarLog("Correo admin voc " + correoAdminVOC);
 
 		for (SolicitudVocEndingSessions s : svoc) {
-			
-			UtilidadesAdapter.pintarLog("File VOC:" + s.getIdSolicitud() + "|SesionesAprobadas:" + s.getSesionesPendientes() + "|SesionesPendientes:" + s.getSesionesPendientes()
-			+ "|Terapeuta:" + s.getNombreTerapeuta());
-			
+
+			UtilidadesAdapter.pintarLog("File VOC:" + s.getIdSolicitud() + "|SesionesAprobadas:"
+					+ s.getSesionesPendientes() + "|SesionesPendientes:" + s.getSesionesPendientes()
+					+ "|Terapeuta:" + s.getNombreTerapeuta());
+
 			Map<String, Object> params = new HashMap<>();
 			params.put("${usuario}", s.getNombreTerapeuta());
 			params.put("${cliente}", s.getCliente());
-			params.put("${citas-aprobadas}",s.getNumSesiones()); 
+			params.put("${citas-aprobadas}", s.getNumSesiones());
 			params.put("${citas-pedientes}", s.getSesionesPendientes());
 
 			correoUs.enviarCorreoFileVOCEndingSessions(s.getNombreTerapeuta(), s.getEmailTerapeuta(), params);
 			correoUs.enviarCorreoFileVOCEndingSessions("Admin VOC", correoAdminVOC, params);
-			
+
 		}
-		
+
+	}
+
+	@Override
+	public void reminderLawyerProspectsLiaison() {
+
+		List<ProspectoAbogadoEntity> l = prosAboPort.obtenerProspectosAbogadosParaReminderLiaison();
+		UtilidadesAdapter.pintarLog("Prospectos obtenidos:" + l.size());
+
+		List<Integer> li = new ArrayList<>();
+		li.add(13);
+
+		List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
+
+		String emailsPros= "";
+	    for(UsuarioEntity us : usList) {
+			for (ProspectoAbogadoEntity o : l) {
+
+				emailsPros= "";
+				UtilidadesAdapter.pintarLog("Pros id:" + o.getIdProspectoAbogado());
+
+				List<EmailProspectoAbogadoEntity> emails = emAProsboPort.obtenerEmailsDeProspectoAbogado(o.getIdProspectoAbogado());
+				if(!emails.isEmpty()) {
+					emailsPros = emails.stream().map(EmailProspectoAbogadoEntity::getEmail).collect(Collectors.joining(","));
+				}
+
+				correoUs.enviarCorreoReminderParaEnviarCorreoLiaison(us.getCorreoElectronico(), o.getIdProspectoAbogado(), us.getNombre(), o.getNombre(), o.getFirma(), o.getTelefono(), o.getFechaAlta(),emailsPros);
+
+				java.util.Date fechaRecordatorioLiaisonDate = UtilidadesAdapter.sumarDiasAFecha(new java.util.Date(), 15);
+				String fechaRecordatorioLiaison = UtilidadesAdapter.formatearFecha(fechaRecordatorioLiaisonDate);
+				prosAboPort.actualizarFechaRecordatorioLiaison(o.getIdProspectoAbogado(), fechaRecordatorioLiaison);
+
+			}
+		}
+
 	}
 
 }

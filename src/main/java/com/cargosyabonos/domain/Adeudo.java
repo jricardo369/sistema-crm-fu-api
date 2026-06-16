@@ -13,6 +13,7 @@ public class Adeudo {
 	private BigDecimal amount;
 	private BigDecimal adeudo;
 	private BigDecimal pagado;
+	private String tipoPago;
 	
 	public int getIdSolicitud() {
 		return idSolicitud;
@@ -62,5 +63,12 @@ public class Adeudo {
 	public void setPagado(BigDecimal pagado) {
 		this.pagado = pagado;
 	}
+	public String getTipoPago() {
+		return tipoPago;
+	}
+	public void setTipoPago(String tipoPago) {
+		this.tipoPago = tipoPago;
+	}
+	
 
 }

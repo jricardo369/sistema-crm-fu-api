@@ -11,7 +11,7 @@ public interface UsuariosUseCase {
 	
 	public List<UsuarioEntity> obtenerUsuarios(); 
 	public List<UsuarioEntity> obtenerUsuariosDeRol(int idRol,int revisor); 
-	public UsuarioEntity buscarPorUsuario(String usuario);
+	public UsuarioObj buscarPorUsuario(String usuario);
 	public UsuarioEntity buscarPorId(int idUsuario);
 	public UsuarioObj buscarPorIdObj(int idUsuario);
 	public void  crearUsuario(UsuarioEntity usuario);

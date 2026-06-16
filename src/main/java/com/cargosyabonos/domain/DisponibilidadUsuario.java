@@ -3,6 +3,7 @@ package com.cargosyabonos.domain;
 public class DisponibilidadUsuario {
 	
 	private int idDisponibilidad;
+	private int idDisponibilidadTraductor;
 	private String fecha;
 	private String hora;
 	private String tipo;
@@ -19,6 +20,7 @@ public class DisponibilidadUsuario {
 	public void setIdDisponibilidad(int idDisponibilidad) {
 		this.idDisponibilidad = idDisponibilidad;
 	}
+	
 	public String getFecha() {
 		return fecha;
 	}
@@ -72,6 +74,12 @@ public class DisponibilidadUsuario {
 	}
 	public void setRol(String rol) {
 		this.rol = rol;
+	}
+	public int getIdDisponibilidadTraductor() {
+		return idDisponibilidadTraductor;
+	}
+	public void setIdDisponibilidadTraductor(int idDisponibilidadTraductor) {
+		this.idDisponibilidadTraductor = idDisponibilidadTraductor;
 	}
 
 	

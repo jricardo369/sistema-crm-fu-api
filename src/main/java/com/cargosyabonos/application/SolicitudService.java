@@ -1,10 +1,6 @@
 package com.cargosyabonos.application;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -14,12 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cargosyabonos.UtilidadesAdapter;
@@ -54,7 +43,6 @@ import com.cargosyabonos.domain.EstatusPagoEntity;
 import com.cargosyabonos.domain.EstatusSolicitudEntity;
 import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.cargosyabonos.domain.FilesFirmaAbogadoObj;
-import com.cargosyabonos.domain.MovimientoEntity;
 import com.cargosyabonos.domain.NumFilesAbogados;
 import com.cargosyabonos.domain.ReporteAnios;
 import com.cargosyabonos.domain.ReporteComparacionAnios;
@@ -63,11 +51,9 @@ import com.cargosyabonos.domain.ReporteDash;
 import com.cargosyabonos.domain.ReporteSolsDeUsuario;
 import com.cargosyabonos.domain.ReporteSolsDeUsuarioObj;
 import com.cargosyabonos.domain.ReporteSolsUsuario;
-import com.cargosyabonos.domain.ScaleEntity;
 import com.cargosyabonos.domain.Solicitud;
 import com.cargosyabonos.domain.SolicitudEntity;
 import com.cargosyabonos.domain.TelefonosSolicitudes;
-import com.cargosyabonos.domain.TipoPagoEntity;
 import com.cargosyabonos.domain.TipoSolicitudEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
 
@@ -161,6 +147,22 @@ public class SolicitudService implements SolicitudUseCase {
 	}
 
 	@Override
+	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(int idUsuario, String cerradas, boolean primeraVez,String ordenarPor, String orden,
+			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
+		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento) {
+			
+		logger.info("Obtener solicitudes por filtros");
+
+		UsuarioEntity us = usPort.buscarPorId(idUsuario);
+		List<Solicitud> salida = new ArrayList<>();
+
+		salida = reqPort.obtenerSolicitudesDeUsuarioQueryFiltros(false,us, cerradas, primeraVez, ordenarPor, orden, fechai, fechaf, idSolicitud, cliente, telefono, email, estado, idEstatusSolicitud, idEstatusPago, idTipoSolicitud, waiver, noshow, importante, asignado,zipcodes, consentimiento);
+
+		return salida;
+
+	}
+
+	@Override
 	public SolicitudEntity obtenerSolicitud(int idRequest) {
 		return reqPort.obtenerSolicitud(idRequest);
 	}
@@ -171,10 +173,14 @@ public class SolicitudService implements SolicitudUseCase {
 		List<Solicitud> list = null;
 		Solicitud solicitud = null;
 		UsuarioEntity us = usPort.buscarPorId(idUsuario);
-		List<String> fechas = UtilidadesAdapter.fechasMesYMesAnterior();
 
+		/*List<String> fechas = UtilidadesAdapter.fechasMesYMesAnterior();
 		list = reqPort.obtenerSolicitudesDeUsuarioPorQueryV2(us, 0, idRequest, fechas.get(0), fechas.get(1), "", "", "",
-				"", false, "NO CLOSED", false,0);
+				"", false, "NO CLOSED", false,0);*/
+
+		list = reqPort.obtenerSolicitudesDeUsuarioQueryFiltros(true,us, "NO CLOSED", false, "", "", "", "", idRequest, 
+		"", "", "", "", 0, 0, 0, null, null, null, "","", null);
+
 		if (!list.isEmpty()) {
 			solicitud = list.get(0);
 		}
@@ -386,6 +392,9 @@ public class SolicitudService implements SolicitudUseCase {
 		s.setSexo(r.getSexo());
 		s.setFinAsgClnc(r.isFinAsgClnc());
 		s.setSignedClnc(r.isSignedClnc());
+		s.setFechaDeCrimen(r.getFechaDeCrimen());
+		s.setConsentimiento(r.getConsentimiento());
+		s.setVerificacionCliente(r.isVerificacionCliente());
 
 		return s;
 	}
@@ -424,6 +433,10 @@ public class SolicitudService implements SolicitudUseCase {
 			reqPort.actualizarAsignacionIntSc(1, 0, idSolicitud);
 			
 			
+		}
+		if (idEstatus == 10) {
+			evPort.ingresarEventoDeSolicitud("Update", "The user "+u.getUsuario()+ " send to \"Finish to Ready on Draft\"", "Info", u.getUsuario(), s);
+			reqPort.actualizarEstatusSolicitud(idSolicitud, 10);
 		}
 		if (idEstatus == 11) {
 
@@ -494,6 +507,20 @@ public class SolicitudService implements SolicitudUseCase {
 
 			UsuarioEntity us = disp.getUsuario();
 			UsuarioEntity usCambio = usPort.buscarPorId(idUsuarioCambio);
+
+			//Validar que el horaria y entervistador no se halla asigando ya 
+			String fechaMx = UtilidadesAdapter.formatearFecha(disp.getFecha());
+			EventoSolicitudEntity eventoDispoExistenteEnFile = evPort.existeEventoSchedulePortipo(fechaMx, disp.getHora(), disp.getTipo(), disp.getUsuario().getIdUsuario(), "1", "Scheduled appointment");
+			
+			if (eventoDispoExistenteEnFile != null) {
+				logger.info("eventoDispoExistenteEnFile: "+disp.getUsuario().getUsuario()
+			+" | fecha:"+fechaMx+" | hora:"+disp.getHora()+" | tipo:"+disp.getTipo() );
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"This user already has a scheduled appointment for the given date and time in file "
+						+eventoDispoExistenteEnFile.getSolicitud().getIdSolicitud()+".");
+			}else{
+				logger.info("Evento no existe en ninguna solicitud, se puede agendar sin problemas");
+			}
 			
 			//Validacion en caso que clinician halla sido asignado primero, al asignar el case manager ya no puede ser clinician
 			if(s.getAssignedClinician() != 0){
@@ -661,6 +688,21 @@ public class SolicitudService implements SolicitudUseCase {
 
 			UsuarioEntity us = disp.getUsuario();
 			UsuarioEntity usCambio = usPort.buscarPorId(idUsuarioCambio);
+
+			//Validar que el horaria y entervistador no se halla asigando ya 
+			String fechaMx = UtilidadesAdapter.formatearFecha(disp.getFecha());
+			EventoSolicitudEntity eventoDispoExistenteEnFile = evPort.existeEventoSchedulePortipo(fechaMx, disp.getHora(), disp.getTipo(), disp.getUsuario().getIdUsuario(), "1", "Scheduled scales");
+			
+			if (eventoDispoExistenteEnFile != null) {
+				logger.info("eventoDispoExistenteEnFile: "+disp.getUsuario().getUsuario()
+			+" | fecha:"+fechaMx+" | hora:"+disp.getHora()+" | tipo:"+disp.getTipo() );
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"This user already has a scheduled appointment for the given date and time in file "
+						+eventoDispoExistenteEnFile.getSolicitud().getIdSolicitud()+".");
+			}else{
+				logger.info("Evento no existe en ninguna solicitud, se puede agendar sin problemas");
+			}
+
 			String fecha = UtilidadesAdapter.formatearFechaUS(disp.getFecha());
 			String hora = disp.getHora();
 			String tipo = disp.getTipo();
@@ -774,7 +816,7 @@ public class SolicitudService implements SolicitudUseCase {
 	
 	@Override
 	public void envioInterviewerClinician(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,
-			boolean fechaAnterior) {
+			boolean fechaAnterior,int idDisponibilidadTraductor) {
 
 		int idUsuarioRevisando = 0;
 
@@ -789,6 +831,22 @@ public class SolicitudService implements SolicitudUseCase {
 
 			UsuarioEntity us = disp.getUsuario();
 			UsuarioEntity usCambio = usPort.buscarPorId(idUsuarioCambio);
+
+			//Validar que el horaria y entervistador no se halla asigando ya 
+			String fechaMx = UtilidadesAdapter.formatearFecha(disp.getFecha());
+			EventoSolicitudEntity eventoDispoExistenteEnFile = evPort.existeEventoSchedulePortipo(fechaMx, disp.getHora(), disp.getTipo(), disp.getUsuario().getIdUsuario(), "1", "Scheduled clinician");
+			
+			if (eventoDispoExistenteEnFile != null) {
+				logger.info("eventoDispoExistenteEnFile: "+disp.getUsuario().getUsuario()
+			+" | fecha:"+fechaMx+" | hora:"+disp.getHora()+" | tipo:"+disp.getTipo() );
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"This user already has a scheduled appointment for the given date and time in file "
+						+eventoDispoExistenteEnFile.getSolicitud().getIdSolicitud()+".");
+			}else{
+				logger.info("Evento no existe en ninguna solicitud, se puede agendar sin problemas");
+			}
+
+
 			String fecha = UtilidadesAdapter.formatearFechaUS(disp.getFecha());
 			String hora = disp.getHora();
 			String tipo = disp.getTipo();
@@ -895,7 +953,78 @@ public class SolicitudService implements SolicitudUseCase {
 				reqPort.actualizarImportante("", s.getIdSolicitud());
 			}
 
+			logger.info("idDisponibilidadTraductor:" + idDisponibilidadTraductor);
+			DisponibilidadUsuarioEntity dispTrad = dispPort.obtenerDisponibilidadPorId(idDisponibilidadTraductor);
+
+			if (dispTrad != null) {
+				envioATraductor(dispTrad, s, fechaAnterior, eventoClncSchedule,usCambio);
+			}
+
 		}
+	}
+
+	public void envioATraductor(DisponibilidadUsuarioEntity disp,SolicitudEntity s,boolean fechaAnterior,EventoSolicitudEntity eventoClncSchedule, UsuarioEntity usCambio) {
+
+		logger.info("------------ Datos disponibilidad traductor");
+		int idUsuarioTraductor = disp.getUsuario().getIdUsuario();
+
+			UsuarioEntity us = disp.getUsuario();
+			String fecha = UtilidadesAdapter.formatearFechaUS(disp.getFecha());
+			String hora = disp.getHora();
+			String tipo = disp.getTipo();
+			String zonaHoraria = disp.getZonaHoraria();
+			logger.info("fecha disp:" + fecha + hora);
+
+			// Convertir a horario del State seleccionado en solicitud, si viene
+			// vacio dejar la hora noramal
+			boolean horaConvertidaFlag = false;
+			String horaConvertida = "";
+			String tipoConvertido = "";
+			if (s.getEstado() != null) {
+
+				if (!s.getEstado().equals("")) {
+
+					horaConvertidaFlag = true;
+					horaConvertida = UtilidadesAdapter.convertirAHoraEstado(fecha, hora, tipo, s.getEstado(),zonaHoraria);
+
+					logger.info("Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
+					if ("".equals(horaConvertida)) {
+						horaConvertidaFlag = false;
+					} else {
+						String[] valores = horaConvertida.split(" ");
+						horaConvertida = valores[0];
+						tipoConvertido = valores[1];
+					}
+
+				}
+			}
+
+			// Agregar evento
+			zonaHoraria = zonaHoraria == null ? "" : zonaHoraria;
+			eventoClncSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
+					"Scheduled translator appointment " + fecha + ", " + hora + " " + tipo + " " + zonaHoraria + " to "
+							+ disp.getUsuario().getUsuario(),
+					"Schedule", usCambio.getUsuario(), disp.getFecha(), disp.getHora(), disp.getTipo(),
+					String.valueOf(disp.getUsuario().getIdUsuario()), s, disp.getZonaHoraria());
+
+			if (!fechaAnterior) {
+
+				if (s.getEmail() != null) {
+
+					// Enviar notificacion a traductor
+					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
+							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+
+				}
+
+			} else {
+
+				//Revisar si es fecha anterior que hacer?
+			}
+
+			//Agregar el usuario traductor a solicitud
+			reqPort.actualizarUsuarioTraductor(idUsuarioTraductor, s.getIdSolicitud());
+
 	}
 	
 
@@ -1109,402 +1238,8 @@ public class SolicitudService implements SolicitudUseCase {
 
 	}
 	
-	public void envioSiguienteProcesoBackup(int idSolicitud, int idUsuarioCambio, int idDisponibilidad,
-			boolean fechaAnterior) {
-
-		logger.info("idSolicitud:" + idSolicitud + "/idUsuarioCambio:" + idUsuarioCambio);
-		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
-		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
-		EventoSolicitudEntity eventoFirstSchedule = null;
-
-		DisponibilidadUsuarioEntity disp = null;
-		int idUsuarioRevisando = 0;
-		int estatusNuevo = 0;
-
-		if (u.getRol().equals("8")) {
-
-			if (!s.isFinIntSc()) {
-				logger.info("Es SCALE");
-				evPort.ingresarEventoDeSolicitud("Info", "Finished the interview scale", "Info", u.getUsuario(), s);
-				reqPort.actualizarFinIntSc("1", idSolicitud);
-				EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
-				reqPort.actualizarAsignacionIntSc(1, Integer.valueOf(ev.getUsuarioSchedule()), idSolicitud);
-				logger.info("id evento:" + ev.getIdEvento());
-				evPort.actualizarFinSchedule("1", ev.getIdEvento());
-				
-			} else {
-				logger.info("Ya se termino scale y volvio a mandar");
-				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "You have already sent this file.");
-			}
-
-		} else {
-
-			if (s.isExternal()) {
-				// Recibido a template
-				if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 1) {
-					estatusNuevo = 2;
-					idUsuarioRevisando = reqPort.obtenerRevisorConMenorSolicitudes(1);
-				}
-			} else {
-				// Recibido a entrevistador
-				if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 1) {
-					estatusNuevo = 3;
-					disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
-					idUsuarioRevisando = disp.getUsuario().getIdUsuario();
-				}
-				
-				// Entrevistador a Revisor
-				if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 3) {
-					estatusNuevo = 2;
-					idUsuarioRevisando = reqPort.obtenerRevisorConMenorSolicitudes(1);
-				}
-				
-				if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 2) {
-					
-					boolean seguir = false;
-					
-					if (s.isAsignacionTemplate() == true) {
-					
-						//Revisar si case manager es clinician
-						UsuarioEntity uuc = usPort.buscarPorId(s.getAssignedClinician());
-						
-						if(uuc.getRol().equals("11")){
-
-							if (s.isFinIntSc() == false || s.isFinIntIni() == false) {
-								throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-										"Interview case manager and scales need to be completed before we can proceed.");
-							} else {
-								seguir = true;
-							}
-						}else{
-
-							if (s.isFinIntSc() == false || s.isFinIntIni() == false || s.isFinAsgClnc() == false) {
-								throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-										"Interview case manager, scales and clinician need to be completed before we can proceed.");
-							} else {
-								seguir = true;
-							}
-						}
-						
-					}
-					
-					//Validar si es un aprobador o admin, que si esta en estatus 2 y no tiene asignacion tempalte mande mensaje
-					if(u.getRol().equals("1")||u.getRol().equals("2")||u.getRol().equals("4")){
-						if (s.isAsignacionTemplate() == false) {
-							throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-									"Editor user has not been assigned; this is necessary to proceed to the next process.");
-						}
-					}
-
-					if (seguir) {
-						estatusNuevo = 10;
-						int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-						logger.info("Usuario revisor:" + usRevisor);
-						if (usRevisor != 0) {
-							idUsuarioRevisando = usRevisor;
-						} else {
-							idUsuarioRevisando = s.getUsuarioRevisor();
-						}
-						reqPort.actualizarFinAsgTmp("1", idSolicitud);
-						
-					}
-				}
-			}
-			
-			if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 6
-					|| s.getEstatusSolicitud().getIdEstatusSolicitud() == 10) {
-				estatusNuevo = 11;
-			}
-			if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 7
-					|| s.getEstatusSolicitud().getIdEstatusSolicitud() == 8
-					|| s.getEstatusSolicitud().getIdEstatusSolicitud() == 9) {
-				estatusNuevo = 1;
-			}
-
-			if (estatusNuevo != 0) {
-
-				boolean actualizar = true;
-				EstatusSolicitudEntity es = esPort.obtenerEstatusSolicitudPorId(estatusNuevo);
-
-				if (estatusNuevo == 10) {
-					if (s.isAsignacionTemplate() == false) {
-						throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-								"You must assign a reviewer user to continue.");
-					}
-				}
-
-				if (estatusNuevo == 11) {
-
-					BigDecimal amount = s.getAmount() == null ? BigDecimal.ZERO : s.getAmount();
-					UtilidadesAdapter
-							.pintarLog("email cliente:" + s.getEmail() + " |email abogado:" + s.getEmail_abogado());
-
-					if ("".equals(s.getEmail()) && "".equals(s.getEmail_abogado())) {
-
-						throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-								"Customer email and lawyer email are mandatory");
-
-					} else {
-
-						boolean montosCeros = false;
-						BigDecimal sm = movPort.obtenerSumaMovimientosSolicitud(idSolicitud);
-
-						if (amount.compareTo(BigDecimal.ZERO) == 0 && sm.compareTo(BigDecimal.ZERO) == 0) {
-
-							logger.info("Amount y suma son 0");
-							montosCeros = true;
-
-						}
-						if (montosCeros) {
-
-							actualizar = false;
-							throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-									"The request does not have an assigned amount or does not have payments");
-
-						} else {
-
-							if (amount.compareTo(sm) == 0) {
-								
-								int proBono = movPort.tieneProbono(s.getIdSolicitud());
-
-								new Thread(new Runnable() {
-									@Override
-									public void run() {
-										 try {
-											Thread.sleep(5000);
-											//logger.info("Se espero 5 segundos para enviar");
-											// Enviar correo a abogado que ya se cerro la
-											// solicitud
-											correoUs.enviarCorreoAAbogadoPorFinSolicitud(s);
-											correoUs.enviarCorreoAMasterPorFinSolicitud(s);
-											
-											logger.info("proBono" + proBono);
-											if (proBono > 0) {
-												logger.info("No enviara notificacion de invoice");
-											} else {
-												logger.info("Se enviara notificacion de invoice");
-												correoUs.enviarCorreoInvoice(s.getEmail(), s);
-											}
-										} catch (InterruptedException e) {
-											e.printStackTrace();
-										}
-										
-									}
-								}).start();
-								
-								
-								reqPort.actualizarImportante("", s.getIdSolicitud());
-
-							} else {
-								actualizar = false;
-								throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-										"This request has pending payments");
-
-							}
-						}
-
-					}
-				}
-
-				if (estatusNuevo == 3) {
-					
-					String tinenInt = evPort.saberQueSchedulesInterviewSeTienen(idSolicitud);
-					if(tinenInt != null){
-						throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-								"This file already have interview for user: "+tinenInt);
-					}
-
-					if (disp != null) {
-
-						String fecha = UtilidadesAdapter.formatearFechaUS(disp.getFecha());
-						String hora = disp.getHora();
-						String tipo = disp.getTipo();
-						String zonaHoraria = disp.getZonaHoraria();
-
-						// Convertir a horario del State seleccionado en solicitud, si viene vacio dejar la hora noramal
-						boolean horaConvertidaFlag = false;
-						String horaConvertida = "";
-						String tipoConvertido = "";
-						if (s.getEstado() != null) {
-							if (!s.getEstado().equals("")) {
-								horaConvertidaFlag = true;
-								horaConvertida = UtilidadesAdapter.convertirAHoraEstado(fecha, hora, tipo,
-										s.getEstado(), zonaHoraria);
-
-								logger.info(
-										"Se convirtio hora a estado " + s.getEstado() + " la hora " + horaConvertida);
-								if ("".equals(horaConvertida)) {
-									horaConvertidaFlag = false;
-								} else {
-									String[] valores = horaConvertida.split(" ");
-									horaConvertida = valores[0];
-									tipoConvertido = valores[1];
-								}
-							}
-						}
-
-						logger.info("fecha disp:" + fecha + " " + hora);
-						// Agregar evento de cita
-						zonaHoraria = zonaHoraria == null ? "" : zonaHoraria;
-						eventoFirstSchedule = evPort.ingresarEventoScheduleDeSolicitud("Schedule",
-								"Scheduled appointment " + fecha + ", " + hora + " " + tipo +" " + zonaHoraria + " to "
-										+ disp.getUsuario().getUsuario(),
-								"Schedule", u.getUsuario(), disp.getFecha(), disp.getHora(), disp.getTipo(),
-								String.valueOf(disp.getUsuario().getIdUsuario()), s, disp.getZonaHoraria());
-						
-						if(disp.getUsuario().getRol().equals("11")){
-							reqPort.actualizarAssignedClinician(disp.getUsuario().getIdUsuario(), idSolicitud);
-						}
-
-						if (!fechaAnterior) {
-
-							// Enviar notificacion a entrevisador
-							UsuarioEntity us = usPort.buscarPorId(idUsuarioRevisando);
-
-							if (s.getEmail() != null) {
-
-								// Enviar notificacion a cliente
-								if (horaConvertidaFlag) {
-									correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida,
-											tipoConvertido, s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
-
-								} else {
-									correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo,
-											s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
-								}
-
-							}
-
-							
-							if (us != null) {
-								
-								correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
-								
-								// Enviar correo Amanda por cita
-								UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
-								if (usAmanda != null) {
-									correoUs.enviarCorreoPrimeraCita(us.getNombre(), fecha, hora + " " + tipo,usAmanda.getCorreoElectronico(), s);
-								}
-							}
-
-							
-
-							// Enviar mensaje a cliente
-							if (horaConvertidaFlag) {
-
-								msgPort.envioMensaje(s.getTelefono(),"Your appointment for FamiliasUnidas has been scheduled for: " + fecha + " " + horaConvertida + " " + tipoConvertido,s, false);
-
-							} else {
-								msgPort.envioMensaje(s.getTelefono(),
-										"Your appointment for FamiliasUnidas has been scheduled for: " + fecha + " "
-												+ hora + " " + tipo,s, false);
-							}
-
-							// Agregar evento de cita con horario nuevo cliente
-							String horaE = horaConvertidaFlag ? horaConvertida : hora;
-							String tipoE = horaConvertidaFlag ? tipoConvertido : tipo;
-							String estado = s.getEstado() == null ? "" : s.getEstado();
-							estado = "".equals(estado) ? "" : " " + s.getEstado() + " time";
-							evPort.ingresarEventoDeSolicitud("Info",
-									"Customer first appointment " + fecha + " " + horaE + " " + tipoE + estado, "Info",
-									u.getUsuario(), s);
-
-							int imp = evPort.obtenerSolicitudesSiTieneAlgunEventoDeSolicitud("Important",
-									s.getIdSolicitud());
-
-							if (imp != 0) {
-
-								reqPort.actualizarImportante("Important", s.getIdSolicitud());
-
-							} else {
-
-								reqPort.actualizarImportante("", s.getIdSolicitud());
-
-							}
-						} else {
-							actualizar = false;
-						}
-
-					}
-				}
-
-				if (estatusNuevo == 3) {
-
-					int ne = s.getNumeroEntrevistas() + 1;
-					reqPort.actualizarNumeroEntrevistas(ne, idSolicitud);
-					reqPort.actualizarInterview(idUsuarioRevisando, idSolicitud);
-
-				}
-				
-
-				if (estatusNuevo == 2) {
-
-					EventoSolicitudEntity ev = null;
-					// Codigo para agregar el usuario que entrevisto y que ya se termino entrevista
-					UsuarioEntity usEntSol = usPort.buscarPorId(s.getUsuarioInterview());	
-					if(u.getRol().equals("5")||u.getRol().equals("11")){
-						ev = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1",usEntSol.getIdUsuario());
-					}else{
-						ev = evPort.obtenerUltimoScheduleInt(idSolicitud, "1");
-					}
-					
-					//reqPort.actualizarInterview(Integer.valueOf(ev.getUsuarioSchedule()), idSolicitud);
-					logger.info("id evento:" + ev.getIdEvento());
-					evPort.actualizarFinSchedule("1", ev.getIdEvento());
-					reqPort.actualizarFinInterview(1, idSolicitud);
-					evPort.ingresarEventoDeSolicitud("Info", "Finished the first interview by user "+u.getUsuario(), "Info", u.getNombre(), s);
-					UsuarioEntity ui = usPort.buscarPorId(s.getUsuarioInterview());
-					if(ui.getRol().equals("11")){
-						reqPort.actualizarInterviewMaster("1", idSolicitud);
-					}
-
-				}
-				
-
-				if (actualizar) {
-
-					reqPort.actualizarEstatusSolicitud(idSolicitud, estatusNuevo);
-					if (idUsuarioRevisando != 0) {
-						reqPort.actualizarUsuarioRevisando(idUsuarioRevisando, idSolicitud);
-					}
-					// Agregar evento
-					evPort.ingresarEventoDeSolicitud("Sending process",
-							"It was sent to the next process " + es.getDescripcion(), "Info", u.getUsuario(), s);
-
-				}
-
-				
-				if (fechaAnterior) {
-
-					int usRevisor = reqPort.obtenerUsuarioSiEsRevisor(4, 1);
-					logger.info("Usuario revisor:" + usRevisor);
-
-					if (usRevisor != 0) {
-						idUsuarioRevisando = usRevisor;
-					} else {
-						idUsuarioRevisando = s.getUsuarioRevisor();
-					}
-
-					reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
-					reqPort.actualizarUsuarioRevisando(usRevisor, idSolicitud);
-					if (eventoFirstSchedule != null) {
-						evPort.actualizarFinSchedule("1", eventoFirstSchedule.getIdEvento());
-					}
-					reqPort.actualizarFinInterview(1, idSolicitud);
-
-				}
-				
-
-			}
-
-		}
-
-	}
-	
 	@Override
 	public void envioFinEntrevistaCaseManager(int idSolicitud,int idUsuarioCambio){
-		//reqPort.actualizarInterviewMaster("1", idSolicitud);
-		//evPort.actualizarFinScheduleDeSolicitud(idSolicitud);
 		
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
@@ -1531,8 +1266,6 @@ public class SolicitudService implements SolicitudUseCase {
 	
 	@Override
 	public void envioFinEntrevistaClinician(int idSolicitud,int idUsuarioCambio){
-		//reqPort.actualizarInterviewMaster("1", idSolicitud);
-		//evPort.actualizarFinScheduleDeSolicitud(idSolicitud);
 		
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioCambio);
@@ -1717,6 +1450,10 @@ public class SolicitudService implements SolicitudUseCase {
 		String fechaiFormato = fechai + " 00:00:00";
 		String fechafFormato = fechaf + " 23:59:59";
 
+		logger.info("fechai:" + fechai + " | fechaf:" + fechaf);
+
+		
+
 		for (ReporteSolsUsuario r : l) {
 			o = new ReporteContador();
 			o.setColor(r.getcolor());
@@ -1733,6 +1470,26 @@ public class SolicitudService implements SolicitudUseCase {
 			}
 			o.setRol(r.getrol());
 		}
+
+		List<ReporteSolsUsuario> lc = reqPort.obtenerSolicitudesClinicians(fechai, fechaf);
+			logger.info("Revisors clinician:" + lc.size());
+			for (ReporteSolsUsuario r : lc) {
+				o = new ReporteContador();
+				o.setColor(r.getcolor());
+				o.setIniciales(UtilidadesAdapter.obtenerIniciales(r.getUsuario()));
+				if(r.getimage() != null){
+					String rutaServidorFinal = rutaServidorFinal();
+					o.setImage(rutaServidorFinal+r.getimage());
+					}
+				o.setNombre(r.getUsuario());
+				o.setNumero(r.getNumero());
+				o.setIdUsuario(r.getId_Usuario());
+				
+				o.setRol(r.getrol());
+				if (o.getNumero() > 0) {
+					lsalida.add(o);
+				}
+			}
 
 		List<ReporteSolsUsuario> lr = reqPort.obtenerNumeroSolicitudesAtendidasPorRevisores(fechai, fechaf);
 		logger.info("Revisores:" + lr.size());
@@ -1814,24 +1571,8 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 		
 		
-			List<ReporteSolsUsuario> lc = reqPort.obtenerSolicitudesClinicians(fechai, fechaf);
-			logger.info("Revisors clinician:" + lc.size());
-			for (ReporteSolsUsuario r : lc) {
-				o = new ReporteContador();
-				o.setColor(r.getcolor());
-				o.setIniciales(UtilidadesAdapter.obtenerIniciales(r.getUsuario()));
-				if(r.getimage() != null){
-					String rutaServidorFinal = rutaServidorFinal();
-					o.setImage(rutaServidorFinal+r.getimage());
-					}
-				o.setNombre(r.getUsuario());
-				o.setNumero(r.getNumero());
-				o.setIdUsuario(r.getId_Usuario());
-				if (o.getNumero() > 0) {
-					lsalida.add(o);
-				}
-				o.setRol(r.getrol());
-			}
+			
+
 		
 		return lsalida;
 	}
@@ -1928,6 +1669,15 @@ public class SolicitudService implements SolicitudUseCase {
 		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
 		UsuarioEntity usRevisor = usPort.buscarPorId(idUsuario);
 		String rol = usEnvio.getRol();
+		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+
+		// Otbener traductor en caso que exista
+		int idTraductor = 0;
+		boolean conTraductor = false;
+		if(s.getUsuarioTraductor() != 0){
+			idTraductor = s.getUsuarioTraductor();
+			conTraductor = true;
+		}
 
 		boolean esClinicianComoCaseManager = false;
 
@@ -1949,8 +1699,6 @@ public class SolicitudService implements SolicitudUseCase {
 					"The length of the rejection reason cannot be greater than 250");
 		}
 
-		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
-
 		evPort.ingresarEventoDeSolicitud("Reject File", motivo, "Reject File", usEnvio.getUsuario(), s);
 
 		UsuarioEntity rolInt = usPort.buscarPorId(s.getUsuarioInterview());
@@ -1959,14 +1707,32 @@ public class SolicitudService implements SolicitudUseCase {
 
 		EventoSolicitudEntity evSol = null;
 		if (rol.equals("5")) {
-			evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
+				evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);		
 		} else if (rol.equals("8")) {
 			evSol = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
 		} else if (rol.equals("11")) {
-			if (esClinicianComoCaseManager) {
-				evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
+
+			if (conTraductor) {
+				if (idTraductor == idUsuarioEnvio) {
+
+					logger.info("El mismo usuario que rechazo es el traductor");
+					reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
+
+					// Obtener evento de solicitud para entrevista a la que se relaciona eltraductor
+					logger.info("Usuario interview del traductor:" + s.getUsuarioInterview());
+					evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", s.getUsuarioInterview());
+					// Obtener usuario entrevistador relacionado al entrevistador
+					usEnvio = usPort.buscarPorId(s.getUsuarioInterview());
+
+				}
 			} else {
-				evSol = evPort.obtenerUltimoScheduleInterviewClinicianByUser(idSolicitud, "1", idUsuarioEnvio);
+
+				if (esClinicianComoCaseManager) {
+					evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
+				} else {
+					evSol = evPort.obtenerUltimoScheduleInterviewClinicianByUser(idSolicitud, "1", idUsuarioEnvio);
+				}
+
 			}
 		}
 
@@ -2003,12 +1769,23 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 
 		if (rol.equals("11")) {
-			if (esClinicianComoCaseManager) {
-				reqPort.actualizarFinAsgClnc("0", idSolicitud);
-				reqPort.actualizarAsignacionIntReset(idSolicitud);
-				reqPort.actualizarAssignedClinician(0, idSolicitud);
-			} else {
-				reqPort.actualizarAssignedClinician(0, idSolicitud);
+
+			if (conTraductor) {
+				if (idTraductor == idUsuarioEnvio) {
+					//Actualizar fin asigancion entrevistador relacionado al traductor
+					reqPort.actualizarAsignacionIntReset(idSolicitud);
+				}
+
+			}else{
+
+				if (esClinicianComoCaseManager) {
+					reqPort.actualizarFinAsgClnc("0", idSolicitud);
+					reqPort.actualizarAsignacionIntReset(idSolicitud);
+					reqPort.actualizarAssignedClinician(0, idSolicitud);
+				} else {
+					reqPort.actualizarAssignedClinician(0, idSolicitud);
+				}
+
 			}
 		}
 		if (rol.equals("8")) {
@@ -2036,130 +1813,93 @@ public class SolicitudService implements SolicitudUseCase {
 
 		}
 
-	}
+		if(idTraductor != 0){
 
-	/*public void reasignar(int idUsuario, String motivo, int idSolicitud, int idUsuarioEnvio) {
+			logger.info("Solicitud tiene asignado traductor, actualizar evento y enviar correo no show a traductor");
 
-		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
-		
-
-		if (!usEnvio.getRol().equals("8")) {
-			reqPort.actualizarUsuarioRevisando(idUsuario, idSolicitud);
-		}
-
-			logger.info("Con motivo");
-
-			if (!"".equals(motivo)) {	
-
-				logger.info("Motivo lleno");
-
-				String motivoTrim = motivo == null ? "" : motivo.trim();
-
-				if (motivoTrim.isEmpty()) {
-					throw new ResponseStatusException(
-						HttpStatus.BAD_REQUEST,
-						"Rejection reason cannot be empty"
-					);
-				}
-
-				if (motivoTrim.length() > 250) {
-					throw new ResponseStatusException(
-						HttpStatus.BAD_REQUEST,
-						"The length of the rejection reason cannot be greater than 250"
-					);
-				}
-
-				SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
-				UsuarioEntity usRevisor = usPort.buscarPorId(s.getUsuarioRevisor());
-
-				evPort.ingresarEventoDeSolicitud("Reject File", motivo, "Reject File", usEnvio.getUsuario(), s);
-
-				EventoSolicitudEntity evSol = null;
-				if (usEnvio.getRol().equals("5")||usEnvio.getRol().equals("11")) {
-					//evSol = evPort.obtenerUltimoScheduleInt(idSolicitud, "1");
-					evSol = evPort.obtenerUltimoScheduleInterviewByUser(idSolicitud, "1", idUsuarioEnvio);
-				} else if (usEnvio.getRol().equals("8")) {
-					evSol = evPort.obtenerUltimoScheduleScales(idSolicitud, "1");
-				}
+			if(idTraductor != usEnvio.getIdUsuario()){
 
 				if (evSol != null) {
-					// Enviar mail
-					correoUs.enviarCorreoNoShow(usRevisor.getCorreoElectronico(),usEnvio.getCorreoElectronico(), usRevisor.getNombre(),usEnvio.getNombre(), s, evSol,motivo);
-					// Enviar mensaje texto
-					if (s.getTelefono() != null) {
-						if (!"".equals(s.getTelefono())) {
 
-							if (evSol != null) {
-								String f = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule()) + " "
-										+ evSol.getHoraSchedule() + " " + evSol.getTipoSchedule();
-								msgPort.envioMensaje(s.getTelefono(),
-										" The client " + s.getCliente()
-												+ " did not show up for the interview scheduled for request "
-												+ s.getIdSolicitud() + " in the date " + f + ".",
-										s, false);
-							}
-						}
-					}
+					logger.info("Si obtuvo evento de solicitud para entrevista a la que se relaciona el traductor");
 
-					logger.info("Actualizar evento solicitud:" + evSol.getIdEvento());
-					evSol.setEstatusSchedule("0");
-					evPort.actualizarEventoSolicitud(evSol);
-					
-					// Si es rol 8 (interviewer scale)
-					if (usEnvio.getRol().equals("5")||usEnvio.getRol().equals("11")) {
-						reqPort.actualizarFinInterview(0, idSolicitud);
-						reqPort.actualizarAsignacionIntReset(idSolicitud);
-					}
-					if (usEnvio.getRol().equals("8")) {
-						reqPort.actualizarAsignacionIntScReset(idSolicitud);
-						reqPort.actualizarFinIntSc("0", idSolicitud);
-					}
-					
-				}
-				
-				if (usEnvio.getRol().equals("11")) {	
-					
-					if(usEnvio.getIdUsuario() == s.getAssignedClinician()){
-						
-						reqPort.actualizarAssignedClinician(0, idSolicitud);
-						
-					}
-					
-				}
+					String fechaEvT = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule());
 
-				if (!usEnvio.getRol().equals("8")) {
-					
-					if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 2) {
-						// Actualizar estatus a Reviewing
-						reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
-						reqPort.actualizarAsignacionTemplate(0, 0, idSolicitud);
-					} else {
-						// Actualizar estatus a Received
-						reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
-					}
+					logger.info("Solicitud:" + s.getIdSolicitud()+"|traductor:" + idTraductor + "|fecha:" + fechaEvT);
+					EventoSolicitudEntity evTraductor = evPort.obtenerScheduleTraductor(s.getIdSolicitud(), "1", idTraductor, fechaEvT);
+					UsuarioEntity usTraductor = usPort.buscarPorId(idTraductor);
+
+					// Correo reject entrevista a traductor
+					correoUs.enviarCorreoReject(usRevisor.getCorreoElectronico(), usTraductor.getCorreoElectronico(),
+						usRevisor.getNombre(), usTraductor.getNombre(), s, evSol, motivoTrim);
+
+					reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
+					evTraductor.setEstatusSchedule("0");
+					evPort.actualizarEventoSolicitud(evTraductor);
 
 				}
 
-				if (usEnvio.getRol().equals("5") || usEnvio.getRol().equals("8")) {
-					int ne = s.getNumeroEntrevistas() - 1;
-					reqPort.actualizarNumeroEntrevistas(ne, idSolicitud);
-				}
+			}else{
+
+				logger.info("El mismo usuario que rechazo es el traductor");
+				reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
 
 			}
 
-			if (usEnvio.getRol().equals("7")) {
+		}
 
-				logger.info("actualizar asignacion template");
+	}
+
+	@Override
+	public void reopen(int idUsuarioEnvio,String motivo,int idSolicitud){
+
+		UsuarioEntity usEnvio = usPort.buscarPorId(idUsuarioEnvio);
+
+		String motivoTrim = motivo == null ? "" : motivo.trim();
+
+		if (motivoTrim.isEmpty()) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"Reopen reason cannot be empty");
+		}
+
+		if (motivoTrim.length() > 250) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"The length of the reopen reason cannot be greater than 250");
+		}
+
+		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+
+		evPort.ingresarEventoDeSolicitud("Reopen File", motivo, "Reopen File", usEnvio.getUsuario(), s);
+
+		reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
+		
+		evPort.obtenerSchedulesActivasDeSolicitudAll(idSolicitud).forEach(ev -> {
+			
+			int evento = Integer.valueOf(ev.getidEvento());
+			int rol = Integer.valueOf(ev.getidrol());
+
+			evPort.actualizarEstatusEvento(0, evento);
+			if (rol == 8) {
+				reqPort.actualizarAsignacionIntScReset(idSolicitud);
+			}
+			if (rol == 5) {
+				reqPort.actualizarAsignacionIntReset(idSolicitud);
+			}
+			if (rol == 7) {
 				reqPort.actualizarAsignacionTemplate(0, 0, idSolicitud);
-
 			}
 
-	}*/
+		});
+
+	}
 	
 	public void noShow(String motivo, int idSolicitud, int idUsuarioEnvio) {
 		
 		UsuarioEntity u = usPort.buscarPorId(idUsuarioEnvio);
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+		UsuarioEntity usRevisor = usPort.buscarPorId(s.getUsuarioRevisor());
 		
 		if ("".equals(motivo)) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -2197,8 +1937,6 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 
 		if (evSol != null) {
-
-			UsuarioEntity usRevisor = usPort.buscarPorId(s.getUsuarioRevisor());
 			
 			// Enviar mail
 			correoUs.enviarCorreoNoShow(usRevisor.getCorreoElectronico(),u.getCorreoElectronico(),usRevisor.getNombre(), u.getNombre(), s, evSol,motivo);
@@ -2229,6 +1967,9 @@ public class SolicitudService implements SolicitudUseCase {
 					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),
 					UtilidadesAdapter.formarUidEvento(evSol), true);
 
+			
+			
+
 		}
 
 		actualizarUsuarioRevisando = !"8".equals(rol);
@@ -2255,6 +1996,31 @@ public class SolicitudService implements SolicitudUseCase {
 		}
 		if (rol.equals("5") ) {
 			reqPort.actualizarAsignacionIntReset(idSolicitud);
+		}
+
+		if(s.getUsuarioTraductor() != 0){
+
+			logger.info("Solicitud tiene asignado traductor, actualizar evento y enviar correo no show a traductor");
+
+			if (evSol != null) {
+
+				logger.info("Si obtuvo evento de solicitud para entrevista a la que se relaciona el traductor");
+
+				String fechaEvT = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule());
+
+				logger.info("Solicitud:" + s.getIdSolicitud()+"|traductor:" + s.getUsuarioTraductor() + "|fecha:" + fechaEvT);
+				EventoSolicitudEntity evTraductor = evPort.obtenerScheduleTraductor(s.getIdSolicitud(), "1", s.getUsuarioTraductor(), fechaEvT);
+				UsuarioEntity usTraductor = usPort.buscarPorId(s.getUsuarioTraductor());
+
+				// Correo no-show entrevista a traductor
+				correoUs.enviarCorreoNoShow(usRevisor.getCorreoElectronico(),usTraductor.getCorreoElectronico(),usRevisor.getNombre(), usTraductor.getNombre(), s, evSol,motivo);		
+
+				reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
+				evTraductor.setEstatusSchedule("0");
+				evPort.actualizarEventoSolicitud(evTraductor);
+
+			}
+
 		}
 
 	}
@@ -2288,13 +2054,6 @@ public class SolicitudService implements SolicitudUseCase {
 
 	}
 
-
-	@Override
-	public String cargarExcel(MultipartFile archivo) {
-
-		return cargaExcelv2(archivo);
-	}
-
 	public void pintarLog(String mensaje, StringBuilder sb) {
 		if (ambiente.equals("local")) {
 			// if(false){
@@ -2310,8 +2069,6 @@ public class SolicitudService implements SolicitudUseCase {
 	}
 
 	public static void main(String args[]) {
-		SolicitudService sc = new SolicitudService();
-		sc.cargaExcelv2(null);
 	}
 
 	@Override
@@ -2517,328 +2274,7 @@ public class SolicitudService implements SolicitudUseCase {
 		return ras;
 	}
 
-	public String cargaExcelv2(MultipartFile archivo) {
-
-		logger.info("Ambiente:" + ambiente);
-		Workbook workbook = null;
-		String salida = "";
-		StringBuilder sb = new StringBuilder();
-
-		try {
-
-			// workbook = WorkbookFactory.create(new
-			// File("/Users/joser.vazquez/ExcelUnif.xlsx"));
-			InputStream is = new ByteArrayInputStream(archivo.getBytes());
-			workbook = WorkbookFactory.create(is);
-
-			logger.info("Number of sheetss: " + workbook.getNumberOfSheets());
-			int cargados = 0;
-			boolean solicitud = false;
-
-			String telefono = "";
-			String cliente = "";
-			String type = "";
-			String paymentType = "";
-			int idEstatusSolicitud = 0;
-			TipoPagoEntity tipoPago = null;
-			int idTipoSolicitud = 0;
-			BigDecimal pago = BigDecimal.ZERO;
-			Double amount = 0.0;
-			String scale = "";
-			Date fecha = null;
-			int mes = 0;
-			String sheetName = "";
-
-			TipoPagoEntity tp3 = tpPort.obtenerTiposPago(3);
-			List<TipoSolicitudEntity> ls = tsPort.obtenerTiposSolicitudes();
-			List<TipoPagoEntity> ltp = tpPort.obtenerTiposPagos();
-			int countGen = 0;
-
-			// Obtener usuario revisor
-			int idUsRevisando = usPort.buscarPorUsuario("juan").getIdUsuario();
-			int idUsRevisor = usPort.buscarPorUsuario("edgar").getIdUsuario();
-
-			ambiente = "qas";
-
-			// for (int i = 2; i < 9; i++) {
-			for (int i = 4; i < 12; i++) {
-
-				Sheet sheet = workbook.getSheetAt(i);
-				sheetName = sheet.getSheetName();
-				logger.info("NombreSheet:" + sheetName);
-
-				logger.info("Sheet:" + i);
-
-				for (Row row : sheet) {
-					Solicitud r = new Solicitud();
-
-					// if (index++ == 0) continue;
-					// logger.info("row:"+ index);
-
-					if (row.getCell(0) != null && row.getCell(0).getCellType() == CellType.STRING) {
-						pintarLog("#################", sb);
-						if (row.getCell(0) != null && row.getCell(0).getCellType() == CellType.STRING) {
-							pintarLog("Cliente:" + row.getCell(0).getStringCellValue(), sb);
-							cliente = row.getCell(0).getStringCellValue();
-						}
-						if (row.getCell(1) != null && row.getCell(1).getCellType() == CellType.STRING) {
-							pintarLog("Type:" + row.getCell(1).getStringCellValue(), sb);
-							type = row.getCell(1).getStringCellValue();
-							if (type.equals("TYPE")) {
-								solicitud = false;
-							}
-							if ("".equals(type)) {
-								solicitud = false;
-							}
-						} else {
-							solicitud = false;
-						}
-
-						if (row.getCell(11) != null && row.getCell(11).getCellType() == CellType.STRING) {
-							if ("Cancelled".equals(row.getCell(11).getStringCellValue())) {
-								solicitud = false;
-							}
-						}
-
-						if (solicitud) {
-
-							pintarLog("··Llenando datos solicitud", sb);
-
-							r.setCliente(cliente);
-							final String typeF = type;
-							TipoSolicitudEntity se = ls.stream().filter(a -> typeF.contains(a.getNombre())).findAny()
-									.orElse(null);
-
-							if (se == null) {
-								idTipoSolicitud = 6;
-							} else {
-								idTipoSolicitud = se.getIdTipoSolicitud();
-							}
-
-							pintarLog("Id tipo solicitud:" + idTipoSolicitud, sb);
-							r.setIdTipoSolicitud(idTipoSolicitud);
-
-							if (row.getCell(2) != null && row.getCell(2).getCellType() == CellType.STRING) {
-								telefono = row.getCell(2).getStringCellValue();
-								pintarLog("Telefono inicial:" + telefono, sb);
-								if (telefono.length() > 12) {
-									telefono = telefono.substring(0, 12);
-									telefono = telefono.replaceAll("-", "");
-								} else {
-									telefono = telefono.replaceAll("-", "");
-								}
-								pintarLog("Telefono final:" + telefono, sb);
-								if (ambiente.equals("local")) {
-									r.setTelefono("0000000000");
-								} else {
-									r.setTelefono(telefono);
-								}
-							} else {
-								r.setTelefono("");
-							}
-							if (row.getCell(3) != null && row.getCell(3).getCellType() == CellType.STRING) {
-								pintarLog("Email cliente:" + row.getCell(3).getStringCellValue(), sb);
-								if (ambiente.equals("local")) {
-									r.setEmail("test@gm.com");
-								} else {
-									r.setEmail(row.getCell(3).getStringCellValue());
-								}
-							}
-							if (row.getCell(4) != null && row.getCell(4).getCellType() == CellType.STRING) {
-								pintarLog("Email lawyer:" + row.getCell(4).getStringCellValue(), sb);
-								if (ambiente.equals("local")) {
-									r.setEmail_abogado("t");
-								} else {
-									r.setEmail_abogado(row.getCell(4).getStringCellValue());
-								}
-							}
-							if (row.getCell(5) != null && row.getCell(5).getCellType() == CellType.STRING) {
-								paymentType = row.getCell(5).getStringCellValue();
-								pintarLog("Tipo payment:" + paymentType, sb);
-								final String paymentTypeF = paymentType;
-								TipoPagoEntity tpa = ltp.stream()
-										.filter(a -> paymentTypeF.toUpperCase().contains(a.getNombre().toUpperCase()))
-										.findAny().orElse(null);
-								if (tpa == null) {
-									tipoPago = tp3;
-								} else {
-									tipoPago = tpa;
-								}
-								pintarLog("Tipo pago final:" + tipoPago.getNombre(), sb);
-							}
-							if (tipoPago == null) {
-								tipoPago = tp3;
-							}
-							if (row.getCell(6) != null && row.getCell(6).getCellType() == CellType.NUMERIC) {
-								pintarLog("Amout:" + row.getCell(6).getNumericCellValue(), sb);
-								amount = row.getCell(6).getNumericCellValue();
-								amount = amount * 100;
-								r.setAmount(new BigDecimal(amount));
-
-							} else {
-								r.setAmount(BigDecimal.ZERO);
-							}
-
-							if (row.getCell(7) != null && row.getCell(7).getCellType() == CellType.STRING) {
-								pintarLog("Scale:" + row.getCell(7).getStringCellValue(), sb);
-								if (!"".equals(row.getCell(7).getStringCellValue())) {
-									scale = row.getCell(7).getStringCellValue();
-									if (scale.length() > 100) {
-										scale = scale.substring(0, 100);
-									}
-								}
-							}
-							/*
-							 * if (row.getCell(8) != null &&
-							 * row.getCell(8).getCellType() == CellType.STRING)
-							 * { if (row.getCell(8).getStringCellValue().equals(
-							 * "READY")) { idEstatusSolicitud = 10; } else {
-							 * idEstatusSolicitud = 1; } pintarLog("Ready:" +
-							 * row.getCell(8).getStringCellValue() +
-							 * " | idEstatusSolicitud:" +
-							 * idEstatusSolicitud,sb);
-							 * r.setIdEstatusSolicitud(idEstatusSolicitud); }
-							 */
-							if (row.getCell(9) != null && row.getCell(9).getCellType() == CellType.STRING) {
-								pintarLog("Firma lawyer:" + row.getCell(9).getStringCellValue(), sb);
-								r.setFirmaAbogados(row.getCell(9).getStringCellValue());
-							}
-							if (row.getCell(10) != null && row.getCell(10).getCellType() == CellType.STRING) {
-								pintarLog("Pago text:" + row.getCell(10).getStringCellValue(), sb);
-								// if
-								// ("PAID".equals(row.getCell(10).getStringCellValue()))
-								// {
-								if (row.getCell(10).getStringCellValue().contains("PAID")) {
-									r.setIdEstatusPago(2);
-									pago = r.getAmount();
-									idEstatusSolicitud = 11;
-									r.setIdEstatusSolicitud(idEstatusSolicitud);
-								}
-
-							}
-							if (row.getCell(10) != null && row.getCell(10).getCellType() == CellType.NUMERIC) {
-								pintarLog("Pago numeric:" + row.getCell(10).getNumericCellValue(), sb);
-								pago = new BigDecimal(row.getCell(10).getNumericCellValue());
-								r.setIdEstatusPago(1);
-							}
-							if (row.getCell(11) != null && row.getCell(11).getCellType() == CellType.STRING) {
-								if ("".equals(row.getCell(11).getStringCellValue())) {
-									idEstatusSolicitud = 10;
-								} else {
-									idEstatusSolicitud = 11;
-								}
-								pintarLog("Ready:" + row.getCell(8).getStringCellValue() + " | idEstatusSolicitud:"
-										+ idEstatusSolicitud, sb);
-								r.setIdEstatusSolicitud(idEstatusSolicitud);
-							}
-							if (pago.compareTo(BigDecimal.ZERO) == 0) {
-								r.setIdEstatusPago(1);
-							}
-							if (i == 4 || i == 5 || i == 6) {
-								if (row.getCell(11) != null && row.getCell(12).getCellType() == CellType.STRING) {
-									pintarLog("Direccion:" + row.getCell(12).getStringCellValue(), sb);
-									if (!"".equals(row.getCell(12).getStringCellValue())) {
-										r.setDireccion(row.getCell(12).getStringCellValue());
-									}
-
-								}
-							}
-
-							pintarLog("idEstatusSolicitud:" + idEstatusSolicitud, sb);
-							if (idEstatusSolicitud == 0) {
-								r.setIdEstatusSolicitud(1);
-							}
-
-							r.setIdUsuarioRevisor(idUsRevisor);
-							r.setIdUsuarioRevisando(idUsRevisando);
-							pintarLog("Pago:" + pago, sb);
-							pintarLog("Tipo Pago:" + tipoPago.getNombre(), sb);
-							pintarLog("Scale:" + scale, sb);
-							pintarLog("idEstatusSolicitud:" + idEstatusSolicitud, sb);
-							pintarLog("idUsRevisor:" + idUsRevisor, sb);
-							pintarLog("idUsRevisando:" + idUsRevisando, sb);
-
-							if (idEstatusSolicitud == 10) {
-								r.setAsignacionIntSc(true);
-							}
-
-							try {
-								mes = UtilidadesAdapter.obtenerMesSheet(sheetName.toUpperCase());
-								fecha = UtilidadesAdapter.cadenaAFecha("2024-" + mes + "-15");
-							} catch (ParseException e) {
-								e.printStackTrace();
-							}
-
-							r.setFechaInicio(fecha);
-							if (type != null) {
-
-								if (type.length() > 350) {
-									r.setAdicional(type.substring(0, 350));
-								} else {
-									r.setAdicional(type);
-								}
-							}
-
-							SolicitudEntity s = crearSolicitudMasivo(r, 1);
-							cargados++;
-
-							if (!"".equals(scale)) {
-
-								// insertar scale
-								ScaleEntity es = new ScaleEntity();
-								es.setScale(scale);
-								es.setSolicitud(s);
-								scPort.crearScale(es);
-
-							}
-							if (pago.compareTo(BigDecimal.ZERO) == 1) {
-								// insertar pago
-								MovimientoEntity mov = new MovimientoEntity();
-								mov.setDescripcion("Pago");
-								mov.setMonto(pago);
-								mov.setFecha(fecha);
-								mov.setSolicitud(s);
-								mov.setTipoPago(tipoPago);
-								mov.setTipo("Payment");
-								movPort.crearMovimiento(mov);
-
-							}
-
-							pintarLog("_______________", sb);
-						}
-						solicitud = true;
-						pago = BigDecimal.ZERO;
-						scale = "";
-						idEstatusSolicitud = 0;
-						idTipoSolicitud = 0;
-						tipoPago = null;
-						type = "";
-					}
-
-				}
-				// logger.info(sb.toString());
-				logger.info("sols cargadas:" + cargados + "\n");
-				countGen = countGen + cargados;
-				cargados = 0;
-			}
-
-			// logger.info("sheetV:" + sheetV);
-
-			salida = "Cargados " + countGen;
-
-		} catch (EncryptedDocumentException | IOException e) {
-			logger.info(e.getMessage());
-		} finally {
-			try {
-				if (workbook != null)
-					workbook.close();
-			} catch (IOException e) {
-				logger.info(e.getMessage());
-			}
-			logger.info(sb.toString());
-		}
-		return salida;
-	}
+	
 
 	@Override
 	public List<String> obtenerTextosOrdenarPor(int idUsuario) {
@@ -2980,7 +2416,7 @@ public class SolicitudService implements SolicitudUseCase {
 			s.add("File Status");
 		}
 		if (rol.equals("10")) {
-			s.add("All");
+			//s.add("All");
 			s.add("Case number");
 			s.add("Customer");
 			s.add("File");
@@ -3036,6 +2472,28 @@ public class SolicitudService implements SolicitudUseCase {
 	@Override
 	public void actualizarEmailAbo(String emailsAbogado, int idSolicitud) {
 		reqPort.actualizarEmailAbo(emailsAbogado, idSolicitud);
+	}
+
+	@Override
+	public void actualizarInterviewToCaseManager(int idSolicitud,int idUsuario,int idUsuarioEnvio){
+
+		UsuarioEntity uEntity = usPort.buscarPorId(idUsuario);
+		UsuarioEntity usCambio = usPort.buscarPorId(idUsuarioEnvio);
+		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
+		EventoSolicitudEntity ev = evPort.obtenerUltimoScheduleClinician(idSolicitud, "1");
+
+		String fecha = UtilidadesAdapter.formatearFechaUS(ev.getFechaSchedule());
+
+		evPort.ingresarEventoScheduleDeSolicitud("Schedule",
+					"Scheduled appointment " + fecha + ", " + ev.getHoraSchedule() + " " + ev.getTipo() +" " + ev.getTimeZoneSchedule() + " to "+ uEntity.getUsuario(),
+					"Schedule", usCambio.getUsuario(), ev.getFechaSchedule(), ev.getHoraSchedule(), ev.getTipoSchedule(),
+					String.valueOf(uEntity.getIdUsuario()), s, ev.getTimeZoneSchedule());
+
+		ev.setEstatusSchedule("0");
+		evPort.actualizarEventoSolicitud(ev);
+		reqPort.actualizarAssignedClinician(0, idSolicitud);
+		reqPort.actualizarInterview(uEntity.getIdUsuario(),idSolicitud);
+		logger.info("id evento:" + ev.getIdEvento());
 	}
 
 }

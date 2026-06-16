@@ -3,6 +3,7 @@ package com.cargosyabonos.application.port.out;
 import java.util.List;
 
 import com.cargosyabonos.domain.UsuarioEntity;
+import com.cargosyabonos.domain.UsuarioObj;
 
 public interface UsuariosPort {
 	
@@ -27,5 +28,6 @@ public interface UsuariosPort {
 	public void actualizarImageUsuario(String image,int idUsuario);
 	public List<UsuarioEntity> obtenerUsuariosParaAssignedClinician();
 	public void desbloquearUsuario(int idUsuario);
+	public List<UsuarioObj> obtenerUsuariosObj(int idUsuario,String usuario);
 
 }

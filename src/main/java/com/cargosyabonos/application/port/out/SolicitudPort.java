@@ -30,6 +30,9 @@ public interface SolicitudPort {
 	public void eliminarSolicitud(SolicitudEntity r);
 	public List<Solicitud> obtenerSolicitudesDeUsuarioPorQueryV2(UsuarioEntity us, int estatus,int idSolicitud,String fechai,
 			String fechaf,String ordenarPor,String orden,String campo,String valor, boolean myFiles,String cerradas,boolean primeraVez, int usuario);
+	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(boolean soloUnObjeto, UsuarioEntity us, String cerradas, boolean primeraVez,String ordenarPor, String orden,
+			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
+		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento);
 	public void actualizarEstatusSolicitud(int idSolicitud, int idEstatus);
 	public int obtenerRevisorConMenorSolicitudes(int revisor);
 	public int obtenerUsuarioRevisandoPorRolCoMenosSols(int idRol);
@@ -55,6 +58,7 @@ public interface SolicitudPort {
 	public void actualizarAsignacionTemplate(int asignacionTemplate,int idUsuarioTemp,int idSolicitud);
 	public void actualizarAsignacionIntSc(int asignacionIntSc,int idUsuario,int idSolicitud);
 	public void actualizarAsignacionClnc(int idUsuario,int idSolicitud);
+	public void actualizarUsuarioTraductor(int idUsuario,int idSolicitud);
 	public void actualizarAsignacionIntScReset(int idSolicitud);
 	public void actualizarAsignacionClncReset(int idSolicitud);
 	public void actualizarNumeroEntrevistas(int num,int idSolicitud);
