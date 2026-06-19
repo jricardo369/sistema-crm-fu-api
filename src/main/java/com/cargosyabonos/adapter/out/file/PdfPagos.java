@@ -58,15 +58,6 @@ public class PdfPagos {
 	@Value("${pdf.font}")
 	private static String rutaFont;
 
-	@Value("${rutaArchivos}")
-	private String rutaArchivos;
-
-	@Value("${rutaArchivos.qas}")
-	private String rutaArchivosQAS;
-
-	@Value("${rutaArchivos.pro}")
-	private String rutaArchivosPRO;
-
 	@Value("${pdf.logo}")
 	private String logo;
 

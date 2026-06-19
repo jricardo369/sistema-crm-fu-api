@@ -89,6 +89,9 @@ public class UsuarioEntity {
 	private String color;
 	
 	private String image;
+
+	@Column(name = "firma")
+	private String firma;
 	
 	@Column(name = "with_supervision")
 	private boolean withSupervision;
@@ -325,5 +328,14 @@ public class UsuarioEntity {
 		this.unpaidVocFlag = unpaidVocFlag;
 	}
 
+	public String getFirma() {
+		return firma;
+	}
+
+	public void setFirma(String firma) {
+		this.firma = firma;
+	}
+
+	
 
 }

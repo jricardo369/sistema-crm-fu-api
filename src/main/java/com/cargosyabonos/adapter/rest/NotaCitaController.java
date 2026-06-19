@@ -46,4 +46,9 @@ public class NotaCitaController {
 		ncUseCase.eliminarNotaCita(idNota,idUsuario);
 	}
 
+	@PutMapping("firmar/{idNota}")
+	public void firmarNota(@PathVariable("idNota") int idNota,@RequestParam("idUsuario") int idUsuario,@RequestParam("idSolicitud") int idSolicitud,@RequestParam("tipo") String tipo) {
+		ncUseCase.firmarNotaCita(idNota,idUsuario,idSolicitud,tipo);
+	}
+
 }

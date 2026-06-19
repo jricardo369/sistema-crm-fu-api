@@ -126,6 +126,16 @@ public class CitaService implements CitaUseCase {
 		cs.setImportante("");
 		cs.setFechaCreacion(c.getfechaCreacion() != null ? c.getfechaCreacion().substring(0, 10) : "");
 		cs.setCodigoRecurrencia(c.getCodigoRecurrencia());
+		cs.setTieneFirma(c.gettieneFirma() == null ? false : c.gettieneFirma().equals("0") ? false : true);
+		int supervisor = 0;
+		if(c.getsupervisor() != null && !"".equals(c.getsupervisor())){
+			try {
+				supervisor = Integer.valueOf(c.getsupervisor());
+			} catch (NumberFormatException e) {
+				logger.error("Error al convertir supervisor a entero: " + c.getsupervisor(), e);
+			}
+		}
+		cs.setSupervisor(supervisor);
 
 		return cs;
 	}

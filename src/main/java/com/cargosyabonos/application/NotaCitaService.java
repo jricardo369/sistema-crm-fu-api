@@ -223,4 +223,23 @@ public class NotaCitaService implements NotaCitaUseCase {
 		return ncPort.obtenerNotaDeCita(idCita);
 	}
 
+	@Override
+	public void firmarNotaCita(int idNota,int idUsuario,int idSolicitud,String tipo) {
+
+		if(tipo.equals("quitarfirmar")){
+
+			NotaCitaEntity nc = ncPort.obtenerNotaCita(idNota);
+			SolicitudVocEntity s = solPort.obtenerSolicitud(idSolicitud);
+			UsuarioEntity u = usPort.buscarPorId(idUsuario);
+			String fecha = UtilidadesAdapter.cambiarFormatoFechaStringAUS(nc.getFechaCreacion());
+			evPort.ingresarEventoDeSolicitud("Info", "The signature on note "+fecha+" was removed", "Info", u.getNombre(), s);
+			idUsuario = 0;
+		
+		}
+		
+		ncPort.firmarNotaCita(idNota, idUsuario);
+		
+	}
+
+
 }

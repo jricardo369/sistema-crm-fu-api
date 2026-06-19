@@ -256,6 +256,7 @@ public class EventoRepository implements EventoSolicitudPort {
 		o.setImportante((String) row[10]);
 		o.setIdEvento((Integer) row[11]);
 		o.setCitaTraductor(Integer.valueOf(row[12].toString()) == 0 ? false : true);
+		o.setTipoSolicitud((String)row[13]);
 		
 		return o;
 	}

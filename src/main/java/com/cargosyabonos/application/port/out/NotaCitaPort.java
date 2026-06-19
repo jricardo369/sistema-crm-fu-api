@@ -13,5 +13,6 @@ public interface NotaCitaPort {
 	public void eliminarNotaCita(NotaCitaEntity a);
 	public NotaCitaEntity obtenerNotaDeCita(int idCita); 
 	public int obtenerIdSolByIdNota(int idNota);
+	public void firmarNotaCita(int idNota,int idUsuario);
 
 }

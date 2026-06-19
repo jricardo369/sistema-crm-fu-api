@@ -26,6 +26,7 @@ public interface UsuariosPort {
 	public List<UsuarioEntity> obtenerUsuariosDeRolesConDesc(List<Integer> roles); 
 	public void actualizarEstatusUsuario(int estatus,int idUsuario);
 	public void actualizarImageUsuario(String image,int idUsuario);
+	public void actualizarImageFirmaUsuario(String image,int idUsuario);
 	public List<UsuarioEntity> obtenerUsuariosParaAssignedClinician();
 	public void desbloquearUsuario(int idUsuario);
 	public List<UsuarioObj> obtenerUsuariosObj(int idUsuario,String usuario);

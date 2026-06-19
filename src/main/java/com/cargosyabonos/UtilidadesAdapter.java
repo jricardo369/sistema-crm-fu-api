@@ -228,6 +228,10 @@ public class UtilidadesAdapter {
 		return "/" + idUsuario;
 	}
 
+	public static String generarRutaImgFirma(int idUsuario) {
+		return "/firma/" + idUsuario;
+	}
+
 	public static String obtenerIniciales(String nombre) {
 		if (nombre == null || nombre.trim().isEmpty()) {
 			return "";
@@ -1125,5 +1129,13 @@ public class UtilidadesAdapter {
 				.mapToObj(indice -> String.valueOf(CARACTERES_ALFANUMERICOS.charAt(indice)))
 				.collect(Collectors.joining());
 	}
+
+	public static String cambiarFormatoFechaStringAUS(String fecha) {
+    LocalDate localDate = LocalDate.parse(fecha); // yyyy-MM-dd
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    return localDate.format(formatter);
+}
 
 }

@@ -159,13 +159,12 @@ public class ReportesAbogadoRepository implements ReportesAbogadoPort {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("SELECT " + 
-                        "    YEAR(fecha_creacion) AS anio, " + 
-                        "    MONTH(fecha_creacion) AS mes, " + 
-                        "    COUNT(*) AS total_abogados_nuevos " + 
-                        "FROM " + 
-                        "    abogado " + 
-                        "WHERE " + 
-                        "    fecha_creacion BETWEEN :fechai AND :fechaf " + 
+                        "    YEAR(a.fecha_creacion) AS anio, " + 
+                        "    MONTH(a.fecha_creacion) AS mes, " + 
+                        "    COUNT(*) AS total_abogados_nuevos  " + 
+                        " FROM abogado a " + 
+                        " RIGHT JOIN solicitud s ON s.id_abogado = a.id_abogado " +
+                        "WHERE a.fecha_creacion BETWEEN :fechai AND :fechaf " + 
                         "GROUP BY anio, mes " + 
                         "ORDER BY anio, mes;");
 

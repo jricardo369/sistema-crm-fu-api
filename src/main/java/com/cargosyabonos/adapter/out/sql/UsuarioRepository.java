@@ -136,6 +136,11 @@ public class UsuarioRepository implements UsuariosPort {
 	public void actualizarImageUsuario(String image,int idUsuario){
 		usJpa.actualizarImageUsuario(image, idUsuario);
 	}
+
+	@Override
+	public void actualizarImageFirmaUsuario(String image,int idUsuario){
+		usJpa.actualizarImageFirmaUsuario(image, idUsuario);
+	}
 	
 	@Override
 	public List<UsuarioEntity> obtenerUsuariosParaAssignedClinician(){
@@ -209,6 +214,7 @@ public class UsuarioRepository implements UsuariosPort {
 		o.setUnpaidVocFlag(Integer.valueOf(row[25].toString()) == 0 ? false : true);
 		o.setEstado((String) row[26]);
 		o.setContrasenia((String) row[27]);
+		//o.setFirma((String) row[28]);
 
 		o.setIniciales(UtilidadesAdapter.obtenerIniciales(o.getNombre()));
 		return o;
@@ -224,7 +230,7 @@ public class UsuarioRepository implements UsuariosPort {
 		String queryS = "SELECT usuario.id_usuario, usuario.usuario, usuario.nombre, usuario.sexo, usuario.correo_electronico, usuario.telefono, " + 
 		"usuario.direccion, usuario.pais, usuario.intentos, usuario.ciudad, usuario.estatus, usuario.edad, usuario.id_rol, usuario.fecha_creacion, " +
 		"usuario.resumen, usuario.ausencia, usuario.revisor, usuario.licencia, usuario.licencia_valida, usuario.disponibilidad, usuario.color, usuario.rate, " + 
-		"usuario.image, usuario.with_supervision, usuario.supervisor, usuario.unpaid_voc_flag, usuario.estado,usuario.contrasenia FROM usuario ";
+		"usuario.image, usuario.with_supervision, usuario.supervisor, usuario.unpaid_voc_flag, usuario.estado,usuario.contrasenia,firma FROM usuario ";
 
 		sb.append(queryS);
 

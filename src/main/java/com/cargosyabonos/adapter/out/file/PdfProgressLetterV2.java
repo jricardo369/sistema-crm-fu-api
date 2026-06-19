@@ -355,7 +355,8 @@ public class PdfProgressLetterV2 {
 			table8.setWidthPercentage(90);
 			table8.setWidths(new int[] { 10 });
 			table8.addCell(PdfUtilidad.cell("__________________________________",pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
-			table8.addCell(PdfUtilidad.cell(u.getSupervisor()+", LMFT", pdfUtil.obtenerFont(getColores(), "normal"), 0,"izquierda", "", "negro"));
+			UsuarioEntity uSup = usPort.buscarPorId(Integer.valueOf(u.getSupervisor()));
+			table8.addCell(PdfUtilidad.cell(uSup.getNombre()+", LMFT", pdfUtil.obtenerFont(getColores(), "normal"), 0,"izquierda", "", "negro"));
 			table8.addCell(PdfUtilidad.cell("Licensed Marriage and Family Therapist", pdfUtil.obtenerFont(getColores(), "normal"),0, "izquierda", "", "negro"));
 			document.add(table8);
 		}else{

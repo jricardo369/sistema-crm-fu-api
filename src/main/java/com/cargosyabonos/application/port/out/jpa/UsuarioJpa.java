@@ -59,7 +59,7 @@ public interface UsuarioJpa extends CrudRepository<UsuarioEntity, Serializable> 
 	public List<UsuarioEntity> obtenerUsuarioPorRoles(@Param("roles") List<Integer> roles);
 	
 	@Query(value = "SELECT u.id_usuario,u.usuario,u.contrasenia,CONCAT(u.nombre ,' (',r.nombre,')') as nombre,u.sexo,u.correo_electronico,u.telefono,u.direccion,u.pais,u.intentos,u.ciudad,u.estatus, "
-		+"u.edad,u.id_rol,u.fecha_creacion,u.resumen,u.ausencia,u.revisor,u.licencia,u.licencia_valida,u.disponibilidad,u.color,u.rate,u.image,u.with_supervision,u.supervisor,u.unpaid_voc_flag "
+		+"u.edad,u.id_rol,u.fecha_creacion,u.resumen,u.ausencia,u.revisor,u.licencia,u.licencia_valida,u.disponibilidad,u.color,u.rate,u.image,u.with_supervision,u.supervisor,u.unpaid_voc_flag,u.estado,u.firma "
 		+"FROM usuario u "
 		+"JOIN rol r ON r.id_rol = u.id_rol WHERE u.id_rol IN(:roles) AND u.estatus NOT IN(4) ORDER BY u.id_rol ASC", nativeQuery = true)
 	public List<UsuarioEntity> obtenerUsuarioPorRolesConDesc(@Param("roles") List<Integer> roles);
@@ -78,5 +78,10 @@ public interface UsuarioJpa extends CrudRepository<UsuarioEntity, Serializable> 
 	@Query(value = "UPDATE usuario SET image = ?1 where id_usuario = ?2", nativeQuery = true)
 	@Modifying
 	public void actualizarImageUsuario(String image,int idUsuario);
+
+	@Transactional
+	@Query(value = "UPDATE usuario SET firma = ?1 where id_usuario = ?2", nativeQuery = true)
+	@Modifying
+	public void actualizarImageFirmaUsuario(String image,int idUsuario);
 
 }

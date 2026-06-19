@@ -83,6 +83,12 @@ public class UsuariosController {
 		return usrUseCase.obtenerUsuariosParaDash(idUsuario);
 	}
 
+	@GetMapping("supervisores")
+	public List<UsuarioEntity> buscarUsuariosSupervisores(@RequestParam("idUsuario") int idUsuario) {
+		UtilidadesAdapter.pintarLog("idUsuario:"+idUsuario);
+		return usrUseCase.obtenerUsuariosSupervisores(idUsuario);
+	}
+
 	@PostMapping
 	public void crearUsuario(@RequestBody UsuarioEntity usuario) {
 		usrUseCase.crearUsuario(usuario);
@@ -106,6 +112,11 @@ public class UsuariosController {
 	@PostMapping("actualizar-imagen/{idUsuario}")
 	public void cargarImagen(@PathVariable("idUsuario") int idUsuario,@RequestParam(value = "archivo", required = false) MultipartFile archivo) {
 		usrUseCase.cargarImagen(archivo, idUsuario);
+	}
+
+	@PostMapping("actualizar-imagen-firma/{idUsuario}")
+	public void cargarImagenFirma(@PathVariable("idUsuario") int idUsuario,@RequestParam(value = "archivo", required = false) MultipartFile archivo) {
+		usrUseCase.cargarImagenFirma(archivo, idUsuario);
 	}
 	
 	@GetMapping("roles")

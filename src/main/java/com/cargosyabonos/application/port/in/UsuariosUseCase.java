@@ -21,7 +21,9 @@ public interface UsuariosUseCase {
 	public UsuarioEntity buscarPorCorreoWithLike(String correo);
 	public List<UsuarioEntity> obtenerUsuariosParaSchedules(int idUsuario);
 	public List<UsuarioEntity> obtenerUsuariosParaDash(int idUsuario);
+	public List<UsuarioEntity> obtenerUsuariosSupervisores(int idUsuario);
 	public void cargarImagen(MultipartFile archivo,int idUsuario);
+	public void cargarImagenFirma(MultipartFile archivo,int idUsuario);
 	public List<UsuarioEntity> obtenerUsuariosParaAssignedClinician();
 	public void desbloquearUsuario(int idUsuario);
 	

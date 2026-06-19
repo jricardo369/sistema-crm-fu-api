@@ -27,5 +27,7 @@ public interface CitaSql {
 	 String getcliente();
 	 String getfechaCreacion();
 	 String getCodigoRecurrencia();
+	 String gettieneFirma();
+	 String getsupervisor();
 
 }

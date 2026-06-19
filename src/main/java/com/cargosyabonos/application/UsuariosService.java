@@ -239,6 +239,21 @@ public class UsuariosService implements UsuariosUseCase {
 
 		return usList;
 	}
+
+	@Override
+	public List<UsuarioEntity> obtenerUsuariosSupervisores(int idUsuario) {
+
+		List<UsuarioEntity> usList = null;
+		UsuarioEntity us = usrPort.buscarPorId(idUsuario);
+		UtilidadesAdapter.pintarLog("us rol:" + us.getRol());
+
+		List<Integer> li = new ArrayList<>();
+		li.add(6);
+
+		usList = usrPort.obtenerUsuariosDeRolesConDesc(li);
+
+		return usList;
+	}
 	
 	@Override
 	public void cargarImagen(MultipartFile archivo,int idUsuario){
@@ -271,6 +286,39 @@ public class UsuariosService implements UsuariosUseCase {
 		
 		arcPort.guardarArchivo(rutaArchivos, archivoB, nombre);
 		usrPort.actualizarImageUsuario(rutaArchivos + nombre, idUsuario);
+	}
+
+	@Override
+	public void cargarImagenFirma(MultipartFile archivo,int idUsuario){
+		String nombreOriginal = archivo.getOriginalFilename();
+		System.out.println("ContentType:"+archivo.getContentType());
+		String tipoArchivo = "";
+		
+		if(archivo.getContentType().contains("word")){
+			tipoArchivo = "docx";
+		}else{
+			tipoArchivo = archivo.getContentType().substring(archivo.getContentType().length() - 3,
+					archivo.getContentType().length());
+		}
+		
+		String rutaArchivos = UtilidadesAdapter.generarRutaImgFirma(idUsuario);
+		String nombre = "/" + idUsuario + "." + tipoArchivo;
+		
+		byte[] archivoB = null;
+
+		try {
+			archivoB = archivo.getBytes();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("rutaArchios:"+rutaArchivos);
+		System.out.println("bytes:"+archivoB);
+		System.out.println("nombre:"+nombre);
+		System.out.println("original nombre:"+nombreOriginal);
+		
+		arcPort.guardarArchivo(rutaArchivos, archivoB, nombre);
+		usrPort.actualizarImageFirmaUsuario(rutaArchivos + nombre, idUsuario);
 	}
 	
 	private String rutaServidorFinal(){

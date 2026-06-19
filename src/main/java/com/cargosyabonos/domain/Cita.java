@@ -33,6 +33,9 @@ public class Cita {
 	private int idDisponibilidad;
 	private boolean recurrente;
 	private String codigoRecurrencia;
+	private boolean tieneFirma;
+	private String tipoSolicitud;
+	private int supervisor;
 	
 	public int getIdDisponibilidad() {
 		return idDisponibilidad;
@@ -202,9 +205,24 @@ public class Cita {
 	public void setCodigoRecurrencia(String codigoRecurrencia) {
 		this.codigoRecurrencia = codigoRecurrencia;
 	}
-
+	public boolean isTieneFirma() {
+		return tieneFirma;
+	}
+	public void setTieneFirma(boolean tieneFirma) {
+		this.tieneFirma = tieneFirma;
+	}
+	public String getTipoSolicitud() {
+		return tipoSolicitud;
+	}
+	public void setTipoSolicitud(String tipoSolicitud) {
+		this.tipoSolicitud = tipoSolicitud;
+	}
+	public int getSupervisor() {
+		return supervisor;
+	}
+	public void setSupervisor(int supervisor) {
+		this.supervisor = supervisor;
+	}
 	
 	
-	
-
 }

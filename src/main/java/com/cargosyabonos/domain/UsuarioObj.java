@@ -68,6 +68,8 @@ public class UsuarioObj {
 
 	private String contrasenia;
 
+	private String firma;
+
 	public int getIdUsuario() {
 		return idUsuario;
 	}
@@ -306,6 +308,14 @@ public class UsuarioObj {
 
 	public void setContrasenia(String contrasenia) {
 		this.contrasenia = contrasenia;
+	}
+
+	public String getFirma() {
+		return firma;
+	}
+
+	public void setFirma(String firma) {
+		this.firma = firma;
 	}
 
 	

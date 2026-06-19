@@ -79,6 +79,9 @@ public class NotaCitaEntity {
 	@Column(name = "plan_futuro", length = 200)
 	private String planFuturo;
 
+	@Column(name = "usuario_firma")
+	private int usuarioFirma;
+
 	public int getIdNota() {
 		return idNota;
 	}
@@ -257,6 +260,14 @@ public class NotaCitaEntity {
 		this.locacionVerificada = locacionVerificada;
 	}
 
+	public int getUsuarioFirma() {
+		return usuarioFirma;
+	}
+
+	public void setUsuarioFirma(int usuarioFirma) {
+		this.usuarioFirma = usuarioFirma;
+	}
+
 	@Override
 	public String toString() {
 		return "NotaCitaEntity [idNota=" + idNota + ", idCita=" + idCita + ", descripcion=" + descripcion
@@ -270,5 +281,7 @@ public class NotaCitaEntity {
 				+ ", respuestaDeIntervencion=" + respuestaDeIntervencion + ", resumenEvaluacion=" + resumenEvaluacion
 				+ ", planFuturo=" + planFuturo + "]";
 	}
+
+	
 
 }

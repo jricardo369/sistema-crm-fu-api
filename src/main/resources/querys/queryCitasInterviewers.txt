@@ -13,13 +13,15 @@ e.fin_schedule as finSchedule,es.descripcion  as descEst,es.id_estatus_solicitud
     CASE 
         WHEN e.descripcion LIKE '%translator%' THEN 1
         ELSE 0
-    END AS esTranslator
+    END AS esTranslator,
+     ts.nombre
 
 FROM evento_solicitud e 
 JOIN usuario u ON u.id_usuario = usuario_schedule 
 LEFT JOIN solicitud s ON s.id_solicitud = e.id_solicitud 
 LEFT JOIN estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud 
 LEFT JOIN estado_usuario eu ON eu.id_usuario = u.id_usuario 
+LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud
 WHERE e.tipo = 'Schedule' 
 AND e.fecha_schedule >= :inicioSemana AND  e.fecha_schedule <= :finSemana
 AND e.estatus_schedule = 1

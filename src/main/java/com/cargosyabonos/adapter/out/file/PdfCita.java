@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +16,12 @@ import com.cargosyabonos.application.port.in.SolicitudVocUseCase;
 import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
 import com.cargosyabonos.application.port.out.NotaCitaPort;
+import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.NotaCitaEntity;
 import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.SolicitudVocEntity;
+import com.cargosyabonos.domain.UsuarioEntity;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -62,10 +63,14 @@ public class PdfCita {
 	private SolicitudVocUseCase solVocUseCase;
 
 	@Autowired
+	private UsuariosPort usPort;
+
+	@Autowired
 	private PdfUtilidad pdfUtil;
 
 	@Value("${pdf.font}")
 	private static String rutaFont;
+	
 
 	@Value("${rutaArchivos}")
 	private String rutaArchivos;
@@ -156,17 +161,59 @@ public class PdfCita {
 		espacio(document, 20f);
 		datosInfo(document,cita);
 		espacio(document, 15f);
+		NotaCitaEntity n = ntPort.obtenerNotaDeCita(cita.getIdCita());
 		if (cita != null) {
-				datosDetalle(document, cita);
-			
-		} else {
-				titulo(document, "No se han cargado notas citas aun", 90);
-			
-			espacio(document, 5f);
+				datosDetalle(document, cita,n);
+		} 
+
+		UsuarioEntity usuario = null;
+		if(n.getUsuarioFirma() > 0) {
+			usuario = usPort.buscarPorId(n.getUsuarioFirma());
 		}
 		espacio(document, 20f);
 		espacio(document, 5f);
 		espacio(document, 100f);
+
+		if (usuario != null) {
+			String rutaArchivosFinal = "";
+
+			switch (ambiente) {
+				case "qas":
+					System.out.println("Es QAS");
+					rutaArchivosFinal = rutaArchivosQAS + usuario.getFirma();
+					break;
+				case "pro":
+					System.out.println("Es PRO");
+					rutaArchivosFinal = rutaArchivosPRO + usuario.getFirma();
+					break;
+				case "local":
+					System.out.println("Es local");
+					rutaArchivosFinal = rutaArchivos + usuario.getFirma();
+					break;
+				default:
+					System.out.println("No encontro match");
+			}
+			System.out.println("rutaArchivosFinal:" + rutaArchivosFinal);
+
+			String rutaFirma = rutaArchivosFinal;
+			java.io.File f = new java.io.File(rutaFirma);
+			if (f.exists()) {
+				try {
+					Image firma = Image.getInstance(rutaFirma);
+					firma.setAlignment(Element.ALIGN_CENTER);
+					firma.scaleToFit(200, 100);
+					document.add(firma);
+					PdfPTable tFirma = new PdfPTable(1);
+					tFirma.setWidthPercentage(50);
+					tFirma.setWidths(new int[] { 10 });
+					tFirma.addCell(PdfUtilidad.cell(usuario.getNombre(), pdfUtil.obtenerFont(getColores(), "normal"), 0,
+							"centro", "", "negro"));
+					document.add(tFirma);
+				} catch (Exception e) {
+					log.error("Error adding signature image", e);
+				}
+			}
+		}
 	}
 
 	public void crearTablaLogo(Document document,CitaEntity s,SolicitudVoc svoc)
@@ -261,7 +308,7 @@ public class PdfCita {
 		return table;
 	}
 
-	public void datosDetalle(Document document, CitaEntity cita)
+	public void datosDetalle(Document document, CitaEntity cita, NotaCitaEntity n)
 			throws FileNotFoundException, DocumentException {
 
 		log.info("Generando sección de datos detalle de pago");
@@ -279,14 +326,14 @@ public class PdfCita {
 					table.addCell(PdfUtilidad.cell("Comment schedule",pdfUtil.obtenerFont(getColores(), "negrita"), 4, "izquierda", "", "magenta"));
 					table.addCell(PdfUtilidad.cell(cita.getComentario() != null ? cita.getComentario() : "",pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "magenta"));
 					
-					 List<NotaCitaEntity> notasCitas = ntPort.obtenerNotasCitas(cita.getIdCita());
+					 //List<NotaCitaEntity> notasCitas = ntPort.obtenerNotasCitas(cita.getIdCita());
 					 //datosDetalleDeDetalle(document, notas);
 					 
-					 if (notasCitas != null) {
+					 //if (notasCitas != null) {
 							
-							if (!notasCitas.isEmpty()) {
+							//if (!notasCitas.isEmpty()) {
 								
-								for (NotaCitaEntity n : notasCitas) {
+								//for (NotaCitaEntity n : notasCitas) {
 									
 									v="";
 									table.addCell(PdfUtilidad.cell(" ",pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "magenta"));
@@ -342,13 +389,13 @@ public class PdfCita {
 									
 									ntPort.obtenerNotasCitas(cita.getIdCita());
 
-								}
-							}
+								//}
+							//}
 							
-						}
+						//}
 					 
 					 
-					 if(notasCitas == null || notasCitas.isEmpty()){
+					 if(n == null){
 							
 							table.addCell(PdfUtilidad.cell("This schedule has no notes " ,pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
 							table.addCell(PdfUtilidad.cell("",pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));

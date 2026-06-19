@@ -50,4 +50,10 @@ public class NotaCitaRepository implements NotaCitaPort{
 		return ncJpa.obtenerIdSolByIdNota(idNota);
 	}
 
+	@Override
+	public void firmarNotaCita(int idNota,int idUsuario) {
+		ncJpa.firmarNotaCita(idUsuario, idNota);
+	}
+
+
 }

@@ -3,6 +3,9 @@ package com.cargosyabonos.application.port.out.jpa;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -28,5 +31,10 @@ public interface NotaCitaJpa extends CrudRepository<NotaCitaEntity, Serializable
 			+ "LEFT JOIN solicitud_voc s ON s.id_solicitud = c.id_solicitud "
 			+ "WHERE nc.id_nota = ?1", nativeQuery = true)
 	public int obtenerIdSolByIdNota(int idNota);
+
+	@Transactional
+	@Query(value = "UPDATE nota_cita SET usuario_firma = ?1 WHERE id_nota = ?2", nativeQuery = true)
+	@Modifying
+	public void firmarNotaCita(int idUsuario,int idNota);
 
 }

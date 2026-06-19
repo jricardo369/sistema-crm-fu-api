@@ -12,5 +12,6 @@ public interface NotaCitaUseCase {
 	public void crearNotaCita(NotaCitaEntity a);
 	public void actualizarNotaCita(NotaCitaEntity a);
 	public void eliminarNotaCita(int idNota,int idUsuario);
+	public void firmarNotaCita(int idNota,int idUsuario,int idSolicitud,String tipo);
 
 }

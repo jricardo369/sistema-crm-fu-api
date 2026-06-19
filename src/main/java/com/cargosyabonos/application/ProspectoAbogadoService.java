@@ -511,12 +511,16 @@ public class ProspectoAbogadoService implements ProspectoAbogadoUseCase {
                         fechaPorcentaje1 = UtilidadesAdapter
                                 .formatearFechaMDY_a_ISO(row.getCell(15).getStringCellValue());
                         pintarLog("fechaPorcentaje1:" + fechaPorcentaje1, sb);
-                        r.setFechaPorcentaje1(fechaPorcentaje1);
-                        r.setPorcentaje1(true);
-                        r.setIdUsuario(103);
-                        Date fechaRecordatorio = UtilidadesAdapter.sumarDiasAFecha(UtilidadesAdapter.fechaActualDate(),
-                                15);
-                        r.setFechaRecordatorioLiaison(UtilidadesAdapter.formatearFecha(fechaRecordatorio));
+                        if(!"".equals(fechaPorcentaje1)){
+                            r.setFechaPorcentaje1(fechaPorcentaje1);
+                            r.setPorcentaje1(true);
+                            Date fechaRecordatorio = UtilidadesAdapter.sumarDiasAFecha(UtilidadesAdapter.fechaActualDate(),15);
+                            r.setFechaRecordatorioLiaison(UtilidadesAdapter.formatearFecha(fechaRecordatorio));
+                            r.setIdUsuario(103);
+                        }else{
+                            r.setIdUsuario(102);
+                            r.setIdEstatusProspecto(1);
+                        }
                     } else {
                         r.setIdUsuario(102);
                     }
@@ -527,6 +531,7 @@ public class ProspectoAbogadoService implements ProspectoAbogadoUseCase {
                         pintarLog("fechaPorcentaje2:" + fechaPorcentaje2, sb);
                         r.setFechaPorcentaje2(fechaPorcentaje2);
                         r.setPorcentaje2(true);
+                        
                     }
 
                     if (row.getCell(19) != null) {
