@@ -88,7 +88,7 @@ public class EnvioCorreoAdapter {
 
 		try {
 
-			Thread.sleep(5000); // si quieres seguir esperando 5s
+			Thread.sleep(9000); // si quieres seguir esperando 5s
 			// enviarCorreo(email, subject, html, archivo, extension);
 			office365MailService.sendHtmlMailWithCalendar(email, subject, html, null, null, null);
 

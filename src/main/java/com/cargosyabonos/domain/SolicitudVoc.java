@@ -73,6 +73,7 @@ public class SolicitudVoc {
 	private String nombreEscuela;
 	private String lenguajePreferente;
 	private List<String> numCitasTerapeutasPorSolicitud;
+	private int noShows;
 
 	
 	public int getIdSolicitud() {
@@ -412,5 +413,10 @@ public class SolicitudVoc {
 	public void setNumCitasTerapeutasPorSolicitud(List<String> numCitasTerapeutasPorSolicitud) {
 		this.numCitasTerapeutasPorSolicitud = numCitasTerapeutasPorSolicitud;
 	}
-	
+	public int getNoShows() {
+		return noShows;
+	}
+	public void setNoShows(int noShows) {
+		this.noShows = noShows;
+	}
 }

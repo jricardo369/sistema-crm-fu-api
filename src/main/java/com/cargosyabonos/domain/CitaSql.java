@@ -29,5 +29,11 @@ public interface CitaSql {
 	 String getCodigoRecurrencia();
 	 String gettieneFirma();
 	 String getsupervisor();
+	 int getrechazada();
+	 String getfechaAprobacion();
+	 String gethoraNota();
+	 String getfechacreacionnota();
+	 String getemailterapeuta();
+	 String getnombreterapeuta();
 
 }

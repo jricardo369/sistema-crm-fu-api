@@ -2,7 +2,6 @@ package com.cargosyabonos.application.port.in;
 
 import java.sql.Date;
 import java.util.List;
-
 import com.cargosyabonos.domain.TareaProgramadaEntity;
 
 public interface TareaProgramadaUseCase {
@@ -15,5 +14,7 @@ public interface TareaProgramadaUseCase {
 	public void validacionMsms();
 	public void solicitudesVocEndingSessions();
 	public void reminderLawyerProspectsLiaison();
+	public void reminderSolsVocPendTratmentPlan();
+	public void reminderCitasSinNotaDiaAnterior();
 
 }

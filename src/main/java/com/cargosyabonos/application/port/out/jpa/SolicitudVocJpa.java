@@ -112,7 +112,7 @@ public interface SolicitudVocJpa extends CrudRepository<SolicitudVocEntity, Seri
 	
 	@Query(value = "SELECT COALESCE(SUM(amount) ,0) FROM solicitud_voc WHERE fecha_inicio BETWEEN ?1 AND ?2 AND cliente = ?3", nativeQuery = true)
 	public BigDecimal obtenerSumaAmountSolicitudesPorFechaYClt(Date fechai, Date fechaf,String cliente);
-	
+
 	@Query(value = "SELECT COALESCE(SUM(CASE WHEN dos_citas = 1 THEN 2 ELSE 1 END), 0) AS conteo_ajustado  FROM request_evaluation.cita  WHERE id_solicitud = ?1 AND no_show = 0;", nativeQuery = true)
 	public int obtenerSesionesDeSolicitud(int idSolicitud);
 	

@@ -124,7 +124,7 @@ public class CitaService implements CitaUseCase {
 		cs.setCliente(c.getcliente());
 		cs.setNombreUsuario(c.getnombreUsuario());
 		cs.setImportante("");
-		cs.setFechaCreacion(c.getfechaCreacion() != null ? c.getfechaCreacion().substring(0, 10) : "");
+		cs.setFechaCreacion(c.getfechaCreacion() != null ? c.getfechaCreacion().substring(0, 16) : "");
 		cs.setCodigoRecurrencia(c.getCodigoRecurrencia());
 		cs.setTieneFirma(c.gettieneFirma() == null ? false : c.gettieneFirma().equals("0") ? false : true);
 		int supervisor = 0;
@@ -136,6 +136,17 @@ public class CitaService implements CitaUseCase {
 			}
 		}
 		cs.setSupervisor(supervisor);
+		
+		if(c.gettieneNota() != null){
+			if(!cs.isTieneNota()){
+				cs.setRechazada(false);
+			}else{
+				cs.setRechazada(c.getrechazada() == 1 ? true : false);
+			}
+		}
+		cs.setFechaAprobacion(c.getfechaAprobacion());
+		cs.setHoraNota(c.gethoraNota() == null ? "" : c.gethoraNota());
+		cs.setFechaCreacionNota(c.getfechacreacionnota() == null ? "" : c.getfechacreacionnota());
 
 		return cs;
 	}

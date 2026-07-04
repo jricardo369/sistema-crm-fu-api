@@ -2,6 +2,8 @@ package com.cargosyabonos.application;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
@@ -10,10 +12,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.NotaCitaUseCase;
+import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
 import com.cargosyabonos.application.port.out.NotaCitaPort;
 import com.cargosyabonos.application.port.out.SolicitudVocPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
+import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.NotaCitaEntity;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
@@ -21,6 +25,8 @@ import com.cargosyabonos.domain.UsuarioEntity;
 @Service
 @PropertySource(ignoreResourceNotFound = true, value = "classpath:configuraciones-global.properties")
 public class NotaCitaService implements NotaCitaUseCase {
+
+	private static final Logger logger = LoggerFactory.getLogger(NotaCitaService.class);
 	
 	@Autowired
 	private UsuariosPort usPort;
@@ -33,6 +39,9 @@ public class NotaCitaService implements NotaCitaUseCase {
 	
 	@Autowired
 	private SolicitudVocPort solPort;
+
+	@Autowired
+	private CitaPort citaPort;
 
 	@Override
 	public List<NotaCitaEntity> obtenerNotasCitas(int idCita) {
@@ -47,7 +56,6 @@ public class NotaCitaService implements NotaCitaUseCase {
 	@Override
 	public void crearNotaCita(NotaCitaEntity a) {
 		
-		
 		a = validacionCampos(a);
 		validacionTamanioDatos(a);
 		
@@ -56,12 +64,32 @@ public class NotaCitaService implements NotaCitaUseCase {
 		UtilidadesAdapter.pintarLog("a:"+a.getIdCita());
 		NotaCitaEntity nc = ncPort.obtenerNotaDeCita(a.getIdCita());
 		UtilidadesAdapter.pintarLog("nc:"+nc);
+
+		int numeroSesiones = 0;
+		String tiempoSesion = a.getTiempoSesion() == null ? "" : a.getTiempoSesion();
+		if(tiempoSesion.contains("44")){
+			numeroSesiones = 1;
+		}else if(tiempoSesion.contains("45")){
+			numeroSesiones = 2;
+		}else if(tiempoSesion.contains("75")){
+			numeroSesiones = 3;
+		}else if(tiempoSesion.contains("105")){
+			numeroSesiones = 4;
+		}
+		
+		logger.info("numeroSesiones:"+numeroSesiones);
+
+		a.setHora(UtilidadesAdapter.obtenerHoraActualPST());
+		
 		if(nc != null){
 			a.setIdNota(nc.getIdNota());
 			ncPort.crearNotaCita(a);
 		}else{
 			ncPort.crearNotaCita(a);
 		}
+
+		CitaEntity s = citaPort.obtenerCita(a.getIdCita());
+		s.setDosCitas(false);
 		
 	}
 	
@@ -234,11 +262,27 @@ public class NotaCitaService implements NotaCitaUseCase {
 			String fecha = UtilidadesAdapter.cambiarFormatoFechaStringAUS(nc.getFechaCreacion());
 			evPort.ingresarEventoDeSolicitud("Info", "The signature on note "+fecha+" was removed", "Info", u.getNombre(), s);
 			idUsuario = 0;
-		
+			ncPort.rechazarNotaCita(0, "", idNota);
+
+		}else{
+			ncPort.rechazarNotaCita(0, UtilidadesAdapter.obtenerFechaActualPST(), idNota);
 		}
 		
 		ncPort.firmarNotaCita(idNota, idUsuario);
 		
+		
+	}
+
+	@Override
+	public void rechazarNotaCita(int idNota,int idUsuario,String motivoRechazo){
+
+		NotaCitaEntity nc = ncPort.obtenerNotaCita(idNota);
+		SolicitudVocEntity s = solPort.obtenerSolicitud(ncPort.obtenerIdSolByIdNota(idNota));
+		UsuarioEntity u = usPort.buscarPorId(idUsuario);
+		String fecha = UtilidadesAdapter.cambiarFormatoFechaStringAUS(nc.getFechaCreacion());
+		evPort.ingresarEventoDeSolicitud("Info", "The note "+fecha+" was rejected with the following reason: "+motivoRechazo, "Rejection", u.getNombre(), s);
+		ncPort.rechazarNotaCita(1, "", idNota);
+
 	}
 
 

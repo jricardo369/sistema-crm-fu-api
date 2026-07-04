@@ -37,4 +37,9 @@ public interface NotaCitaJpa extends CrudRepository<NotaCitaEntity, Serializable
 	@Modifying
 	public void firmarNotaCita(int idUsuario,int idNota);
 
+	@Transactional
+	@Query(value = "UPDATE nota_cita SET rechazada = ?1,fecha_aprobacion=?2 WHERE id_nota = ?3", nativeQuery = true)
+	@Modifying
+	public void rechazarNotaCita(int rechazada,String fechaAprobada, int idNota);
+
 }

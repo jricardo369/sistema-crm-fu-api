@@ -58,4 +58,14 @@ public class LayoutJobs {
 		tpUC.reminderLawyerProspectsLiaison();
 	}
 
+	@Scheduled(cron = "#{@obtenerSolsVocPendTratmentPlan}")
+	private void obtenerSolsVocPendTratmentPlan(){
+		tpUC.reminderSolsVocPendTratmentPlan();
+	}
+
+	@Scheduled(cron = "#{@obtenerCitasSinNotaDiaAnterior}")
+	private void obtenerCitasSinNotaDiaAnterior(){
+		tpUC.reminderCitasSinNotaDiaAnterior();
+	}
+
 }

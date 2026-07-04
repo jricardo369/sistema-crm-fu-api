@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.CorreoElectronicoUseCase;
 import com.cargosyabonos.application.port.in.TareaProgramadaUseCase;
+import com.cargosyabonos.application.port.out.CitaPort;
 import com.cargosyabonos.application.port.out.ConfiguracionPort;
 import com.cargosyabonos.application.port.out.CorreosPort;
 import com.cargosyabonos.application.port.out.EmailProspectoAbogadoPort;
@@ -31,13 +32,14 @@ import com.cargosyabonos.application.port.out.TareaProgramadaPort;
 import com.cargosyabonos.application.port.out.TextosPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.domain.AdeudoSolicitudes;
+import com.cargosyabonos.domain.CitaSql;
 import com.cargosyabonos.domain.ConfiguracionEntity;
 import com.cargosyabonos.domain.EmailProspectoAbogadoEntity;
 import com.cargosyabonos.domain.EventoSolicitudEntity;
-import com.cargosyabonos.domain.ProspectoAbogado;
 import com.cargosyabonos.domain.ProspectoAbogadoEntity;
 import com.cargosyabonos.domain.SolicitudEntity;
 import com.cargosyabonos.domain.SolicitudVocEndingSessions;
+import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.TareaProgramadaEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
 
@@ -57,6 +59,9 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 
 	@Autowired
 	private SolicitudPort solPort;
+
+	@Autowired
+	private CitaPort citaPort;
 
 	@Autowired
 	private MovimientosPort movPort;
@@ -314,7 +319,20 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 					reminderLawyerProspectsLiaison();
 				}
 			}
+		} else if(codigoTarea.equals("rem-trat-plan")){
+			if (tp.isActivo()) {
+				if(ambiente.equals(amb)){
+					reminderSolsVocPendTratmentPlan();
+				}
+			}
+		} else if(codigoTarea.equals("rem-nota-sin-cita")){
+			if (tp.isActivo()) {
+				if(ambiente.equals(amb)){
+					reminderCitasSinNotaDiaAnterior();
+				}
+			}
 		}
+		
 
 	}
 
@@ -380,6 +398,117 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 		}
 
 	}
+
+	@Override
+	public void reminderSolsVocPendTratmentPlan() {
+
+		List<SolicitudVoc> svoc = solVocPort.obtenerSolsVocPendTratmentPlan();
+		log.info("Solicitudes obtenidas:" + svoc.size());
+
+		// Obtener correos voc
+		List<Integer> li = new ArrayList<>();
+		li.add(6);
+		List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
+		String cn = "";
+
+		for (SolicitudVoc s : svoc) {
+
+			cn = s.getNumeroDeCaso() == null ? "" : s.getNumeroDeCaso();
+
+			log.info("File VOC:" + s.getIdSolicitud() + "|Cliente:"
+					+ s.getCliente() + "|Telefono:" + s.getTelefono()
+					+ "|Email:" + s.getEmail() + "|Numero de caso:" + s.getNumeroDeCaso());
+
+			Map<String, Object> params = new HashMap<>();
+			params.put("${terapeuta}", s.getNombreTerapeuta());
+			params.put("${fecha-creacion}", s.getFechaInicio());
+			params.put("${cliente}", s.getCliente());
+			params.put("${numero-caso}", cn);
+
+			String subject = "";
+			if(!"".equals(cn)){
+				subject = "Reminder: Appointment Note Missing for case number " + cn;
+			}else{
+				subject = "Reminder: Appointment Note Missing for file " + s.getIdSolicitud();
+			}
+
+			if (s.getEmail() != null && !"".equals(s.getEmail())) {
+				log.info("Enviando correo a terapeuta:" + s.getEmail() + "|Numero de caso:" + cn);
+				correosPort.enviarCorreoDeLayout(s.getEmail(), subject ,params,
+						"email-recordatorio-tratamiento-pendiente");
+			}
+
+			for (UsuarioEntity o : usList) {
+
+				params.put("${terapeuta}", o.getNombre());
+				if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
+						log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
+						correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
+						"email-recordatorio-tratamiento-pendiente");
+					
+				}
+
+			}
+
+		}
+
+	}
+
+	@Override
+	public void reminderCitasSinNotaDiaAnterior(){
+
+		List<CitaSql> cs = citaPort.obtenerCitasSinNotaDiaAnterior();
+		log.info("Citas obtenidas:" + cs.size());
+
+		// Obtener correos voc
+		List<Integer> li = new ArrayList<>();
+		li.add(6);
+		List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
+
+		String cn = "";
+
+		for (CitaSql c : cs) {
+
+			cn = c.getcasenumber() == null ? "" : c.getcasenumber();
+
+			log.info("File VOC:" + c.getcasenumber() + "|Terapeuta:"
+					+ c.getnombreterapeuta() + "|Email:" + c.getemailterapeuta() + "|Numero de caso:" + c.getcasenumber());
+
+			Map<String, Object> params = new HashMap<>();
+			params.put("${terapeuta}", c.getnombreterapeuta());
+			params.put("${numero-caso}", cn);
+			params.put("${fecha-cita}", c.getfecha() +" "+ c.gethora() +" "+ c.gettipo());
+			params.put("${cliente}", c.getcliente());
+
+			String subject = "";
+			if(!"".equals(cn)){
+				subject = "Reminder: Appointment Note Missing for case number " + cn;
+			}else{
+				subject = "Reminder: Appointment Note Missing for file " + c.getidSolicitud();
+			}
+
+			if (c.getemailterapeuta() != null && !"".equals(c.getemailterapeuta())) {
+				log.info("Enviando correo a terapeuta:" + c.getemailterapeuta() + "|Numero de caso:" + cn);
+				correosPort.enviarCorreoDeLayout(c.getemailterapeuta(),subject,params,
+						"email-recordatorio-cita-sin-nota");
+			}
+
+			for (UsuarioEntity o : usList) {
+
+				params.put("${terapeuta}", o.getNombre());
+				if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
+						log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
+						correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
+						"email-recordatorio-cita-sin-nota");
+					
+				}
+
+			}
+
+		}
+
+	}
+
 
 	@Override
 	public void reminderLawyerProspectsLiaison() {

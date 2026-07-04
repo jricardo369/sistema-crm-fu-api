@@ -28,10 +28,7 @@ public class EventoSolicitudEntity {
 	@Column(name = "id_evento")
 	private int idEvento;
 	
-	@Column(name = "fecha", columnDefinition = "TIMESTAMP")
-	@Temporal(TemporalType.TIMESTAMP)
-	@JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
-	private Date fecha;
+	private String fecha;
 	
 	@Column(name = "evento", length = 45)
 	private String evento;
@@ -89,11 +86,11 @@ public class EventoSolicitudEntity {
 		this.idEvento = idEvento;
 	}
 
-	public Date getFecha() {
+	public String getFecha() {
 		return fecha;
 	}
 
-	public void setFecha(Date fecha) {
+	public void setFecha(String fecha) {
 		this.fecha = fecha;
 	}
 

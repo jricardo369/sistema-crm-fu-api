@@ -92,13 +92,7 @@ public class CitaEntity {
 		this.tipo = tipo;
 	}
 
-	public boolean isDosCitas() {
-		return dosCitas;
-	}
-
-	public void setDosCitas(boolean dosCitas) {
-		this.dosCitas = dosCitas;
-	}
+	
 
 	public int getIdSolicitud() {
 		return idSolicitud;
@@ -154,6 +148,14 @@ public class CitaEntity {
 
 	public void setCodigoRecurrencia(String codigoRecurrencia) {
 		this.codigoRecurrencia = codigoRecurrencia;
+	}
+
+	public boolean isDosCitas() {
+		return dosCitas;
+	}
+
+	public void setDosCitas(boolean dosCitas) {
+		this.dosCitas = dosCitas;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.cargosyabonos.adapter.out.sql;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.checkerframework.checker.units.qual.s;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.CitaPort;
+import com.cargosyabonos.application.port.out.ConfiguracionPort;
 import com.cargosyabonos.application.port.out.EstatusPagoPort;
 import com.cargosyabonos.application.port.out.EstatusSolicitudPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
@@ -26,6 +29,7 @@ import com.cargosyabonos.application.port.out.SolicitudVocPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.application.port.out.jpa.MovimientoJpa;
 import com.cargosyabonos.application.port.out.jpa.SolicitudVocJpa;
+import com.cargosyabonos.domain.ConfiguracionEntity;
 import com.cargosyabonos.domain.EstatusPagoEntity;
 import com.cargosyabonos.domain.EstatusSolicitudEntity;
 import com.cargosyabonos.domain.NumeroCasosSolicitudes;
@@ -76,6 +80,9 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	
 	@Autowired
     private Validator validator; 
+
+	@Autowired
+	private ConfiguracionPort configPort;
 	
 	@Override
 	public List<SolicitudVocEntity> obtenerSolicitudesDeUsuario(int idUsuario,int estatus) {	
@@ -211,6 +218,15 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 		List<SolicitudVocEndingSessions> result = null;
 		result = obtenerSolsVocEndingSessions().stream()
 			    .map(this::convertirSolQueryASolicitudVocEndingSessions)
+			    .collect(Collectors.toCollection(ArrayList::new));
+		return result;
+	}
+
+	@Override
+	public List<SolicitudVoc> obtenerSolsVocPendTratmentPlan(){
+		List<SolicitudVoc> result = null;
+		result = obtenerSolsVocPendTratmentPlanQry().stream()
+			    .map(this::convertirSolQueryASolicitudPendTratmentPlan)
 			    .collect(Collectors.toCollection(ArrayList::new));
 		return result;
 	}
@@ -509,6 +525,33 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 		
 		
 	}
+
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerSolsVocPendTratmentPlanQry() {
+
+		ConfiguracionEntity confj = configPort.obtenerConfiguracionPorCodigo("DAYS-REM-TP");
+		String tiempo = confj.getValor();
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Pendiente Tratment Plan");
+		StringBuilder sb = new StringBuilder();
+		
+		String queryS = "SELECT s.id_solicitud,s.fecha_inicio,concat(s.cliente,' ',s.apellidos) as cliente,s.numero_de_caso,s.telefono, " + 
+						"u.nombre,u.correo_electronico as emailTerapeuta "+
+						"FROM solicitud_voc s "+
+						"LEFT JOIN usuario u ON u.id_usuario = s.terapeuta "+
+						"WHERE num_sesiones = 0 AND fecha_inicio <= DATE_SUB(NOW(), INTERVAL " + tiempo + " HOUR);";
+
+		sb.append(queryS);
+		
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+		
+		Query query = entityManager.createNativeQuery(sb.toString());
+
+		List<Object[]> rows = query.getResultList();
+		return rows;
+		
+		
+	}
 	
 	private SolicitudVocEndingSessions convertirSolQueryASolicitudVocEndingSessions(Object[] row) {
 		
@@ -527,6 +570,22 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 		s.setNumSchedules(ns.intValue());
 		BigDecimal sp = (BigDecimal)row[10];
 		s.setSesionesPendientes(sp.intValue());	
+		
+		
+		return s;
+	}
+
+	private SolicitudVoc convertirSolQueryASolicitudPendTratmentPlan(Object[] row) {
+
+		SolicitudVoc s = new SolicitudVoc();
+		
+		s.setIdSolicitud((Integer)row[0]);
+		s.setFechaInicio((Date)row[1]);
+		s.setCliente((String)row[2]);
+		s.setNumeroDeCaso((String)row[3]);
+		s.setTelefono((String)row[4]);
+		s.setNombreTerapeuta((String)row[5]);
+		s.setEmail((String)row[6]);
 		
 		
 		return s;
@@ -603,6 +662,8 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 				s.setSesionesPendientes(s.getNumSesiones()-s.getNumSchedules());
 				BigDecimal ssn = (BigDecimal)row[46];
 				s.setNumSesionesSinNota(ssn == null ? 0 : ssn.intValue());
+				BigInteger nos = (BigInteger)row[47];
+				s.setNoShows(nos == null ? 0 : nos.intValue());
 				
 			}
 			

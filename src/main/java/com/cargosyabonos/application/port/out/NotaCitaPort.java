@@ -14,5 +14,6 @@ public interface NotaCitaPort {
 	public NotaCitaEntity obtenerNotaDeCita(int idCita); 
 	public int obtenerIdSolByIdNota(int idNota);
 	public void firmarNotaCita(int idNota,int idUsuario);
+	public void rechazarNotaCita(int rechazada,String fechaAprobada,int idNota);
 
 }

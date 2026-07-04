@@ -55,5 +55,9 @@ public class NotaCitaRepository implements NotaCitaPort{
 		ncJpa.firmarNotaCita(idUsuario, idNota);
 	}
 
+	@Override
+	public void rechazarNotaCita(int rechazada,String fechaAprobada,int idNota) {
+		ncJpa.rechazarNotaCita(rechazada, fechaAprobada, idNota);
+	}
 
 }

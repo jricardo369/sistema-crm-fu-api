@@ -60,6 +60,11 @@ public class CitaRepository implements CitaPort{
 	}
 
 	@Override
+	public List<CitaSql> obtenerCitasSinNotaDiaAnterior() {
+		return citaJpa.obtenerCitasSinNotaDiaAnterior();
+	}
+
+	@Override
 	public void crearCita(CitaEntity a) {
 		citaJpa.save(a);
 	}
@@ -174,7 +179,8 @@ public class CitaRepository implements CitaPort{
 				+ "CONCAT(s.cliente,' ', IFNULL(s.apellidos,'')) as cliente,s.telefono,s.email, c.amount,c.comentario,c.pagado,c.fecha_pagado as fechaPagado,u.nombre as terapeuta,s.fecha_nacimiento,s.sexo,s.direccion "
 			+"FROM cita c "
 			+"JOIN solicitud_voc s ON s.id_solicitud = c.id_solicitud "
-			+ "JOIN usuario u ON c.id_usuario = u.id_usuario ");
+			+ "JOIN usuario u ON c.id_usuario = u.id_usuario "
+			+ "JOIN nota_cita nc ON nc.id_cita = c.id_cita ");
 
 		if (campo != null) {
 			switch (campo) {

@@ -24,9 +24,9 @@ public interface CitaPort {
 	public void actualizarPagado(boolean pagado,String fechPagado,int idCita);
 	public List<CitaSql> obtenerCitasDeUsuarioPorSemana(String fecha,int idUsuario,int noShow);
 	public List<String> obtenerNumeroCitasTerapeutasPorSolicitud(int idSolicitud);
-
 	public CitaEntity obtenerCitaPorRecurrenciaYIdCita(String codigoRecurrencia,int idCita); 
 	public List<CitaEntity> obtenerCitaPorRecurrenciaYFecha(String codigoRecurrencia,String fecha);
 	public void eliminarCitasRecurrentes(String codigoRecurrencia,String fecha); 
+	public List<CitaSql> obtenerCitasSinNotaDiaAnterior();
 
 }

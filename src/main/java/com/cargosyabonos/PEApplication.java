@@ -213,6 +213,8 @@ public class PEApplication extends SpringBootServletInitializer{
 		logger.info("cron rem recordatorio liaison:"+salida);
 		return salida;
 	}
+
+
 	
 	@Bean
 	public String getCronRecordatorioCitas(){
@@ -249,6 +251,44 @@ public class PEApplication extends SpringBootServletInitializer{
 		logger.info("cron sols ending session:"+salida);
 		return salida;
 	}
+
+	@Bean
+	public String obtenerSolsVocPendTratmentPlan(){
+		String salida = "";
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("rem-trat-plan");
+		String dia = "";
+		if(tp.getDia() == null){
+			dia = "*";
+		}else{
+			dia = tp.getDia();
+			dia =  dia.toUpperCase();
+			dia = diaParaCron(dia);
+		}
+		String hora = tp.getHora();
+		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
+		logger.info("cron trat plan:"+salida);
+		return salida;
+	}
+
+	@Bean
+	public String obtenerCitasSinNotaDiaAnterior(){
+		String salida = "";
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("rem-nota-sin-cita");
+		String dia = "";
+		if(tp.getDia() == null){
+			dia = "*";
+		}else{
+			dia = tp.getDia();
+			dia =  dia.toUpperCase();
+			dia = diaParaCron(dia);
+		}
+		String hora = tp.getHora();
+		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
+		logger.info("cron trat plan:"+salida);
+		return salida;
+	}
+
+	
 
 	private String diaParaCron(String dia) {
 		String s = "";

@@ -36,6 +36,10 @@ public class Cita {
 	private boolean tieneFirma;
 	private String tipoSolicitud;
 	private int supervisor;
+	private boolean rechazada;
+	private String fechaAprobacion;
+	private String horaNota;
+	private String fechaCreacionNota;
 	
 	public int getIdDisponibilidad() {
 		return idDisponibilidad;
@@ -224,5 +228,29 @@ public class Cita {
 		this.supervisor = supervisor;
 	}
 	
+	public String getFechaAprobacion() {
+		return fechaAprobacion;
+	}
+	public void setFechaAprobacion(String fechaAprobacion) {
+		this.fechaAprobacion = fechaAprobacion;
+	}
+	public boolean isRechazada() {
+		return rechazada;
+	}
+	public void setRechazada(boolean rechazada) {
+		this.rechazada = rechazada;
+	}
+	public String getHoraNota() {
+		return horaNota;
+	}
+	public void setHoraNota(String horaNota) {
+		this.horaNota = horaNota;
+	}
+	public String getFechaCreacionNota() {
+		return fechaCreacionNota;
+	}
+	public void setFechaCreacionNota(String fechaCreacionNota) {
+		this.fechaCreacionNota = fechaCreacionNota;
+	}
 	
 }

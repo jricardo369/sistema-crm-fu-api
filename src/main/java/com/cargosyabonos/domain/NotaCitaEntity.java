@@ -82,6 +82,12 @@ public class NotaCitaEntity {
 	@Column(name = "usuario_firma")
 	private int usuarioFirma;
 
+	@Column(name = "rechazada")
+	private boolean rechazada;
+
+	@Column(name = "fecha_aprobacion", length = 20)
+	private String fechaAprobacion;
+
 	public int getIdNota() {
 		return idNota;
 	}
@@ -268,19 +274,23 @@ public class NotaCitaEntity {
 		this.usuarioFirma = usuarioFirma;
 	}
 
-	@Override
-	public String toString() {
-		return "NotaCitaEntity [idNota=" + idNota + ", idCita=" + idCita + ", descripcion=" + descripcion
-				+ ", fechaCreacion=" + fechaCreacion + ", hora=" + hora + ", tipo=" + tipo + ", referencia="
-				+ referencia + ", tiempoSesion=" + tiempoSesion + ", enfoquePrincipal=" + enfoquePrincipal
-				+ ", SiHiAsignado=" + SiHiAsignado + ", locacionVerificada=" + locacionVerificada
-				+ ", sintomaComportamiento1=" + sintomaComportamiento1 + ", rating1=" + rating1
-				+ ", sintomaComportamiento2=" + sintomaComportamiento2 + ", rating2=" + rating2
-				+ ", sintomaComportamiento3=" + sintomaComportamiento3 + ", rating3=" + rating3
-				+ ", tipoContenidoSesion=" + tipoContenidoSesion + ", comentarios=" + comentarios
-				+ ", respuestaDeIntervencion=" + respuestaDeIntervencion + ", resumenEvaluacion=" + resumenEvaluacion
-				+ ", planFuturo=" + planFuturo + "]";
+	public boolean isRechazada() {
+		return rechazada;
 	}
+
+	public void setRechazada(boolean rechazada) {
+		this.rechazada = rechazada;
+	}
+
+	public String getFechaAprobacion() {
+		return fechaAprobacion;
+	}
+
+	public void setFechaAprobacion(String fechaAprobacion) {
+		this.fechaAprobacion = fechaAprobacion;
+	}
+
+	
 
 	
 

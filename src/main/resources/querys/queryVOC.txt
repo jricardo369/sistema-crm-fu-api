@@ -31,7 +31,15 @@ WHERE c.id_solicitud = s.id_solicitud
   AND nc.id_cita IS NULL
   AND c.no_show = 0 
   AND c.fecha < CURDATE()
-    ) AS citassinnota
+    ) AS citassinnota,
+
+-- Subconsulta para obtener no show 
+(
+	SELECT COUNT(*) AS noShow
+FROM cita c
+WHERE c.no_show = 1
+  AND c.id_solicitud = s.id_solicitud 
+) AS noshows
 
 FROM request_evaluation.solicitud_voc s 
 LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud 

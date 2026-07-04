@@ -516,14 +516,22 @@ public class ProspectoAbogadoService implements ProspectoAbogadoUseCase {
                             r.setPorcentaje1(true);
                             Date fechaRecordatorio = UtilidadesAdapter.sumarDiasAFecha(UtilidadesAdapter.fechaActualDate(),15);
                             r.setFechaRecordatorioLiaison(UtilidadesAdapter.formatearFecha(fechaRecordatorio));
-                            r.setIdUsuario(103);
+                             
+                                r.setIdUsuario(103);
+                            
                         }else{
                             r.setIdUsuario(102);
-                            r.setIdEstatusProspecto(1);
+                            if (!"CLOSED".equalsIgnoreCase(estatusProspecto)
+                                    && !"Successful".equalsIgnoreCase(estatusProspecto)) {
+                                r.setIdEstatusProspecto(1);
+                            }
+                            
                         }
                     } else {
                         r.setIdUsuario(102);
                     }
+
+                    pintarLog("estatus proscepto:" + r.getIdEstatusProspecto(), sb);
 
                     if (row.getCell(16) != null) {
                         fechaPorcentaje2 = UtilidadesAdapter

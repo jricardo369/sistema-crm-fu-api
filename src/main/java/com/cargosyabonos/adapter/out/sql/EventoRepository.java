@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.application.port.out.jpa.EventoSolicitudJpa;
@@ -99,7 +100,7 @@ public class EventoRepository implements EventoSolicitudPort {
 		EventoSolicitudEntity e = new EventoSolicitudEntity();
 		e.setEvento(evento);
 		e.setDescripcion(descripcion);
-		e.setFecha(new Date());
+		e.setFecha(UtilidadesAdapter.obtenerFechaActualPST());
 		e.setTipo(tipo);
 		e.setUsuario(usuario);
 		e.setSolicitud(solicitud);
@@ -118,7 +119,7 @@ public class EventoRepository implements EventoSolicitudPort {
 		EventoSolicitudEntity e = new EventoSolicitudEntity();
 		e.setEvento(envento);
 		e.setDescripcion(descripcion);
-		e.setFecha(new Date());
+		e.setFecha(UtilidadesAdapter.obtenerFechaActualPST());
 		e.setTipo(tipo);
 		e.setUsuario(usuario);
 		e.setSolicitud(solicitud);

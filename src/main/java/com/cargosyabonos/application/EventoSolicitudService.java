@@ -80,14 +80,10 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 		EventoSolicitudEntity e = new EventoSolicitudEntity();
 		if (es.getFecha() == null) {
-			Date d = UtilidadesAdapter.fechaActualDate();
 			// System.out.println("d:"+d);
-			e.setFecha(d);
+			e.setFecha(UtilidadesAdapter.obtenerFechaActualPST());
 		} else {
-			try {
-				e.setFecha(UtilidadesAdapter.cadenaAFecha(es.getFecha()));
-			} catch (ParseException e1) {
-			}
+				e.setFecha(es.getFecha());
 		}
 		if (!tipoEvento.equals("Interview review")) {
 			e.setDescripcion(es.getDescripcion());
@@ -130,7 +126,7 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 					.println("fechaString:" + fechaString + "|horaString:" + es.getHora() + "|" + es.getTipoSchedule());
 			e.setDescripcion(e.getDescripcion() + "," + " Appointment for the day " + fechaString + " at "
 					+ es.getHora() + " " + es.getTipoSchedule());
-			e.setFecha(UtilidadesAdapter.fechaActualDate());
+			e.setFecha(UtilidadesAdapter.obtenerFechaActualPST());
 		}
 
 		if (tipoEvento.equals("Interview review")) {
@@ -153,7 +149,7 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 			}
 
 			UsuarioEntity ue = usPort.buscarPorId(idUsuarioSchedule);
-			e.setFecha(UtilidadesAdapter.fechaActualDate());
+			e.setFecha(UtilidadesAdapter.obtenerFechaActualPST());
 			e.setTipo("Schedule");
 			e.setEvento("Schedule");
 			UtilidadesAdapter.pintarLog("fecha:" + es.getFecha());
@@ -248,7 +244,7 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 		UsuarioEntity ucm = s.getUsuarioInterview() == 0 ? null : usPort.buscarPorId(s.getUsuarioInterview());
 		boolean esClinicianComoCaseManager = ucm == null ? false : "11".equals(ucm.getRol());
 
-		String fecha = UtilidadesAdapter.formatearFechaUS(e.getFecha());
+		String fecha = UtilidadesAdapter.formatearFechaUSDesdeString(e.getFecha());
 
 		esPort.ingresarEventoDeSolicitud("Update",
 				"The user " + usEntrada.getUsuario() + " canceled the file for the reason:" + motivo, "Reject File",

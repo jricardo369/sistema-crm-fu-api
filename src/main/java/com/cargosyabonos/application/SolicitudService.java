@@ -1760,7 +1760,7 @@ public class SolicitudService implements SolicitudUseCase {
 			evPort.actualizarEventoSolicitud(evSol);
 
 			// Correo cancelacion entrevista a cliente
-			String fecha = UtilidadesAdapter.formatearFechaUS(evSol.getFecha());
+			String fecha = UtilidadesAdapter.formatearFechaUSDesdeString(evSol.getFecha());
 			correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, evSol.getHoraSchedule(),
 					evSol.getTipoSchedule(), s.getEmail(), s.getEstado(),
 					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),
@@ -1961,7 +1961,7 @@ public class SolicitudService implements SolicitudUseCase {
 			evPort.actualizarEventoSolicitud(evSol);
 
 			// Correo cancelacion entrevista a cliente
-			String fecha = UtilidadesAdapter.formatearFechaUS(evSol.getFecha());
+			String fecha = UtilidadesAdapter.formatearFechaUSDesdeString(evSol.getFecha());
 			correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, evSol.getHoraSchedule(),
 					evSol.getTipoSchedule(), s.getEmail(), s.getEstado(),
 					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),

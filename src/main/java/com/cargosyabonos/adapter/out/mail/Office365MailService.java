@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.cargosyabonos.UtilidadesAdapter;
@@ -186,9 +187,39 @@ public class Office365MailService {
 
             HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(email, headers);
 
-            logger.info("Ojbeto json");
+            int maxIntentos = 3;
+            int intento = 0;
 
-            rest.postForEntity(url, httpEntity, Void.class);
+            while (intento < maxIntentos) {
+
+                try {
+
+                    rest.postForEntity(url, httpEntity, Void.class);
+                    break; // Se envió correctamente
+
+                } catch (HttpClientErrorException.TooManyRequests ex) {
+
+                    intento++;
+
+                    logger.warning("429 Too Many Requests. Intento " + intento + " de " + maxIntentos);
+
+                    if (intento >= maxIntentos) {
+                        throw ex;
+                    }
+
+                    try {
+                        Thread.sleep(30000); // Espera 30 segundos
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+
+                } catch (Exception e) {
+
+                    logger.warning("Error al enviar correo: " + e.getMessage());
+                    throw e; // No reintentar si no es un 429
+                }
+            }
 
 
         } else {

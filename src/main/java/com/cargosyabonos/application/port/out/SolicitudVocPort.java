@@ -35,6 +35,7 @@ public interface SolicitudVocPort {
 	public List<ReporteSolsUsuario> obtenerNumeroSolicitudesDeTemperatura(Date fi,Date ff);
 	public List<NumeroCasosSolicitudes> obtenerNumerosCaso(String numeroCaso);
 	public int obtenerSesionesDeSolicitud(int idSolicitud);
+	public List<SolicitudVoc> obtenerSolsVocPendTratmentPlan();
 	
 	
 }

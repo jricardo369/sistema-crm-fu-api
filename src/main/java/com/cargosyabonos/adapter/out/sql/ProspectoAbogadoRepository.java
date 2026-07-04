@@ -173,7 +173,7 @@ public class ProspectoAbogadoRepository implements ProspectoAbogadoPort{
 			}
 
 			if(rol.equals("12")){
-				if(!estatus.equals("INTERESTED")) {
+				if (!estatus.equals("INTERESTED") && !estatus.equals("SUCESSFUL") && !estatus.equals("CLOSED")) {
 					if(idUsuario != 0){ 
 						if (sbW.length() != 0)
 							sbW.append(" AND ");
@@ -305,7 +305,7 @@ public class ProspectoAbogadoRepository implements ProspectoAbogadoPort{
 				query.setParameter("estatus", estatusF);
 			}
 			if(rol.equals("12")){
-				if(!estatus.equals("INTERESTED")) {
+				if (!estatus.equals("INTERESTED") && !estatus.equals("SUCESSFUL") && !estatus.equals("CLOSED")) {
 					if (idUsuario != 0) {
 						query.setParameter("idUsuario", idUsuario);
 					}

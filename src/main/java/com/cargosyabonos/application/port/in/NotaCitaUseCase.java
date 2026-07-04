@@ -13,5 +13,6 @@ public interface NotaCitaUseCase {
 	public void actualizarNotaCita(NotaCitaEntity a);
 	public void eliminarNotaCita(int idNota,int idUsuario);
 	public void firmarNotaCita(int idNota,int idUsuario,int idSolicitud,String tipo);
+	public void rechazarNotaCita(int idNota,int idUsuario,String motivoRechazo);
 
 }

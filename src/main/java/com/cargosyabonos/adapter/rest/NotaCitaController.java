@@ -51,4 +51,9 @@ public class NotaCitaController {
 		ncUseCase.firmarNotaCita(idNota,idUsuario,idSolicitud,tipo);
 	}
 
+	@PutMapping("rechazar/{idNota}")
+	public void rechazarNotaCita(@PathVariable("idNota") int idNota,@RequestParam("idUsuario") int idUsuario,@RequestParam("motivo") String motivo) {
+		ncUseCase.rechazarNotaCita(idNota, idUsuario, motivo);
+	}
+
 }

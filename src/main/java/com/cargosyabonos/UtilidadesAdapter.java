@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -74,6 +75,32 @@ public class UtilidadesAdapter {
 			return strFecha;
 		}
 		return strFecha;
+	}
+
+	public static String formatearFechaUSDesdeString(String fecha) {
+
+		if (fecha == null || fecha.trim().isEmpty()) {
+			return "";
+		}
+
+		try {
+			DateTimeFormatter salida = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+
+			if (fecha.length() > 10) {
+				LocalDateTime fechaHora = LocalDateTime.parse(
+						fecha,
+						DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+				return fechaHora.format(salida);
+			} else {
+				LocalDate fechaLocal = LocalDate.parse(
+						fecha,
+						DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				return fechaLocal.format(salida);
+			}
+
+		} catch (Exception e) {
+			return "";
+		}
 	}
 
 	public static String formatearFechaConHora(Date fecha) {
@@ -381,11 +408,30 @@ public class UtilidadesAdapter {
 		Date d = null;
 		try {
 			d = cadenaAFechaPST(formatDateToString(date, "yyyy-MM-dd hh:mm:ss a", "PST"));
-			//System.out.println("d:" + d);
+			// System.out.println("d:" + d);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		return d;
+	}
+
+	public static String obtenerFechaActual() {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		return LocalDateTime.now().format(formatter);
+	}
+
+	public static String obtenerFechaActualPST() {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+		return LocalDateTime.now(ZoneId.of("America/Los_Angeles"))
+				.format(formatter);
+	}
+
+	public static String obtenerHoraActualPST() {
+		ZoneId zoneId = ZoneId.of("America/Los_Angeles");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+		return LocalTime.now(zoneId).format(formatter);
 	}
 
 	public static Date cadenaAFechaPST(String fecha) throws ParseException {
@@ -707,15 +753,17 @@ public class UtilidadesAdapter {
 		}
 		return salida;
 	}
-	
+
 	/**
 	 * Recibe una fecha tipo "2025-09-09 07:00AM" y regresa "09/09/2025 07:00AM"
 	 */
 	public static String formatearFechaYHoraSeparadoUS(String fechaHora) {
-		if (fechaHora == null || fechaHora.trim().isEmpty()) return "";
+		if (fechaHora == null || fechaHora.trim().isEmpty())
+			return "";
 		fechaHora = fechaHora.trim();
 		String[] partes = fechaHora.split(" ");
-		if (partes.length < 2) return "";
+		if (partes.length < 2)
+			return "";
 		String fecha = partes[0];
 		String hora = partes[1];
 		// Si hay AM/PM pegado a la hora, sepáralo
@@ -726,7 +774,7 @@ public class UtilidadesAdapter {
 		}
 		String fechaFormateada = formatearFechaStringAtipoUS(fecha);
 		return fechaFormateada + " " + hora;
-	}	
+	}
 
 	public static String agregarCerosALaIzquierda(int tamanio, String valor) {
 		String m = String.format("%0" + tamanio + "d", Integer.valueOf(valor));
@@ -804,16 +852,18 @@ public class UtilidadesAdapter {
 
 	}
 
-		/**
+	/**
 	 * Convierte una fecha y hora de una zona horaria origen a otra destino.
-	 * @param fecha en formato MM-dd-yyyy
-	 * @param hora12 hora en formato hh:mm
-	 * @param tipo "AM" o "PM"
-	 * @param zonaOrigen abreviatura (PST, CST, etc.)
+	 * 
+	 * @param fecha       en formato MM-dd-yyyy
+	 * @param hora12      hora en formato hh:mm
+	 * @param tipo        "AM" o "PM"
+	 * @param zonaOrigen  abreviatura (PST, CST, etc.)
 	 * @param zonaDestino abreviatura (PST, CST, etc.)
 	 * @return hora convertida en formato 12h (ejemplo: 03:00 PM)
 	 */
-	public static String convertirAHoraZona(String fecha, String hora12, String tipo, String zonaOrigen, String zonaDestino) {
+	public static String convertirAHoraZona(String fecha, String hora12, String tipo, String zonaOrigen,
+			String zonaDestino) {
 		if (zonaOrigen != null) {
 			if ("".equals(zonaOrigen)) {
 				zonaOrigen = "PST";
@@ -1004,7 +1054,7 @@ public class UtilidadesAdapter {
 	}
 
 	public static String rangoRangoFechasDeFecha(String fecha, String formatoFecha) throws ParseException {
-		
+
 		Date fechaDate;
 
 		fechaDate = UtilidadesAdapter.cadenaAFecha(fecha);
@@ -1055,14 +1105,17 @@ public class UtilidadesAdapter {
 	}
 
 	public static String formarUidEvento(EventoSolicitudEntity evento) {
-		return evento.getIdEvento() + "-" + evento.getUsuarioSchedule() + "-" + evento.getSolicitud().getIdSolicitud()+ "-" +evento.getFechaSchedule()+ "-" +evento.getHoraSchedule()+ "-" +evento.getTipoSchedule();
+		return evento.getIdEvento() + "-" + evento.getUsuarioSchedule() + "-" + evento.getSolicitud().getIdSolicitud()
+				+ "-" + evento.getFechaSchedule() + "-" + evento.getHoraSchedule() + "-" + evento.getTipoSchedule();
 	}
 
-		/**
-	 * Devuelve el valor de una celda como String, sin importar si es numérico o texto.
+	/**
+	 * Devuelve el valor de una celda como String, sin importar si es numérico o
+	 * texto.
 	 */
 	public static String getCellStringValue(org.apache.poi.ss.usermodel.Cell cell) {
-		if (cell == null) return "";
+		if (cell == null)
+			return "";
 		switch (cell.getCellType()) {
 			case STRING:
 				return cell.getStringCellValue();
@@ -1070,7 +1123,7 @@ public class UtilidadesAdapter {
 				double d = cell.getNumericCellValue();
 				// Si es entero, no mostrar decimales
 				if (d == Math.floor(d)) {
-					return String.valueOf((long)d);
+					return String.valueOf((long) d);
 				} else {
 					return String.valueOf(d);
 				}
@@ -1083,7 +1136,7 @@ public class UtilidadesAdapter {
 					try {
 						double val = cell.getNumericCellValue();
 						if (val == Math.floor(val)) {
-							return String.valueOf((long)val);
+							return String.valueOf((long) val);
 						} else {
 							return String.valueOf(val);
 						}
@@ -1102,9 +1155,10 @@ public class UtilidadesAdapter {
 	 * Convierte una fecha tipo "M/d/yyyy" o "MM/dd/yyyy" a "yyyy-MM-dd".
 	 */
 	public static String formatearFechaMDY_a_ISO(String fecha) {
-		if (fecha == null || fecha.trim().isEmpty()) return "";
+		if (fecha == null || fecha.trim().isEmpty())
+			return "";
 		fecha = fecha.trim();
-		String[] patrones = {"M/d/yyyy", "MM/dd/yyyy", "M/dd/yyyy", "MM/d/yyyy"};
+		String[] patrones = { "M/d/yyyy", "MM/dd/yyyy", "M/dd/yyyy", "MM/d/yyyy" };
 		for (String pat : patrones) {
 			try {
 				java.time.format.DateTimeFormatter entrada = java.time.format.DateTimeFormatter.ofPattern(pat);
@@ -1118,11 +1172,11 @@ public class UtilidadesAdapter {
 	}
 
 	public static String soloNumeros(String texto) {
-    if (texto == null) {
-        return "";
-    }
-    return texto.replaceAll("[^0-9]", "");
-}
+		if (texto == null) {
+			return "";
+		}
+		return texto.replaceAll("[^0-9]", "");
+	}
 
 	public static String generarCodigoAlfanumerico10() {
 		return RANDOM.ints(10, 0, CARACTERES_ALFANUMERICOS.length())
@@ -1131,11 +1185,11 @@ public class UtilidadesAdapter {
 	}
 
 	public static String cambiarFormatoFechaStringAUS(String fecha) {
-    LocalDate localDate = LocalDate.parse(fecha); // yyyy-MM-dd
+		LocalDate localDate = LocalDate.parse(fecha); // yyyy-MM-dd
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    return localDate.format(formatter);
-}
+		return localDate.format(formatter);
+	}
 
 }

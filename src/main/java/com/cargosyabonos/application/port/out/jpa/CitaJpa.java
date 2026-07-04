@@ -32,7 +32,7 @@ public interface CitaJpa extends CrudRepository<CitaEntity, Serializable> {
 				"        THEN 1 " + 
 				"        ELSE 0 " + 
 				"    END AS tieneFirma, " + 
-				"  u.supervisor " + 
+				"  u.supervisor,nc.rechazada as rechazada,nc.fecha_aprobacion as fechaaprobacion,nc.hora as horanota,nc.fecha_creacion as fechacreacionnota " + 
 				"FROM cita c " + 
 				"LEFT JOIN nota_cita nc ON nc.id_cita = c.id_cita " +
 				"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario " + 
@@ -75,7 +75,7 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 				"        THEN 1 " + 
 				"        ELSE 0 " + 
 				"    END AS tieneFirma, " + 
-				"  u.supervisor " + 
+				"  u.supervisor,nc.rechazada as rechazada,nc.fecha_aprobacion as fechaaprobacion,nc.hora as horanota,nc.fecha_creacion as fechacreacionnota " + 
 				"FROM cita c " + 
 				"LEFT JOIN solicitud_voc s ON s.id_solicitud= c.id_solicitud " + 
 				"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario " + 
@@ -94,7 +94,7 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 				"        THEN 1 " + 
 				"        ELSE 0 " + 
 				"    END AS tieneFirma, " +
-				"  u.supervisor " + 
+				"  u.supervisor,nc.rechazada as rechazada,nc.fecha_aprobacion as fechaaprobacion,nc.hora as horanota,nc.fecha_creacion as fechacreacionnota " + 
 				"FROM cita c " + 
 				"LEFT JOIN solicitud_voc s ON s.id_solicitud= c.id_solicitud " + 
 				"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario " + 
@@ -110,6 +110,22 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 				"WHERE id_solicitud = ?1 " + 
 				"GROUP BY u.nombre", nativeQuery = true)
 	public List<String> obtenerNumeroCitasTerapeutasPorSolicitud(int idSolicitud);
+
+	@Query(value = "SELECT  s.id_solicitud,s.cliente,s.numero_de_caso as casenumber,c.id_cita as idCita,c.comentario,c.fecha,c.hora,c.tipo,c.dos_citas as dosCitas,c.id_usuario as idUsuario,c.id_solicitud as idSolicitud, " + 
+				"c.no_show as noShow,c.amount,c.pagado,c.fecha_pagado as fechaPagado, " +
+				"CASE WHEN nc.id_cita IS NOT NULL THEN 1 ELSE 0 END AS tieneNota,  " + 
+				"c.fecha_creacion AS fechaCreacion, " + 
+				"c.codigo_recurrencia AS codigoRecurrencia, " + 
+				"u.supervisor,nc.rechazada as rechazada,nc.fecha_aprobacion as fechaaprobacion,nc.hora as horanota, nc.fecha_creacion as fechaCreacionNota, "+
+				"u.correo_electronico as emailterapeuta,u.nombre as nombreterapeuta " + 
+				"FROM cita c " + 
+				"LEFT JOIN nota_cita nc ON nc.id_cita = c.id_cita " + 
+				"LEFT JOIN solicitud s ON s.id_solicitud = c.id_solicitud " + 
+				"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario " + 
+				"WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND no_show = 0 " + 
+				"HAVING tieneNota = 0 " + 
+				"ORDER BY c.fecha DESC;", nativeQuery = true)
+	public List<CitaSql> obtenerCitasSinNotaDiaAnterior();
 	
 	@Transactional
 	@Query(value = "UPDATE cita SET no_show  = ?1 WHERE id_cita = ?2", nativeQuery = true)
