@@ -28,8 +28,6 @@ public interface SolicitudPort {
 	public SolicitudEntity crearSolicitudMasivo(SolicitudEntity r);
 	public void actualizarSolicitud(SolicitudEntity r);
 	public void eliminarSolicitud(SolicitudEntity r);
-	public List<Solicitud> obtenerSolicitudesDeUsuarioPorQueryV2(UsuarioEntity us, int estatus,int idSolicitud,String fechai,
-			String fechaf,String ordenarPor,String orden,String campo,String valor, boolean myFiles,String cerradas,boolean primeraVez, int usuario);
 	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(boolean soloUnObjeto, UsuarioEntity us, String cerradas, boolean primeraVez,String ordenarPor, String orden,
 			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
 		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento);

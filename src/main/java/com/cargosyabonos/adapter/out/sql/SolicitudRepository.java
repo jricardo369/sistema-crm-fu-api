@@ -506,49 +506,6 @@ public class SolicitudRepository implements SolicitudPort {
 	}
 
 	@Override
-	public List<Solicitud> obtenerSolicitudesDeUsuarioPorQueryV2(UsuarioEntity us, int estatus, int idSolicitud,
-			String fechai, String fechaf, String ordenarPor, String orden, String campo, String valor, boolean myFiles,
-			String cerradas,boolean primeraVez, int usuario) {
-
-		List<Solicitud> result = null;
-		String rol = us.getRol();
-		int idUsuario = us.getIdUsuario();
-
-		if (estatus > 0) {
-
-			List<Object[]> rows = obtenerSolsFiltro(false, rol, us.isRevisor(), fechai, fechaf, idUsuario, idSolicitud,
-					cerradas, ordenarPor, orden, campo, valor, myFiles,primeraVez,usuario);
-			result = new ArrayList<>(rows.size());
-			for (Object[] row : rows) {
-				result.add(convertirSolQueryASolicitud(row, false));
-			}
-
-		} else {
-
-			UtilidadesAdapter.pintarLog("idSol:"+idSolicitud);
-			if (idSolicitud > 0) {
-				List<Object[]> rows = obtenerSolsFiltro(true, rol, us.isRevisor(), fechai, fechaf, idUsuario,
-						idSolicitud, "OPEN", ordenarPor, orden, campo, valor, myFiles,primeraVez,usuario);
-				result = new ArrayList<>(rows.size());
-				for (Object[] row : rows) {
-					result.add(convertirSolQueryASolicitud(row, true));
-				}
-			} else {
-
-				List<Object[]> rows = obtenerSolsFiltro(false, rol, us.isRevisor(), fechai, fechaf, idUsuario,
-						idSolicitud, cerradas, ordenarPor, orden, campo, valor, myFiles,primeraVez,usuario);
-				result = new ArrayList<>(rows.size());
-				for (Object[] row : rows) {
-					result.add(convertirSolQueryASolicitud(row, false));
-				}
-			}
-
-		}
-
-		return result;
-	}
-
-	@Override
 	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(boolean soloUnObjeto, UsuarioEntity us, String cerradas,
 			boolean primeraVez, String ordenarPor, String orden,
 			String fechai, String fechaf, int idSolicitud, String cliente, String telefono, String email, String estado,
@@ -557,15 +514,6 @@ public class SolicitudRepository implements SolicitudPort {
 
 		List<Solicitud> result = null;
 		UtilidadesAdapter.pintarLog("idSol:" + idSolicitud);
-		
-		/*boolean soloUnObjeto = false;
-
-		boolean filtrosSinSolicitudConDatos = hayFiltrosActivos(cliente, telefono, email, estado, idEstatusSolicitud, idEstatusPago, idTipoSolicitud, waiver, noshow, importante, asignado, zipcodes);
-		if(!filtrosSinSolicitudConDatos){
-			if (idSolicitud > 0) {
-				soloUnObjeto = true;
-			}
-		}*/
 
 		logger.info("Obteniendo solicitudes con filtros - soloUnObjeto: " + soloUnObjeto + ", idSolicitud: " + idSolicitud);
 

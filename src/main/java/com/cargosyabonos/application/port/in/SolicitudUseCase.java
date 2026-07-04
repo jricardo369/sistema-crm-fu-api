@@ -21,8 +21,6 @@ public interface SolicitudUseCase {
 	public List<ReporteContador> obtenerReporteSolicitudesDeUsuarios(int idUsuario,Date fechai,Date fechaf);
 	public List<ReporteSolsDeUsuarioObj> obtenerReporteSolicitudesDeUsuario(Date fechai, Date fechaf,int idUsuario);
 	public List<ReporteContador> obtenerReporteMailsAbogados(String fechai,String fechaf);
-	public List<Solicitud> obtenerSolicitudesV2(int idUsuario,int estatus,String fechai,String fechaf,String ordenarPor,String orden,String campo,String valor, 
-			boolean myFiles,String cerradas, boolean primeraVez,int usuario);
 	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(int idUsuario,String cerradas, boolean primeraVez,String ordenarPor, String orden,
 			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
 		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento);

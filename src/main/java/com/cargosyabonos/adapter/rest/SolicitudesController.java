@@ -33,22 +33,6 @@ public class SolicitudesController {
 	@Autowired
 	private SolicitudUseCase oCase;
 
-	@GetMapping("solicitudes-de-usuario/{idUsuario}")
-	public List<Solicitud> obtenerSolicitudesDeUsuario(@PathVariable("idUsuario") int idUsuario,@RequestParam(required = false) String estatus,
-			@RequestParam(required = false) String fechai,@RequestParam(required = false) String fechaf,@RequestParam(required = false) String ordenarPor,
-			@RequestParam(required = false) String orden,@RequestParam(required = false) String valor,@RequestParam(required = false) String campo,
-			@RequestParam(required = false) boolean myFiles,@RequestParam(required = false) String cerradas,@RequestParam(required = false) boolean primeraVez) {
-		
-		fechai = fechai == null ? "": fechai;
-		fechaf = fechaf == null ? "": fechaf;
-		ordenarPor = ordenarPor == null ? "": ordenarPor;
-		UtilidadesAdapter.pintarLog("Estatus:" + estatus+"|Fechai:"+fechai+"|Fechaf:"+fechaf+"|OrdenarPor:"+ordenarPor+"|Campo:"+campo+"|Valor:"+valor+"|Cerradas:"+cerradas+"|PrimeraVez:"+primeraVez);
-		
-		int e = (estatus == null || estatus.isEmpty()) ? 0 : Integer.parseInt(estatus);
-		
-		return oCase.obtenerSolicitudesV2(idUsuario, e, fechai, fechaf, ordenarPor, orden, campo, valor, myFiles, cerradas, primeraVez,0);
-		
-	}
 	@GetMapping("solicitudes-de-usuario-filtros/{idUsuario}")
 	public List<Solicitud> obtenerSolicitudesDeUsuarioFiltros(@PathVariable("idUsuario") int idUsuario,@RequestParam(required = false) boolean primeraVez,@RequestParam(required = false) String cerradas,
 			@RequestParam(required = false) String ordenarPor,@RequestParam(required = false) String orden,

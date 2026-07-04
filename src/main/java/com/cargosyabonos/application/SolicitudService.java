@@ -123,30 +123,6 @@ public class SolicitudService implements SolicitudUseCase {
 	private ConfiguracionPort confPort;
 
 	@Override
-	public List<Solicitud> obtenerSolicitudesV2(int idUsuario, int estatus, String fechai, String fechaf,
-			String ordenarPor, String orden, String campo, String valor, boolean myFiles, String cerradas,
-			boolean primeraVez,int usuario) {
-
-				logger.info("Obtener solicitudes");
-		
-		if(campo != null){
-			if(campo.equals("Phone")){
-				valor = valor.replace("-", "").replace("(", "").replace(")", "").replace(" ", "");
-				logger.info("valor para phone:"+valor);
-			}
-		}
-
-		UsuarioEntity us = usPort.buscarPorId(idUsuario);
-		List<Solicitud> salida = new ArrayList<>();
-
-		salida = reqPort.obtenerSolicitudesDeUsuarioPorQueryV2(us, estatus, 0, fechai, fechaf, ordenarPor, orden, campo,
-				valor, myFiles, cerradas, primeraVez,usuario);
-
-		return salida;
-
-	}
-
-	@Override
 	public List<Solicitud> obtenerSolicitudesDeUsuarioQueryFiltros(int idUsuario, String cerradas, boolean primeraVez,String ordenarPor, String orden,
 			String fechai,String fechaf, int idSolicitud,String cliente,String telefono,String email,String estado,int idEstatusSolicitud, int idEstatusPago,
 		int idTipoSolicitud, String waiver,String noshow,String importante,String asignado,String zipcodes,String consentimiento) {
