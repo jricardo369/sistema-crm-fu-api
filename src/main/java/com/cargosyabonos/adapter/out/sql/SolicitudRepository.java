@@ -939,6 +939,8 @@ public class SolicitudRepository implements SolicitudPort {
 			}
 			
 		} 
+
+		
 		/*else {
 			UtilidadesAdapter.pintarLog("Agregar id solicitud al query");
 			if (sbW.length() != 0)
@@ -1088,8 +1090,10 @@ public class SolicitudRepository implements SolicitudPort {
 				}
 			}
 
-			if (rol.equals("11")) {
-				query.setParameter("idUsuario", idUsuario);
+			if (idSolicitud == 0) {
+				if (rol.equals("11")) {
+					query.setParameter("idUsuario", idUsuario);
+				}
 			}
 
 		} else {
