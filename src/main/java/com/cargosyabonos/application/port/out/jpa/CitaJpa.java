@@ -120,10 +120,10 @@ public List<CitaSql> obtenerCitasDeSolicitudSinNoshow(int idSolicitud);
 				"u.correo_electronico as emailterapeuta,u.nombre as nombreterapeuta " + 
 				"FROM cita c " + 
 				"LEFT JOIN nota_cita nc ON nc.id_cita = c.id_cita " + 
-				"LEFT JOIN solicitud s ON s.id_solicitud = c.id_solicitud " + 
+				"LEFT JOIN solicitud_voc s ON s.id_solicitud = c.id_solicitud " + 
 				"LEFT JOIN usuario u ON u.id_usuario = c.id_usuario " + 
-				"WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND no_show = 0 " + 
-				"HAVING tieneNota = 0 " + 
+				"WHERE c.fecha >= NOW() - INTERVAL 24 HOUR AND c.fecha < NOW() AND c.no_show = 0 " + 
+				"AND s.id_estatus_solicitud NOT IN (11) AND nc.id_cita IS NULL " +
 				"ORDER BY c.fecha DESC;", nativeQuery = true)
 	public List<CitaSql> obtenerCitasSinNotaDiaAnterior();
 	

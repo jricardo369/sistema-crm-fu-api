@@ -185,6 +185,48 @@ public class UtilidadesAdapter {
 		return prop;
 	}
 
+	public static String obtenerAssetsFolderPorAmbiente(String ambiente,
+			String assetsFolder,
+			String assetsFolderQas,
+			String assetsFolderPro) {
+
+		if ("qas".equalsIgnoreCase(ambiente)) {
+			return assetsFolderQas;
+		}
+		if ("pro".equalsIgnoreCase(ambiente)) {
+			return assetsFolderPro;
+		}
+		return assetsFolder;
+	}
+
+	public static Properties cargarConfiguracionCrmDesdeAssets(String ambiente,
+			String assetsFolder,
+			String assetsFolderQas,
+			String assetsFolderPro) throws IOException {
+
+		String assetsFolderFinal = obtenerAssetsFolderPorAmbiente(
+				ambiente,
+				assetsFolder,
+				assetsFolderQas,
+				assetsFolderPro);
+
+		if (assetsFolderFinal == null || assetsFolderFinal.trim().isEmpty()) {
+			throw new IOException("No hay configuración para mail.assets.folder en ambiente " + ambiente);
+		}
+
+		File archivoConfig = new File(assetsFolderFinal, "configuraciones-crm.properties");
+		if (!archivoConfig.exists()) {
+			throw new IOException("No se encontró configuraciones-crm.properties en " + archivoConfig.getAbsolutePath());
+		}
+
+		Properties props = new Properties();
+		try (FileInputStream input = new FileInputStream(archivoConfig)) {
+			props.load(input);
+		}
+
+		return props;
+	}
+
 	public static Date sumarDiasAFecha(Date fecha, int dias) {
 		if (dias == 0)
 			return fecha;

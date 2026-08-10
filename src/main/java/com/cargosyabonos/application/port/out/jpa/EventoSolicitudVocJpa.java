@@ -27,6 +27,9 @@ public interface EventoSolicitudVocJpa extends CrudRepository<EventoSolicitudVoc
 	@Query(value = "SELECT * FROM evento_solicitud_voc WHERE tipo = 'Schedule'  AND fecha LIKE %?1% AND fecha_schedule IS NULL ORDER BY id_evento", nativeQuery = true)
 		public List<EventoSolicitudVocEntity> obtenerEventosSchedules(String fecha);
 	
+	@Query(value = "SELECT * FROM evento_solicitud_voc WHERE fecha BETWEEN ?1 AND ?2 AND descripcion LIKE '%Download appointment data%' ORDER BY fecha DESC", nativeQuery = true)
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(String fechai, String fechaf);
+	
 	@Query(value = "SELECT e.id_evento,e.fecha,e.evento,e.descripcion,e.tipo,e.id_usuario,e.id_solicitud "
 			+ "FROM evento_solicitud_voc e "
 			+ "JOIN usuario u on u.id_usuario = e.id_usuario WHERE id_solicitud = ?1", nativeQuery = true)

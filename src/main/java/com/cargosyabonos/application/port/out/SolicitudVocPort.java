@@ -5,6 +5,11 @@ import java.util.Date;
 import java.util.List;
 
 import com.cargosyabonos.domain.NumeroCasosSolicitudes;
+import com.cargosyabonos.domain.ReporteHorasMensualVoc;
+import com.cargosyabonos.domain.ReporteHorasMesTerapeuta;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasDetalleVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasVoc;
 import com.cargosyabonos.domain.ReporteSolsUsuario;
 import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.SolicitudVocEndingSessions;
@@ -36,6 +41,11 @@ public interface SolicitudVocPort {
 	public List<NumeroCasosSolicitudes> obtenerNumerosCaso(String numeroCaso);
 	public int obtenerSesionesDeSolicitud(int idSolicitud);
 	public List<SolicitudVoc> obtenerSolsVocPendTratmentPlan();
+	public List<ReporteHorasMesTerapeuta> obtenerReporteHorasMesTerapeuta(int idTerapeuta, int anio, int mes);
+	public List<ReporteHorasMensualVoc> obtenerReporteHorasMensualVoc(int idTerapeuta, int anio, int mes);
+	public List<ReporteNotasCitasVoc> obtenerReporteNotasCitasRangoFechas(String fechai, String fechaf);
+	public List<ReporteNotasCitasTerapeutasVoc> obtenerReporteNotasCitasTerapeutasRangoFechas(String fechai, String fechaf, Integer idUsuario);
+	public List<ReporteNotasCitasTerapeutasDetalleVoc> obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(String fechai, String fechaf, int idUsuario);
 	
 	
 }

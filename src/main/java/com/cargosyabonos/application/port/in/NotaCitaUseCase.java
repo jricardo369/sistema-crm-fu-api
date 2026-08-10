@@ -7,6 +7,7 @@ import com.cargosyabonos.domain.NotaCitaEntity;
 public interface NotaCitaUseCase {
 	
 	public List<NotaCitaEntity> obtenerNotasCitas(int idCita); 
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(String fechai, String fechaf);
 	public NotaCitaEntity obtenerNotaDeCita(int idCita); 
 	public NotaCitaEntity obtenerNota(int idNota);
 	public void crearNotaCita(NotaCitaEntity a);

@@ -90,6 +90,11 @@ public class EventoVocRepository implements EventoSolicitudVocPort {
 	}
 
 	@Override
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(String fechai, String fechaf) {
+		return eSolJpa.obtenerEventosRangoFechasDescripcion(fechai, fechaf);
+	}
+
+	@Override
 	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud) {
 		return eSolJpa.obtenerHistorialNumSesionesDeSolicitud(idSolicitud);
 	}

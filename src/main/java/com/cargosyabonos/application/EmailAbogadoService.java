@@ -4,12 +4,14 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.cargosyabonos.domain.AbogadoEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cargosyabonos.application.port.in.EmailAbogadoUseCase;
+import com.cargosyabonos.application.port.out.AbogadoPort;
 import com.cargosyabonos.application.port.out.EmailAbogadoPort;
 import com.cargosyabonos.domain.EmailAbogadoEntity;
 import com.cargosyabonos.domain.TittleAbogadoEntity;
@@ -21,6 +23,9 @@ public class EmailAbogadoService implements EmailAbogadoUseCase {
 	
 	@Autowired
 	private EmailAbogadoPort emailAboPort;
+
+	@Autowired
+	private AbogadoPort aboPort;
 
 	@Override
 	public List<EmailAbogadoEntity> obtenerEmailsDeAbogado(int idAbogado) {
@@ -38,7 +43,8 @@ public class EmailAbogadoService implements EmailAbogadoUseCase {
 		EmailAbogadoEntity eae = emailAboPort.obtenerEmailAbogado(ab.getEmail());
 
 		if (eae != null) {
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "This email is already registered");
+			AbogadoEntity abogadoExistente = aboPort.obtenerAbogadoPorId(eae.getIdAbogado());
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "This email address is already registered with the law firm: "+abogadoExistente.getNombre());
 		}
 
 		emailAboPort.crearEmailAbogado(ab);

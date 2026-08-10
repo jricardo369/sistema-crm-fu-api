@@ -11,5 +11,6 @@ public interface AdeudoSolicitudes {
     BigDecimal getamount();
     BigDecimal getdeuda();
     String gettipo();
+	BigDecimal gettotalpagado();
     
 }

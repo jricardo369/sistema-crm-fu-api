@@ -42,6 +42,11 @@ import com.cargosyabonos.domain.CitaEntity;
 import com.cargosyabonos.domain.EstatusPagoEntity;
 import com.cargosyabonos.domain.EstatusSolicitudEntity;
 import com.cargosyabonos.domain.NumeroCasosSolicitudes;
+import com.cargosyabonos.domain.ReporteHorasMensualVoc;
+import com.cargosyabonos.domain.ReporteHorasMesTerapeuta;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasDetalleVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasVoc;
 import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.cargosyabonos.domain.TipoSolicitudEntity;
@@ -599,6 +604,31 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		int numSesiones = reqPort.obtenerSesionesDeSolicitud(idSolicitud);
 		int spend = s.getNumSesiones() - numSesiones;
 		reqPort.actualizarNumSesiones(numSesiones, spend, idSolicitud);
+	}
+
+	@Override
+	public List<ReporteHorasMesTerapeuta> obtenerReporteHorasMesTerapeuta(int idTerapeuta, int anio, int mes) {
+		return reqPort.obtenerReporteHorasMesTerapeuta(idTerapeuta, anio, mes);
+	}
+
+	@Override
+	public List<ReporteHorasMensualVoc> obtenerReporteHorasMensualVoc(int idTerapeuta, int anio, int mes) {
+		return reqPort.obtenerReporteHorasMensualVoc(idTerapeuta, anio, mes);
+	}
+
+	@Override
+	public List<ReporteNotasCitasVoc> obtenerReporteNotasCitasRangoFechas(String fechai, String fechaf) {
+		return reqPort.obtenerReporteNotasCitasRangoFechas(fechai, fechaf);
+	}
+
+	@Override
+	public List<ReporteNotasCitasTerapeutasVoc> obtenerReporteNotasCitasTerapeutasRangoFechas(String fechai, String fechaf, Integer idUsuario) {
+		return reqPort.obtenerReporteNotasCitasTerapeutasRangoFechas(fechai, fechaf, idUsuario);
+	}
+
+	@Override
+	public List<ReporteNotasCitasTerapeutasDetalleVoc> obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(String fechai, String fechaf, int idUsuario) {
+		return reqPort.obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(fechai, fechaf, idUsuario);
 	}
 
 }

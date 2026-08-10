@@ -73,6 +73,9 @@ public class AbogadoRepository implements AbogadoPort{
 		o.setTelefono((String) row[3]);
 		o.setEmail((String) row[4]);
 		o.setSinonimos((String) row[5]);
+		o.setFechaCreacion((String) row[6]);
+		o.setReferencia((String) row[7]);
+		o.setEstado((String) row[8]);
 		return o;
 	}
 
@@ -89,7 +92,7 @@ public class AbogadoRepository implements AbogadoPort{
 		UtilidadesAdapter.pintarLog("ejecutando query anios");
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("SELECT a.id_abogado,a.firma,a.nombre,a.telefono,e.email,a.sinonimos,a.fecha_creacion " 
+		sb.append("SELECT a.id_abogado,a.firma,a.nombre,a.telefono,e.email,a.sinonimos,DATE_FORMAT(a.fecha_creacion, '%Y-%m-%d %H:%i:%s') AS fecha_creacion,a.referencia, a.estado " 
 				+"FROM abogado a "
 				+"LEFT JOIN email_abogado e ON e.id_abogado = a.id_abogado "
 				+ "WHERE a.nombre LIKE :valor OR a.sinonimos LIKE :valor OR e.email LIKE :valor");
@@ -104,11 +107,44 @@ public class AbogadoRepository implements AbogadoPort{
 		return rows;
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Object[]> obtenerTodosAbogadosConMailsSql() {
+
+		UtilidadesAdapter.pintarLog("ejecutando query anios");
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("SELECT a.id_abogado,a.firma,a.nombre,a.telefono,e.email,a.sinonimos,DATE_FORMAT(a.fecha_creacion, '%Y-%m-%d %H:%i:%s') AS fecha_creacion,a.referencia, a.estado " 
+				+"FROM abogado a "
+				+"LEFT JOIN email_abogado e ON e.id_abogado = a.id_abogado ");
+
+		UtilidadesAdapter.pintarLog("query:" + sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+
+		List<Object[]> rows = query.getResultList();
+		return rows;
+	}
+
 	@Override
 	public List<Abogado> obtenerAbogadosConMail(String valorBusqueda) {
 		
 		List<Object[]> rows = null;	
 		rows = obtenerAbogadosConMailsSql(valorBusqueda);			
+		List<Abogado> result = null;
+
+		result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirAAbogado(row));
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<Abogado> obtenerTodosAbogadosConMail() {
+		
+		List<Object[]> rows = null;	
+		rows = obtenerTodosAbogadosConMailsSql();			
 		List<Abogado> result = null;
 
 		result = new ArrayList<>(rows.size());

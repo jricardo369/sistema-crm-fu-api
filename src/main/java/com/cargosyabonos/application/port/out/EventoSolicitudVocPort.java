@@ -19,6 +19,7 @@ public interface EventoSolicitudVocPort {
 	public int obtenerSolicitudesSiTieneAlgunEventoDeSolicitud(String tipoEvento,int idSolicitud);
 	public void ingresarEventoDeSolicitud(String envento,String descripcion,String tipo,String usuario,SolicitudVocEntity solicitud);
 	public List<EventoSolicitudVocEntity> obtenerEventosSchedules(String fecha);
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(String fechai, String fechaf);
 	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud);
 	public void actualizarTipoEvento(int idEvento, String tipoEvento, String decripcion);
 

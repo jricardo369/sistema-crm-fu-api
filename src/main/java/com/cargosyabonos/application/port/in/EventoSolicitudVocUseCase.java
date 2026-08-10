@@ -13,5 +13,6 @@ public interface EventoSolicitudVocUseCase {
 	public void ajusteSesionesVOC(int idSolicitud, int numSesiones, String motivo,int usuarioEnvio,String tipo);
 	public void actualizarTipoEvento(int idEvento, String tipoEvento);
 	public List<EventoSolicitudVocEntity> obtenerHistorialNumSesionesDeSolicitud(int idSolicitud);
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(String fechai, String fechaf);
 
 }

@@ -38,6 +38,11 @@ public class AbogadoController {
 	public List<AbogadoEntity> obtenerAbogados() {
 		return aboUseCase.obtenerAbogados();
 	}
+
+	@GetMapping("/todos-con-mail")
+	public List<Abogado> obtenerAbogadosTodosConMail() {
+		return aboUseCase.obtenerTodosAbogadosConMail();
+	}
 	
 	@GetMapping("/por-nombre/{nombre}")
 	public List<AbogadoEntity> obtenerAbogadoPorNombre(@PathVariable("nombre") String nombre) {

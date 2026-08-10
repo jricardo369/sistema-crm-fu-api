@@ -1,11 +1,13 @@
 package com.cargosyabonos.adapter.out.mail;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -32,14 +34,26 @@ public class Office365MailService {
 
     Logger logger = Logger.getLogger(Office365MailService.class.getName());
 
-    @Value("${office365.tenant-id}")
+    @Value("${office365.tenant-id:}")
     private String tenantId;
-    @Value("${office365.client-id}")
+    @Value("${office365.client-id:}")
     private String clientId;
-    @Value("${office365.client-secret}")
+    @Value("${office365.client-secret:}")
     private String clientSecret;
-    @Value("${office365.from-user}")
+    @Value("${office365.from-user:}")
     private String fromUser;
+
+    @Value("${mail.assets.folder:}")
+    private String assetsFolder;
+
+    @Value("${mail.assets.folder.qas:}")
+    private String assetsFolderQas;
+
+    @Value("${mail.assets.folder.pro:}")
+    private String assetsFolderPro;
+
+    @Value("${ambiente:local}")
+    private String ambiente;
 
     @Autowired
     private ConfiguracionPort confPort;
@@ -51,9 +65,48 @@ public class Office365MailService {
 
     @PostConstruct
     public void initConfig() {
+        cargarConfiguracionOffice365Externa();
         ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("ENVIAR-CORREOS");
         this.enviarCorreos = Boolean.valueOf(confj.getValor());
         logger.info("[EnvioCorreoAdapter] Config enviarCorreos=" + this.enviarCorreos);
+    }
+
+    private void cargarConfiguracionOffice365Externa() {
+        try {
+            Properties props = UtilidadesAdapter.cargarConfiguracionCrmDesdeAssets(
+                    ambiente,
+                    assetsFolder,
+                    assetsFolderQas,
+                    assetsFolderPro);
+
+            String tenantIdFile = props.getProperty("office365.tenant-id", "").trim();
+            String clientIdFile = props.getProperty("office365.client-id", "").trim();
+            String clientSecretFile = props.getProperty("office365.client-secret", "").trim();
+            String fromUserFile = props.getProperty("office365.from-user", "").trim();
+
+            if (!tenantIdFile.isEmpty()) {
+                this.tenantId = tenantIdFile;
+            }
+            if (!clientIdFile.isEmpty()) {
+                this.clientId = clientIdFile;
+            }
+            if (!clientSecretFile.isEmpty()) {
+                this.clientSecret = clientSecretFile;
+            }
+            if (!fromUserFile.isEmpty()) {
+                this.fromUser = fromUserFile;
+            }
+
+            String assetsFolderFinal = UtilidadesAdapter.obtenerAssetsFolderPorAmbiente(
+                    ambiente,
+                    assetsFolder,
+                    assetsFolderQas,
+                    assetsFolderPro);
+            logger.info("Configuración Office365 cargada desde " + assetsFolderFinal + "/configuraciones-crm.properties");
+        } catch (IOException e) {
+            logger.warning("No se pudo cargar configuración Office365 externa: " + e.getMessage()
+                    + ". Se usarán propiedades cargadas por Spring.");
+        }
     }
 
     private String getAccessToken() {

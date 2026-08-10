@@ -32,8 +32,8 @@ LEFT JOIN (
         c.id_solicitud,
         SUM(
             CASE
-                WHEN nc.tiempo_sesion BETWEEN 0 AND 44 THEN 1
-                WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 2
+                WHEN nc.tiempo_sesion BETWEEN 0 AND 44 THEN 0.5
+                WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1
                 WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 3
                 WHEN nc.tiempo_sesion >= 105 THEN 4
                 ELSE 0

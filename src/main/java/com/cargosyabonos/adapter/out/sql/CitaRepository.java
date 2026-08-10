@@ -104,25 +104,24 @@ public class CitaRepository implements CitaPort{
 
 		BigDecimal totalPagado = result.stream()
 				.filter(CargosCitasVoc::isPagado)
-				.map(CargosCitasVoc::getAmount)
+				.map(CargosCitasVoc::getTotalPagado)
 				.filter(monto -> monto != null)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
 
-				BigDecimal totalNoPagado = result.stream()
-				.filter(cargo -> !cargo.isPagado())
+		BigDecimal totalAmount = result.stream()
 				.map(CargosCitasVoc::getAmount)
 				.filter(monto -> monto != null)
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		log.info("Total pagado: " + totalPagado);
-		log.info("Total no pagado: " + totalNoPagado);
+		log.info("Total no pagado: " + totalAmount);
 
-		BigDecimal balance = totalPagado.subtract(totalNoPagado);
+		BigDecimal balance = totalAmount.subtract(totalPagado);
 
 		log.info("Balance: " + balance);
 
 		c.setTotalPagado(totalPagado);
-		c.setTotalNoPagado(totalNoPagado);
+		c.setTotalNoPagado(totalAmount);
 		c.setBalance(balance);
 		c.setCargoVoc(result);
 
@@ -147,6 +146,7 @@ public class CitaRepository implements CitaPort{
 		d.setAnioNacimiento((String) row[12]);
 		d.setSexo((String) row[13]);
 		d.setDireccion((String) row[14]);
+		d.setTotalPagado((BigDecimal) row[15]);
 
 		return d;
 		
@@ -176,11 +176,16 @@ public class CitaRepository implements CitaPort{
 
 		sb.append(
 				"SELECT s.id_solicitud as file,c.id_cita as idCita,s.numero_de_caso as caseNumber,c.fecha as fecha, "
-				+ "CONCAT(s.cliente,' ', IFNULL(s.apellidos,'')) as cliente,s.telefono,s.email, c.amount,c.comentario,c.pagado,c.fecha_pagado as fechaPagado,u.nombre as terapeuta,s.fecha_nacimiento,s.sexo,s.direccion "
+				+ "CONCAT(s.cliente,' ', IFNULL(s.apellidos,'')) as cliente,s.telefono,s.email, c.amount,c.comentario,c.pagado,c.fecha_pagado as fechaPagado, "
+				+ "u.nombre as terapeuta,s.fecha_nacimiento,s.sexo,s.direccion,IFNULL(p.total_pagado, 0) AS totalPagado "
 			+"FROM cita c "
 			+"JOIN solicitud_voc s ON s.id_solicitud = c.id_solicitud "
 			+ "JOIN usuario u ON c.id_usuario = u.id_usuario "
-			+ "JOIN nota_cita nc ON nc.id_cita = c.id_cita ");
+			+ "JOIN nota_cita nc ON nc.id_cita = c.id_cita "
+			+ "LEFT JOIN ( SELECT id_cita, SUM(monto) AS total_pagado " +
+			" FROM pagos_voc " + 
+			" GROUP BY id_cita " + 
+			") p ON p.id_cita = c.id_cita ");
 
 		if (campo != null) {
 			switch (campo) {

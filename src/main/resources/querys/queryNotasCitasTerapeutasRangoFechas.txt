@@ -1,0 +1,14 @@
+SELECT 
+    u.nombre,
+    COUNT(DISTINCT c.id_cita) AS total_citas,
+    COUNT(nc.id_nota) AS total_notas,
+    SUM(
+        CASE 
+            WHEN nc.fecha_creacion > DATE_ADD(c.fecha, INTERVAL 1 DAY) THEN 1 
+            ELSE 0 
+        END
+    ) AS notas_con_retraso
+FROM cita c
+INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+LEFT JOIN nota_cita nc ON c.id_cita = nc.id_cita
+WHERE c.fecha BETWEEN :fechai AND :fechaf

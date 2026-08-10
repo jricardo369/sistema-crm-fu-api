@@ -58,7 +58,7 @@ public interface MovimientoJpa extends CrudRepository<MovimientoEntity, Serializ
 	@Query(value = "SELECT COALESCE(sum(monto) ,0) FROM movimiento WHERE tipo in( 'Payment') AND id_solicitud = ?1", nativeQuery = true)
 	public BigDecimal obtenerSumaMovimientosPorIdSolicitud(int idSolicitud);
 
-	@Query(value = "SELECT s.id_solicitud,s.cliente,s.email,s.telefono,s.amount,ts.nombre as tipo, "
+	/*@Query(value = "SELECT s.id_solicitud,s.cliente,s.email,s.telefono,s.amount,ts.nombre as tipo, "
 			+"(amount-(SELECT IFNULL( (SELECT sum(monto) FROM request_evaluation.movimiento where id_solicitud = s.id_solicitud ) ,0))) as deuda "
 			+"FROM solicitud s "
 			+"LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud "
@@ -70,6 +70,20 @@ public interface MovimientoJpa extends CrudRepository<MovimientoEntity, Serializ
 			+"AND UPPER(LEFT(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(s.cliente,'Á','A'),'É','E'),'Í','I'),'Ó','O'),'Ú','U')), 1))  "
 			+"BETWEEN ?1 AND ?2 "
 			+"GROUP BY s.id_solicitud ORDER BY cliente asc", nativeQuery = true)
+	public List<AdeudoSolicitudes> obtenerDeudasSolicitudes(String letraInicio,String letrafin);*/
+
+	@Query(value = "SELECT s.id_solicitud,s.cliente,s.email,s.telefono, s.amount,ts.nombre AS tipo,(s.amount - IFNULL(mov.total_pagado, 0)) AS deuda,IFNULL(mov.total_pagado, 0) AS totalpagado " + 
+				"FROM solicitud s " + 
+				"LEFT JOIN tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud " + 
+				"LEFT JOIN (SELECT id_solicitud, SUM(monto) AS total_pagado FROM request_evaluation.movimiento GROUP BY id_solicitud) mov ON mov.id_solicitud = s.id_solicitud " + 
+				"WHERE s.amount > 0 " + 
+				"  AND s.id_estatus_pago NOT IN (2) " + 
+				"  AND s.id_estatus_solicitud IN (10) " + 
+				"  AND (s.email != '' OR s.telefono != '') " + 
+				"  AND UPPER(LEFT(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(s.cliente,'Á','A'),'É','E'),'Í','I'),'Ó','O'),'Ú','U')), 1)) " + 
+				"  BETWEEN ?1 AND ?2 " + 
+				"  AND (s.amount - IFNULL(mov.total_pagado, 0)) > 0 " + 
+				"ORDER BY s.cliente ASC;", nativeQuery = true)
 	public List<AdeudoSolicitudes> obtenerDeudasSolicitudes(String letraInicio,String letrafin);
 
 	@Query(value = "SELECT s.cliente,s.id_solicitud,email,amount,"

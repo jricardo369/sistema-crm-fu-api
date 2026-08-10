@@ -15,6 +15,7 @@ public interface AbogadoUseCase {
 	public void actualizarAbogado(AbogadoEntity a);
 	public void eliminarAbogado(int idAbogado);
 	public List<Abogado> obtenerAbogadosConMail(String valorBusqueda);
+	public List<Abogado> obtenerTodosAbogadosConMail();
 	public List<FuenteDeReferenciaEntity> obtenerFuentesDeReferencia();
 
 }

@@ -19,6 +19,14 @@ public class CargosCitasVoc {
     private String anioNacimiento;
     private String sexo;
     private String direccion;
+	private BigDecimal totalPagado;
+	
+	public BigDecimal getTotalPagado() {
+		return totalPagado;
+	}
+	public void setTotalPagado(BigDecimal totalPagado) {
+		this.totalPagado = totalPagado;
+	}
     
 	public int getIdFile() {
 		return idFile;

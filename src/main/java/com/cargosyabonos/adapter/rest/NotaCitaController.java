@@ -30,6 +30,12 @@ public class NotaCitaController {
 	public List<NotaCitaEntity> obtenerNotasDeSolicitud(@PathVariable("idCita") int idCita) {
 		return ncUseCase.obtenerNotasCitas(idCita);
 	}
+
+	@GetMapping("rango-fechas")
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf) {
+		return ncUseCase.obtenerNotasCitasRangoFechas(fechai, fechaf);
+	}
 	
 	@PostMapping()
 	public void crearNota(@RequestBody NotaCitaEntity c) {

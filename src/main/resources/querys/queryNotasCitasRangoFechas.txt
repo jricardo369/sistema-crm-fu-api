@@ -1,0 +1,12 @@
+SELECT 
+    (
+        SELECT COUNT(*) 
+        FROM nota_cita 
+        WHERE fecha_creacion BETWEEN :fechai AND :fechaf
+    ) AS total_notas_citas,
+    (
+        SELECT COUNT(*) 
+        FROM evento_solicitud_voc 
+        WHERE descripcion LIKE '%Download appointment data%'
+          AND fecha BETWEEN :fechai AND :fechaf
+    ) AS total_notas_descarga;

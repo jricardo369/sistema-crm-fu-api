@@ -246,9 +246,18 @@ public class PEApplication extends SpringBootServletInitializer{
 	@Bean
 	public String getSolsEndingSession(){
 		String salida = "";
-		//Todos los dias a las 12 pm horario california,se le restan 6 horas a 18
-		salida = "0 00 18 * * *";
-		logger.info("cron sols ending session:"+salida);
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("sols-voc-end-sessions");
+		String dia = "";
+		if(tp.getDia() == null){
+			dia = "*";
+		}else{
+			dia = tp.getDia();
+			dia =  dia.toUpperCase();
+			dia = diaParaCron(dia);
+		}
+		String hora = tp.getHora();
+		salida = " 0 " + hora.substring(3,5) + " " + hora.substring(0,2) + " * * " + dia;
+		logger.info("cron trat plan:"+salida);
 		return salida;
 	}
 

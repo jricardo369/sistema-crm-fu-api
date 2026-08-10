@@ -26,6 +26,9 @@ public interface NotaCitaJpa extends CrudRepository<NotaCitaEntity, Serializable
 	@Query(value = "SELECT * FROM nota_cita WHERE id_cita = ?1 ORDER BY id_nota DESC", nativeQuery = true)
 	public NotaCitaEntity obtenerNotaDeCita(int idCita);
 	
+	@Query(value = "SELECT * FROM nota_cita WHERE fecha_creacion BETWEEN ?1 AND ?2 ORDER BY fecha_creacion DESC", nativeQuery = true)
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(String fechai, String fechaf);
+	
 	@Query(value = "SELECT s.id_solicitud FROM nota_cita nc "
 			+ "LEFT JOIN cita c ON c.id_cita = nc.id_cita "
 			+ "LEFT JOIN solicitud_voc s ON s.id_solicitud = c.id_solicitud "

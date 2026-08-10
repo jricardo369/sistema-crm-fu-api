@@ -1,0 +1,93 @@
+SELECT 
+    s.terapeuta,
+    CONCAT_WS(' ', s.cliente, NULLIF(s.apellidos, '')) AS nombre_completo,
+    s.id_solicitud,
+    s.num_sesiones AS horas_aprobadas,
+    
+    -- Fechas de las citas en el mes específico
+    GROUP_CONCAT(
+        CASE 
+            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes 
+            THEN DATE_FORMAT(nc.fecha_creacion, '%Y-%m-%d')
+            ELSE NULL 
+        END 
+        SEPARATOR ', '
+    ) AS fechas_citas_mes,
+    
+    -- Tipos de duración de sesión en el mes (ej: "1 & 2")
+    GROUP_CONCAT(
+        DISTINCT CASE 
+            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes THEN
+                CASE 
+                    WHEN nc.tiempo_sesion <= 44 THEN '0.5'
+                    WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN '1'
+                    WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN '2'
+                    WHEN nc.tiempo_sesion >= 105 THEN '3'
+                END
+            ELSE NULL
+        END
+        ORDER BY nc.tiempo_sesion ASC
+        SEPARATOR ' & '
+    ) AS duracion_sesiones_mes,
+
+    -- Total de horas consumidas en el mes específico
+    SUM(
+        CASE 
+            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes THEN
+                CASE 
+                    WHEN nc.tiempo_sesion <= 44 THEN 0.5
+                    WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+                    WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
+                    WHEN nc.tiempo_sesion >= 105 THEN 3.0
+                    ELSE 0
+                END
+            ELSE 0 
+        END
+    ) AS horas_del_mes,
+    
+    -- Total de horas consumidas en toda la solicitud (histórico global)
+    SUM(
+        CASE 
+            WHEN nc.tiempo_sesion <= 44 THEN 0.5
+            WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+            WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
+            WHEN nc.tiempo_sesion >= 105 THEN 3.0
+            ELSE 0
+        END
+    ) AS total_horas_solicitud,
+    
+    -- Horas restantes del cliente (num_sesiones - total histórico)
+    (
+        s.num_sesiones - SUM(
+            CASE 
+                WHEN nc.tiempo_sesion <= 44 THEN 0.5
+                WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+                WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
+                WHEN nc.tiempo_sesion >= 105 THEN 3.0
+                ELSE 0
+            END
+        )
+    ) AS horas_restantes
+
+FROM solicitud_voc s
+LEFT JOIN cita c ON s.id_solicitud = c.id_solicitud
+LEFT JOIN nota_cita nc ON c.id_cita = nc.id_cita
+
+-- Filtro por ID de terapeuta
+WHERE s.terapeuta = :idTerapeuta
+
+GROUP BY 
+    s.terapeuta,
+    s.id_solicitud, 
+    s.cliente, 
+    s.num_sesiones
+
+-- FILTRO POR CITAS DEL MES:
+-- Activo: Muestra solo registros con citas en el mes seleccionado
+-- Inactivo: Coméntalo (-- HAVING...) para mostrar todas las solicitudes del terapeuta
+HAVING COUNT(
+    CASE 
+        WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes 
+        THEN nc.id_nota 
+    END
+) > 0;

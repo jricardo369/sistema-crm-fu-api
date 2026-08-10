@@ -5,6 +5,11 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cargosyabonos.domain.NumeroCasosSolicitudes;
+import com.cargosyabonos.domain.ReporteHorasMensualVoc;
+import com.cargosyabonos.domain.ReporteHorasMesTerapeuta;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasDetalleVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasVoc;
 import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 
@@ -26,5 +31,10 @@ public interface SolicitudVocUseCase {
 	public List<SolicitudVoc> obtenerSolicitudesFiltroV2(int idUsuario, String campo,String valor,String fecha1,String fecha2);
 	public List<NumeroCasosSolicitudes> obtenerNumerosCaso(String numeroCaso);
 	public void syncNumSesiones(int idSolicitud, int idUsuario);
+	public List<ReporteHorasMesTerapeuta> obtenerReporteHorasMesTerapeuta(int idTerapeuta, int anio, int mes);
+	public List<ReporteHorasMensualVoc> obtenerReporteHorasMensualVoc(int idTerapeuta, int anio, int mes);
+	public List<ReporteNotasCitasVoc> obtenerReporteNotasCitasRangoFechas(String fechai, String fechaf);
+	public List<ReporteNotasCitasTerapeutasVoc> obtenerReporteNotasCitasTerapeutasRangoFechas(String fechai, String fechaf, Integer idUsuario);
+	public List<ReporteNotasCitasTerapeutasDetalleVoc> obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(String fechai, String fechaf, int idUsuario);
 
 }

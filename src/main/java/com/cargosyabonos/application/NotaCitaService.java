@@ -49,6 +49,11 @@ public class NotaCitaService implements NotaCitaUseCase {
 	}
 
 	@Override
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(String fechai, String fechaf) {
+		return ncPort.obtenerNotasCitasRangoFechas(fechai, fechaf);
+	}
+
+	@Override
 	public NotaCitaEntity obtenerNota(int idNota) {
 		return ncPort.obtenerNotaCita(idNota);
 	}

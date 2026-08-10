@@ -169,4 +169,9 @@ public class EventoSolicitudVocService implements EventoSolicitudVocUseCase {
 		return esPort.obtenerHistorialNumSesionesDeSolicitud(idSolicitud);	
 	}
 
+	@Override
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(String fechai, String fechaf) {
+		return esPort.obtenerEventosRangoFechasDescripcion(fechai, fechaf);
+	}
+
 }

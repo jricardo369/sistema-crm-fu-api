@@ -34,13 +34,15 @@ public class PdfUtilidad {
 	public static PdfPCell cell(Object valor, Font font, int border, String align, String colorFondo,String colorBorder) {
 
 		String texto = "";
-		texto = valor.toString();
-		if (valor.getClass() == Integer.class) {
+		if (valor != null) {
 			texto = valor.toString();
-		} else if (valor.getClass() == Float.class) {
-			texto = valor.toString();
-		} else if (valor.getClass() == BigDecimal.class) {
-			texto = UtilidadesAdapter.formatNumber(valor);
+			if (valor.getClass() == Integer.class) {
+				texto = valor.toString();
+			} else if (valor.getClass() == Float.class) {
+				texto = valor.toString();
+			} else if (valor.getClass() == BigDecimal.class) {
+				texto = UtilidadesAdapter.formatNumber(valor);
+			}
 		}
 
 		PdfPCell cell = new PdfPCell(new Phrase(texto, font));
@@ -82,6 +84,56 @@ public class PdfUtilidad {
 			cell.setBackgroundColor(BaseColor.WHITE);
 		if (colorFondo.equals("negro"))
 			cell.setBackgroundColor(BaseColor.BLACK);
+		if (colorFondo.equals("magenta"))
+			cell.setBackgroundColor(new BaseColor(117, 81, 140));
+		
+
+		return cell;
+	}
+
+	public static PdfPCell cellBigDecimalNoEsDinero(Object valor, Font font, int border, String align, String colorFondo,String colorBorder) {
+
+		String texto = "";
+		texto = valor.toString();
+		
+
+		PdfPCell cell = new PdfPCell(new Phrase(texto, font));
+
+		if (align.equals("centro")) {
+			cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+		} else if (align.equals("derecha")) {
+			cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+		} else if (align.equals("izquierda")) {
+			cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+		}
+
+		if (border == 0) {
+			cell.setBorder(Rectangle.NO_BORDER);
+		} else if (border == -1) {
+			cell.setBorder(Rectangle.BOTTOM);
+		} else if (border == -2) {
+			cell.setBorder(Rectangle.TOP);
+		} else if(border == 3){
+			cell.setBorder(Rectangle.BOTTOM | Rectangle.TOP);
+		}else if(border == 4){
+			cell.setBorder(Rectangle.LEFT);
+		}else {
+			cell.setBorder(Rectangle.BOX);
+		}
+
+		// Color border
+		if (colorBorder.equals("negro"))
+			cell.setBorderColorTop(BaseColor.BLACK);
+		if (colorBorder.equals("gris"))
+			cell.setBorderColor(new BaseColor(180, 180, 180));
+		if (colorBorder.equals("magenta"))
+			cell.setBorderColor(BaseColor.MAGENTA);
+
+		//Color fondo
+		if (colorFondo.equals("gris"))
+			cell.setBackgroundColor(new BaseColor(243, 243, 243));
+		if (colorFondo.equals("blanco"))
+			cell.setBackgroundColor(BaseColor.WHITE);
 		
 
 		return cell;
@@ -106,7 +158,9 @@ public class PdfUtilidad {
 			f = FontFactory.getFont(rutaFontFinal + "/Roboto-Light.ttf", 8, Font.NORMAL);
 		} else if ("negrita".equals(tipo)) {
 			f = FontFactory.getFont(rutaFontFinal + "/Roboto-Light.ttf", 8, Font.BOLD);
-		} else if ("tituloTabla".equals(tipo)) {
+		} else if ("negritaChica".equals(tipo)) {
+			f = FontFactory.getFont(rutaFontFinal + "/Roboto-Light.ttf", 6, Font.BOLD);
+		}else if ("tituloTabla".equals(tipo)) {
 			f = FontFactory.getFont(rutaFontFinal + "/Roboto-Light.ttf", 9, Font.BOLD);
 		} else if ("negritaTitulos".equals(tipo)) {
 			f = FontFactory.getFont(rutaFontFinal + "/Roboto-Light.ttf", 9, Font.BOLD, new BaseColor(

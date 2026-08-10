@@ -59,4 +59,10 @@ public class EventosSolicitudVocController {
 		return oCase.obtenerHistorialNumSesionesDeSolicitud(idSolicitud);
 	}
 
+	@GetMapping("eventos-descarga-cita")
+	public List<EventoSolicitudVocEntity> obtenerEventosRangoFechasDescripcion(
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf) { 
+		return oCase.obtenerEventosRangoFechasDescripcion(fechai, fechaf);
+	}
+
 }

@@ -74,7 +74,7 @@ public class AbogadoService implements AbogadoUseCase {
 			AbogadoEntity aboExistente = aboPort.obtenerAbogadoPorEmail(emA.getEmail());
 			if (aboExistente != null) {
 				throw new RuntimeException(
-						"El email " + emA.getEmail() + " ya está asociado al abogado: " + aboExistente.getNombre());
+						"The email " + emA.getEmail() + " is already associated with the lawyer: " + aboExistente.getNombre());
 			}
 		}
 
@@ -171,6 +171,11 @@ public class AbogadoService implements AbogadoUseCase {
 	@Override
 	public List<Abogado> obtenerAbogadosConMail(String valorBusqueda) {
 		return aboPort.obtenerAbogadosConMail(valorBusqueda);
+	}
+
+	@Override
+	public List<Abogado> obtenerTodosAbogadosConMail() {
+		return aboPort.obtenerTodosAbogadosConMail();
 	}
 
 	@Override

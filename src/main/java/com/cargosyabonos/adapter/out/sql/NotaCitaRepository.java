@@ -46,6 +46,11 @@ public class NotaCitaRepository implements NotaCitaPort{
 	}
 
 	@Override
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(String fechai, String fechaf) {
+		return ncJpa.obtenerNotasCitasRangoFechas(fechai, fechaf);
+	}
+
+	@Override
 	public int obtenerIdSolByIdNota(int idNota) {
 		return ncJpa.obtenerIdSolByIdNota(idNota);
 	}

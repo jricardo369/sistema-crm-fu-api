@@ -20,8 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cargosyabonos.adapter.out.file.ExcelFilesFirmas;
 import com.cargosyabonos.adapter.out.file.ExcelFilesFirmasA;
 import com.cargosyabonos.adapter.out.file.PdfPagos;
+import com.cargosyabonos.adapter.out.file.ReporteHorasMensualVocPdf;
+import com.cargosyabonos.adapter.out.file.ReporteHorasTerapeuta;
+import com.cargosyabonos.adapter.out.file.ReporteNotasCitasVocPdf;
 import com.cargosyabonos.application.port.in.EventoSolicitudUseCase;
 import com.cargosyabonos.application.port.in.SolicitudUseCase;
+import com.cargosyabonos.application.port.in.SolicitudVocUseCase;
 import com.cargosyabonos.domain.CitasDeUsuario;
 import com.cargosyabonos.domain.DetalleSolsPorFecha;
 import com.cargosyabonos.domain.EventoSolicitud;
@@ -29,6 +33,11 @@ import com.cargosyabonos.domain.FilesFirmaAbogadoObj;
 import com.cargosyabonos.domain.NumFilesAbogados;
 import com.cargosyabonos.domain.ReporteContador;
 import com.cargosyabonos.domain.ReporteDash;
+import com.cargosyabonos.domain.ReporteHorasMensualVoc;
+import com.cargosyabonos.domain.ReporteHorasMesTerapeuta;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasDetalleVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasVoc;
 import com.cargosyabonos.domain.ReporteSolsDeUsuarioObj;
 import com.cargosyabonos.domain.Solicitud;
 import com.itextpdf.text.DocumentException;
@@ -45,7 +54,19 @@ public class ReportesController {
 	private EventoSolicitudUseCase evCase;
 	
 	@Autowired
+	private SolicitudVocUseCase vocCase;
+	
+	@Autowired
 	private PdfPagos pdfPagos;
+	
+	@Autowired
+	private ReporteHorasTerapeuta reporteHorasTerapeuta;
+	
+	@Autowired
+	private ReporteHorasMensualVocPdf reporteHorasMensualVocPdf;
+	
+	@Autowired
+	private ReporteNotasCitasVocPdf reporteNotasCitasVocPdf;
 	
 	@GetMapping("solicitudes-de-usuarios/{idUsuario}")
 	public List<ReporteContador> solicitudesDeUsuarios(@PathVariable("idUsuario") int idUsuario,@RequestParam("fechai") Date fechai,
@@ -158,6 +179,118 @@ public class ReportesController {
 			@RequestParam(required = false) String fechai,@RequestParam(required = false) String fechaf,@RequestParam(required = false) int usuario) {	
 		return oCase.reporteDetalleSolsFecha(fechai, fechaf, usuario);
 		
+	}
+	
+	@GetMapping("horas-mes-terapeuta/{idTerapeuta}")
+	public List<ReporteHorasMesTerapeuta> reporteHorasMesTerapeuta(@PathVariable("idTerapeuta") int idTerapeuta,
+			@RequestParam("anio") int anio,@RequestParam("mes") int mes) {
+		return vocCase.obtenerReporteHorasMesTerapeuta(idTerapeuta, anio, mes);
+	}
+	
+	@GetMapping("horas-mes-terapeuta-pdf/{idTerapeuta}")
+	public ResponseEntity<byte[]> reporteHorasMesTerapeutaPdf(@PathVariable("idTerapeuta") int idTerapeuta,
+			@RequestParam("anio") int anio,@RequestParam("mes") int mes) { 
+		
+		byte[] contenidoPdf;
+		try {
+			contenidoPdf = reporteHorasTerapeuta.generarPdf(idTerapeuta, anio, mes);
+		} catch (DocumentException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+
+		String nombreArchivo = "reporte_horas_terapeuta_" + idTerapeuta + "_" + anio + "_" + mes + ".pdf";
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombreArchivo);
+
+		return new ResponseEntity<>(contenidoPdf, headers, HttpStatus.OK);
+		    
+	}
+
+	@GetMapping("horas-mensual-voc")
+	public List<ReporteHorasMensualVoc> reporteHorasMensualVoc(
+			@RequestParam(value = "idTerapeuta", required = false) Integer idTerapeuta,
+			@RequestParam("anio") int anio,@RequestParam("mes") int mes) {
+		int terapeuta = idTerapeuta == null ? 0 : idTerapeuta;
+		return vocCase.obtenerReporteHorasMensualVoc(terapeuta, anio, mes);
+	}
+	
+	@GetMapping("horas-mensual-voc-pdf")
+	public ResponseEntity<byte[]> reporteHorasMensualVocPdf(
+			@RequestParam(value = "idTerapeuta", required = false) Integer idTerapeuta,
+			@RequestParam("anio") int anio,@RequestParam("mes") int mes) { 
+		
+		int terapeuta = idTerapeuta == null ? 0 : idTerapeuta;
+
+		byte[] contenidoPdf;
+		try {
+			contenidoPdf = reporteHorasMensualVocPdf.generarPdf(terapeuta, anio, mes);
+		} catch (DocumentException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+
+		String nombreArchivo = "reporte_horas_mensual_voc_" + terapeuta + "_" + anio + "_" + mes + ".pdf";
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombreArchivo);
+
+		return new ResponseEntity<>(contenidoPdf, headers, HttpStatus.OK);
+		    
+	}
+
+	@GetMapping("notas-citas-rango-fechas")
+	public List<ReporteNotasCitasVoc> notasCitasRangoFechas(
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf) {
+		return vocCase.obtenerReporteNotasCitasRangoFechas(fechai, fechaf);
+	}
+
+	@GetMapping("notas-citas-terapeutas-rango-fechas")
+	public List<ReporteNotasCitasTerapeutasVoc> notasCitasTerapeutasRangoFechas(
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf,
+			@RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
+		return vocCase.obtenerReporteNotasCitasTerapeutasRangoFechas(fechai, fechaf, idUsuario);
+	}
+
+	@GetMapping("notas-citas-terapeutas-detalle-rango-fechas/{idUsuario}")
+	public List<ReporteNotasCitasTerapeutasDetalleVoc> notasCitasTerapeutasDetalleRangoFechas(
+			@PathVariable("idUsuario") int idUsuario,
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf) {
+		return vocCase.obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(fechai, fechaf, idUsuario);
+	}
+
+	@GetMapping("notas-citas-rango-fechas-pdf")
+	public ResponseEntity<byte[]> notasCitasRangoFechasPdf(
+			@RequestParam("fechai") String fechai, @RequestParam("fechaf") String fechaf) {
+
+		byte[] contenidoPdf;
+		try {
+			contenidoPdf = reporteNotasCitasVocPdf.generarPdf(fechai, fechaf);
+		} catch (DocumentException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+
+		String nombreArchivo = "reporte_notas_citas_" + fechai + "_a_" + fechaf + ".pdf";
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombreArchivo);
+
+		return new ResponseEntity<>(contenidoPdf, headers, HttpStatus.OK);
+		    
 	}
 
 }

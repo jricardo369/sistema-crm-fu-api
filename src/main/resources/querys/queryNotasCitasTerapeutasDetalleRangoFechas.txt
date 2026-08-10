@@ -1,0 +1,12 @@
+SELECT 
+    nc.id_nota,
+    nc.fecha_creacion AS fecha_creacion_nota,
+    c.id_cita AS id_cita_asociado,
+    c.fecha AS fecha_cita,
+    DATEDIFF(nc.fecha_creacion, c.fecha) AS dias_de_retraso
+FROM cita c
+INNER JOIN nota_cita nc ON c.id_cita = nc.id_cita
+WHERE c.id_usuario = :idUsuario 
+  AND c.fecha BETWEEN :fechai AND :fechaf 
+  AND nc.fecha_creacion > DATE_ADD(c.fecha, INTERVAL 1 DAY)
+ORDER BY c.fecha ASC

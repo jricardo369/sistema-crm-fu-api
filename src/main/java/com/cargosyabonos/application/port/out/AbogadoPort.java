@@ -16,6 +16,7 @@ public interface AbogadoPort {
 	public void actualizarAbogado(AbogadoEntity a);
 	public void eliminarAbogado(AbogadoEntity a);
 	public List<Abogado> obtenerAbogadosConMail(String valorBusqueda);
+	public List<Abogado> obtenerTodosAbogadosConMail();
 	public void actualizarCuponAbogado(int idAbogado);
 	public Abogado obtenerSiExisteEmailAbogado(String emailAbogado);
 	public Abogado obtenerSiExisteNombreAbogado(String nombreAbogado); 

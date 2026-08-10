@@ -33,6 +33,11 @@ import com.cargosyabonos.domain.ConfiguracionEntity;
 import com.cargosyabonos.domain.EstatusPagoEntity;
 import com.cargosyabonos.domain.EstatusSolicitudEntity;
 import com.cargosyabonos.domain.NumeroCasosSolicitudes;
+import com.cargosyabonos.domain.ReporteHorasMensualVoc;
+import com.cargosyabonos.domain.ReporteHorasMesTerapeuta;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasDetalleVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasTerapeutasVoc;
+import com.cargosyabonos.domain.ReporteNotasCitasVoc;
 import com.cargosyabonos.domain.ReporteSolsUsuario;
 import com.cargosyabonos.domain.SolicitudVoc;
 import com.cargosyabonos.domain.SolicitudVocEndingSessions;
@@ -53,6 +58,21 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	
 	@Value("classpath:/querys/queryVOCEndingSessions.txt")
     private Resource queryVOCEndingSessions;
+	
+	@Value("classpath:/querys/queryReporteHorasMesTerapeuta.txt")
+    private Resource queryReporteHorasMesTerapeuta;
+	
+	@Value("classpath:/querys/queryReporteHorasMensualVOC.txt")
+    private Resource queryReporteHorasMensualVOC;
+	
+	@Value("classpath:/querys/queryNotasCitasRangoFechas.txt")
+    private Resource queryNotasCitasRangoFechas;
+
+	@Value("classpath:/querys/queryNotasCitasTerapeutasRangoFechas.txt")
+    private Resource queryNotasCitasTerapeutasRangoFechas;
+
+	@Value("classpath:/querys/queryNotasCitasTerapeutasDetalleRangoFechas.txt")
+    private Resource queryNotasCitasTerapeutasDetalleRangoFechas;
 
 	@Autowired
 	SolicitudVocJpa reqJpa;
@@ -539,7 +559,8 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 						"u.nombre,u.correo_electronico as emailTerapeuta "+
 						"FROM solicitud_voc s "+
 						"LEFT JOIN usuario u ON u.id_usuario = s.terapeuta "+
-						"WHERE num_sesiones = 0 AND fecha_inicio <= DATE_SUB(NOW(), INTERVAL " + tiempo + " HOUR);";
+						"WHERE num_sesiones = 0 AND fecha_inicio <= DATE_SUB(NOW(), INTERVAL " + tiempo + " HOUR) "+
+						"AND id_estatus_solicitud NOT IN (11);";
 
 		sb.append(queryS);
 		
@@ -673,7 +694,31 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 				
 			}else{
 				nc = citaPort.obtenerNumeroCitasTerapeutasPorSolicitud(s.getIdSolicitud());
+				String nombreTerapeuta = s.getNombreTerapeuta();
+				if (nombreTerapeuta != null && !"".equals(nombreTerapeuta.trim())) {
+					String currentPrefix = "(Current) ";
+					int idxTerapeuta = -1;
+					for (int i = 0; i < nc.size(); i++) {
+						String item = nc.get(i);
+						if (item != null && (item.equals(nombreTerapeuta) || item.startsWith(nombreTerapeuta + ","))) {
+							idxTerapeuta = i;
+							break;
+						}
+					}
+
+					if (idxTerapeuta > -1) {
+						String terapeutaItem = nc.remove(idxTerapeuta);
+						if (terapeutaItem.startsWith(currentPrefix)) {
+							terapeutaItem = terapeutaItem.substring(currentPrefix.length());
+						}
+						terapeutaItem = currentPrefix + terapeutaItem;
+						nc.add(0, terapeutaItem);
+					} else {
+						nc.add(0, currentPrefix + nombreTerapeuta + ", 0 schedules");
+					}
+				}
 				s.setNumCitasTerapeutasPorSolicitud(nc);
+				
 			}
 			
 			if(s.getNumSchedules() >= 2){
@@ -707,6 +752,252 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	@Override
 	public int obtenerSesionesDeSolicitud(int idSolicitud) {
 		return reqJpa.obtenerSesionesDeSolicitud(idSolicitud);
-	}	
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<ReporteHorasMesTerapeuta> obtenerReporteHorasMesTerapeuta(int idTerapeuta, int anio, int mes) {
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Reporte Horas Mes Terapeuta");
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryReporteHorasMesTerapeuta.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("idTerapeuta", idTerapeuta);
+		query.setParameter("anio", anio);
+		query.setParameter("mes", mes);
+
+		List<Object[]> rows = query.getResultList();
+		List<ReporteHorasMesTerapeuta> result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirQueryAReporteHorasMesTerapeuta(row));
+		}
+		return result;
+	}
+
+	private ReporteHorasMesTerapeuta convertirQueryAReporteHorasMesTerapeuta(Object[] row) {
+
+		ReporteHorasMesTerapeuta r = new ReporteHorasMesTerapeuta();
+
+		r.setTerapeuta(((Integer)row[0]).intValue());
+		r.setCliente((String)row[1]);
+		r.setIdSolicitud(((Integer)row[2]).intValue());
+		r.setHorasAprobadas(((Integer)row[3]).intValue());
+		r.setFechasCitasMes((String)row[4]);
+		r.setDuracionSesionesMes((String)row[5]);
+		r.setHorasDelMes(row[6] == null ? BigDecimal.ZERO : (BigDecimal)row[6]);
+		r.setTotalHorasSolicitud(row[7] == null ? BigDecimal.ZERO : (BigDecimal)row[7]);
+		r.setHorasRestantes(row[8] == null ? BigDecimal.ZERO : (BigDecimal)row[8]);
+		
+
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<ReporteHorasMensualVoc> obtenerReporteHorasMensualVoc(int idTerapeuta, int anio, int mes) {
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Reporte Horas Mensual VOC");
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryReporteHorasMensualVOC.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("idTerapeuta", idTerapeuta);
+		query.setParameter("anio", anio);
+		query.setParameter("mes", mes);
+
+		List<Object[]> rows = query.getResultList();
+		List<ReporteHorasMensualVoc> result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirQueryAReporteHorasMensualVoc(row));
+		}
+		return result;
+	}
+
+	private ReporteHorasMensualVoc convertirQueryAReporteHorasMensualVoc(Object[] row) {
+
+		ReporteHorasMensualVoc r = new ReporteHorasMensualVoc();
+
+		
+		
+		r.setCliente((String)row[0]);
+		r.setNumeroDeCaso((String)row[1]);
+		r.setFechaNacimiento((String)row[2]);
+		r.setTelefono((String)row[3]);
+		r.setDireccion((String)row[4]);
+		r.setIdTerapeuta(((Integer)row[5]).intValue());
+		r.setNombreTerapeuta((String)row[6]);
+		r.setIdSolicitud(((Integer)row[7]).intValue());
+		r.setHorasAprobadas(((Integer)row[8]).intValue());
+		r.setFechasCitasMes((String)row[9]);
+		r.setDuracionSesionesMes((String)row[10]);
+		r.setNumSesionesMes(row[11] == null ? BigDecimal.ZERO : (BigDecimal)row[11]);
+		r.setHorasDelMes(row[12] == null ? BigDecimal.ZERO : (BigDecimal)row[12]);
+		r.setTotalHorasSolicitud(row[13] == null ? BigDecimal.ZERO : (BigDecimal)row[13]);
+		r.setHorasRestantes(row[14] == null ? BigDecimal.ZERO : (BigDecimal)row[14]);
+		r.setSexo((String)row[15]);
+
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<ReporteNotasCitasVoc> obtenerReporteNotasCitasRangoFechas(String fechai, String fechaf) {
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Reporte Notas Citas Rango Fechas");
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryNotasCitasRangoFechas.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+
+		List<Object[]> rows = query.getResultList();
+		List<ReporteNotasCitasVoc> result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirQueryAReporteNotasCitasVoc(row));
+		}
+		return result;
+	}
+
+	private ReporteNotasCitasVoc convertirQueryAReporteNotasCitasVoc(Object[] row) {
+
+		ReporteNotasCitasVoc r = new ReporteNotasCitasVoc();
+
+		r.setTotalNotasCitas(((Number)row[0]).intValue());
+		r.setTotalNotasDescarga(((Number)row[1]).intValue());
+
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<ReporteNotasCitasTerapeutasVoc> obtenerReporteNotasCitasTerapeutasRangoFechas(String fechai, String fechaf, Integer idUsuario) {
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Reporte Notas Citas Terapeutas Rango Fechas");
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryNotasCitasTerapeutasRangoFechas.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		if (idUsuario != null && idUsuario > 0) {
+			sb.append(" AND c.id_usuario = :idUsuario");
+		}
+
+		sb.append(" GROUP BY u.id_usuario, u.nombre");
+
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+		if (idUsuario != null && idUsuario > 0) {
+			query.setParameter("idUsuario", idUsuario);
+		}
+
+		List<Object[]> rows = query.getResultList();
+		List<ReporteNotasCitasTerapeutasVoc> result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirQueryAReporteNotasCitasTerapeutasVoc(row));
+		}
+		return result;
+	}
+
+	private ReporteNotasCitasTerapeutasVoc convertirQueryAReporteNotasCitasTerapeutasVoc(Object[] row) {
+
+		ReporteNotasCitasTerapeutasVoc r = new ReporteNotasCitasTerapeutasVoc();
+
+		r.setNombre((String)row[0]);
+		r.setTotalCitas(((Number)row[1]).intValue());
+		r.setTotalNotas(((Number)row[2]).intValue());
+		r.setNotasConRetraso(((Number)row[3]).intValue());
+
+		return r;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<ReporteNotasCitasTerapeutasDetalleVoc> obtenerReporteNotasCitasTerapeutasDetalleRangoFechas(String fechai, String fechaf, int idUsuario) {
+
+		UtilidadesAdapter.pintarLog("Ejecutando Query Reporte Notas Citas Terapeutas Detalle Rango Fechas");
+		StringBuilder sb = new StringBuilder();
+
+		String queryS = "";
+
+		try (Scanner scanner = new Scanner(queryNotasCitasTerapeutasDetalleRangoFechas.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}
+
+		sb.append(queryS);
+
+		UtilidadesAdapter.pintarLog("query:"+sb.toString());
+
+		Query query = entityManager.createNativeQuery(sb.toString());
+		query.setParameter("idUsuario", idUsuario);
+		query.setParameter("fechai", fechai);
+		query.setParameter("fechaf", fechaf);
+
+		List<Object[]> rows = query.getResultList();
+		List<ReporteNotasCitasTerapeutasDetalleVoc> result = new ArrayList<>(rows.size());
+		for (Object[] row : rows) {
+			result.add(convertirQueryAReporteNotasCitasTerapeutasDetalleVoc(row));
+		}
+		return result;
+	}
+
+	private ReporteNotasCitasTerapeutasDetalleVoc convertirQueryAReporteNotasCitasTerapeutasDetalleVoc(Object[] row) {
+
+		ReporteNotasCitasTerapeutasDetalleVoc r = new ReporteNotasCitasTerapeutasDetalleVoc();
+
+		r.setIdNota(((Number)row[0]).intValue());
+		r.setFechaCreacionNota((String)row[1]);
+		r.setIdCitaAsociado(((Number)row[2]).intValue());
+		r.setFechaCita((String)row[3]);
+		r.setDiasDeRetraso(((Number)row[4]).intValue());
+
+		return r;
+	}
 	
 }

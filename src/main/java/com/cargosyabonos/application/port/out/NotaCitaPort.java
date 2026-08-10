@@ -12,6 +12,7 @@ public interface NotaCitaPort {
 	public void actualizarNotaCita(NotaCitaEntity a);
 	public void eliminarNotaCita(NotaCitaEntity a);
 	public NotaCitaEntity obtenerNotaDeCita(int idCita); 
+	public List<NotaCitaEntity> obtenerNotasCitasRangoFechas(String fechai, String fechaf);
 	public int obtenerIdSolByIdNota(int idNota);
 	public void firmarNotaCita(int idNota,int idUsuario);
 	public void rechazarNotaCita(int rechazada,String fechaAprobada,int idNota);

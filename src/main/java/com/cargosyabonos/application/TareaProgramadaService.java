@@ -373,27 +373,34 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	@Override
 	public void solicitudesVocEndingSessions() {
 
-		List<SolicitudVocEndingSessions> svoc = solVocPort.obtenerSolicitudesVOCEndingSessions();
-		UtilidadesAdapter.pintarLog("Solicitudes obtenidas:" + svoc.size());
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("sols-voc-end-sessions");
+		UtilidadesAdapter.pintarLog("Tarea programada activa?" + tp.isActivo() +" en ambiente "+ambiente);	
 
-		ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("VOC-ADMIN-MAIL");
-		String correoAdminVOC = confj.getValor();
-		UtilidadesAdapter.pintarLog("Correo admin voc " + correoAdminVOC);
+		if (tp.isActivo()) {
 
-		for (SolicitudVocEndingSessions s : svoc) {
+			List<SolicitudVocEndingSessions> svoc = solVocPort.obtenerSolicitudesVOCEndingSessions();
+			UtilidadesAdapter.pintarLog("Solicitudes obtenidas:" + svoc.size());
 
-			UtilidadesAdapter.pintarLog("File VOC:" + s.getIdSolicitud() + "|SesionesAprobadas:"
-					+ s.getSesionesPendientes() + "|SesionesPendientes:" + s.getSesionesPendientes()
-					+ "|Terapeuta:" + s.getNombreTerapeuta());
+			ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("VOC-ADMIN-MAIL");
+			String correoAdminVOC = confj.getValor();
+			UtilidadesAdapter.pintarLog("Correo admin voc " + correoAdminVOC);
 
-			Map<String, Object> params = new HashMap<>();
-			params.put("${usuario}", s.getNombreTerapeuta());
-			params.put("${cliente}", s.getCliente());
-			params.put("${citas-aprobadas}", s.getNumSesiones());
-			params.put("${citas-pedientes}", s.getSesionesPendientes());
+			for (SolicitudVocEndingSessions s : svoc) {
 
-			correoUs.enviarCorreoFileVOCEndingSessions(s.getNombreTerapeuta(), s.getEmailTerapeuta(), params);
-			correoUs.enviarCorreoFileVOCEndingSessions("Admin VOC", correoAdminVOC, params);
+				UtilidadesAdapter.pintarLog("File VOC:" + s.getIdSolicitud() + "|SesionesAprobadas:"
+						+ s.getSesionesPendientes() + "|SesionesPendientes:" + s.getSesionesPendientes()
+						+ "|Terapeuta:" + s.getNombreTerapeuta());
+
+				Map<String, Object> params = new HashMap<>();
+				params.put("${usuario}", s.getNombreTerapeuta());
+				params.put("${cliente}", s.getCliente());
+				params.put("${citas-aprobadas}", s.getNumSesiones());
+				params.put("${citas-pedientes}", s.getSesionesPendientes());
+
+				correoUs.enviarCorreoFileVOCEndingSessions(s.getNombreTerapeuta(), s.getEmailTerapeuta(), params);
+				correoUs.enviarCorreoFileVOCEndingSessions("Admin VOC", correoAdminVOC, params);
+
+			}
 
 		}
 
@@ -402,50 +409,57 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	@Override
 	public void reminderSolsVocPendTratmentPlan() {
 
-		List<SolicitudVoc> svoc = solVocPort.obtenerSolsVocPendTratmentPlan();
-		log.info("Solicitudes obtenidas:" + svoc.size());
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("rem-trat-plan");
+		UtilidadesAdapter.pintarLog("Tarea programada activa?" + tp.isActivo() +" en ambiente "+ambiente);	
 
-		// Obtener correos voc
-		List<Integer> li = new ArrayList<>();
-		li.add(6);
-		List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
-		String cn = "";
+		if (tp.isActivo()) {
+			
+			List<SolicitudVoc> svoc = solVocPort.obtenerSolsVocPendTratmentPlan();
+			log.info("Solicitudes obtenidas:" + svoc.size());
 
-		for (SolicitudVoc s : svoc) {
+			// Obtener correos voc
+			List<Integer> li = new ArrayList<>();
+			li.add(6);
+			List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
+			String cn = "";
 
-			cn = s.getNumeroDeCaso() == null ? "" : s.getNumeroDeCaso();
+			for (SolicitudVoc s : svoc) {
 
-			log.info("File VOC:" + s.getIdSolicitud() + "|Cliente:"
-					+ s.getCliente() + "|Telefono:" + s.getTelefono()
-					+ "|Email:" + s.getEmail() + "|Numero de caso:" + s.getNumeroDeCaso());
+				cn = s.getNumeroDeCaso() == null ? "" : s.getNumeroDeCaso();
 
-			Map<String, Object> params = new HashMap<>();
-			params.put("${terapeuta}", s.getNombreTerapeuta());
-			params.put("${fecha-creacion}", s.getFechaInicio());
-			params.put("${cliente}", s.getCliente());
-			params.put("${numero-caso}", cn);
+				log.info("File VOC:" + s.getIdSolicitud() + "|Cliente:"
+						+ s.getCliente() + "|Telefono:" + s.getTelefono()
+						+ "|Email:" + s.getEmail() + "|Numero de caso:" + s.getNumeroDeCaso());
 
-			String subject = "";
-			if(!"".equals(cn)){
-				subject = "Reminder: Appointment Note Missing for case number " + cn;
-			}else{
-				subject = "Reminder: Appointment Note Missing for file " + s.getIdSolicitud();
-			}
+				Map<String, Object> params = new HashMap<>();
+				params.put("${terapeuta}", s.getNombreTerapeuta());
+				params.put("${fecha-creacion}", s.getFechaInicio());
+				params.put("${cliente}", s.getCliente());
+				params.put("${numero-caso}", cn);
 
-			if (s.getEmail() != null && !"".equals(s.getEmail())) {
-				log.info("Enviando correo a terapeuta:" + s.getEmail() + "|Numero de caso:" + cn);
-				correosPort.enviarCorreoDeLayout(s.getEmail(), subject ,params,
-						"email-recordatorio-tratamiento-pendiente");
-			}
+				String subject = "";
+				if(!"".equals(cn)){
+					subject = "Reminder: Appointment Note Missing for case number " + cn;
+				}else{
+					subject = "Reminder: Appointment Note Missing for file " + s.getIdSolicitud();
+				}
 
-			for (UsuarioEntity o : usList) {
+				if (s.getEmail() != null && !"".equals(s.getEmail())) {
+					log.info("Enviando correo a terapeuta:" + s.getEmail() + "|Numero de caso:" + cn);
+					correosPort.enviarCorreoDeLayout(s.getEmail(), subject ,params,
+							"email-recordatorio-tratamiento-pendiente");
+				}
 
-				params.put("${terapeuta}", o.getNombre());
-				if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
-						log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
-						correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
-						"email-recordatorio-tratamiento-pendiente");
-					
+				for (UsuarioEntity o : usList) {
+
+					params.put("${terapeuta}", o.getNombre());
+					if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
+							log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
+							correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
+							"email-recordatorio-tratamiento-pendiente");
+						
+					}
+
 				}
 
 			}
@@ -457,54 +471,60 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 	@Override
 	public void reminderCitasSinNotaDiaAnterior(){
 
-		List<CitaSql> cs = citaPort.obtenerCitasSinNotaDiaAnterior();
-		log.info("Citas obtenidas:" + cs.size());
+		TareaProgramadaEntity tp = tPort.obtenerPorCodigo("rem-nota-sin-cita");
+		UtilidadesAdapter.pintarLog("Tarea programada activa?" + tp.isActivo() +" en ambiente "+ambiente);	
 
-		// Obtener correos voc
-		List<Integer> li = new ArrayList<>();
-		li.add(6);
-		List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
+		if (tp.isActivo()) {
 
-		String cn = "";
+			List<CitaSql> cs = citaPort.obtenerCitasSinNotaDiaAnterior();
+			log.info("Citas obtenidas:" + cs.size());
 
-		for (CitaSql c : cs) {
+			// Obtener correos voc
+			List<Integer> li = new ArrayList<>();
+			li.add(6);
+			List<UsuarioEntity> usList = usPort.obtenerUsuariosDeRoles(li);
 
-			cn = c.getcasenumber() == null ? "" : c.getcasenumber();
+			String cn = "";
 
-			log.info("File VOC:" + c.getcasenumber() + "|Terapeuta:"
-					+ c.getnombreterapeuta() + "|Email:" + c.getemailterapeuta() + "|Numero de caso:" + c.getcasenumber());
+			for (CitaSql c : cs) {
 
-			Map<String, Object> params = new HashMap<>();
-			params.put("${terapeuta}", c.getnombreterapeuta());
-			params.put("${numero-caso}", cn);
-			params.put("${fecha-cita}", c.getfecha() +" "+ c.gethora() +" "+ c.gettipo());
-			params.put("${cliente}", c.getcliente());
+				cn = c.getcasenumber() == null ? "" : c.getcasenumber();
 
-			String subject = "";
-			if(!"".equals(cn)){
-				subject = "Reminder: Appointment Note Missing for case number " + cn;
-			}else{
-				subject = "Reminder: Appointment Note Missing for file " + c.getidSolicitud();
-			}
+				log.info("File VOC:" + c.getcasenumber() + "|Terapeuta:"
+						+ c.getnombreterapeuta() + "|Email:" + c.getemailterapeuta() + "|Numero de caso:" + c.getcasenumber());
 
-			if (c.getemailterapeuta() != null && !"".equals(c.getemailterapeuta())) {
-				log.info("Enviando correo a terapeuta:" + c.getemailterapeuta() + "|Numero de caso:" + cn);
-				correosPort.enviarCorreoDeLayout(c.getemailterapeuta(),subject,params,
-						"email-recordatorio-cita-sin-nota");
-			}
+				Map<String, Object> params = new HashMap<>();
+				params.put("${terapeuta}", c.getnombreterapeuta());
+				params.put("${numero-caso}", cn);
+				params.put("${fecha-cita}", c.getfecha() +" "+ c.gethora() +" "+ c.gettipo());
+				params.put("${cliente}", c.getcliente());
 
-			for (UsuarioEntity o : usList) {
+				String subject = "";
+				if(!"".equals(cn)){
+					subject = "Reminder: Appointment Note Missing for case number " + cn;
+				}else{
+					subject = "Reminder: Appointment Note Missing for file " + c.getidSolicitud();
+				}
 
-				params.put("${terapeuta}", o.getNombre());
-				if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
-						log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
-						correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
-						"email-recordatorio-cita-sin-nota");
-					
+				if (c.getemailterapeuta() != null && !"".equals(c.getemailterapeuta())) {
+					log.info("Enviando correo a terapeuta:" + c.getemailterapeuta() + "|Numero de caso:" + cn);
+					correosPort.enviarCorreoDeLayout(c.getemailterapeuta(),subject,params,
+							"email-recordatorio-cita-sin-nota");
+				}
+
+				for (UsuarioEntity o : usList) {
+
+					params.put("${terapeuta}", o.getNombre());
+					if (o.getCorreoElectronico() != null && !"".equals(o.getCorreoElectronico())) {
+							log.info("Enviando correo a usuario tipo VOC:" + o.getCorreoElectronico() + "|Numero de caso:" + cn);
+							correosPort.enviarCorreoDeLayout(o.getCorreoElectronico(), subject ,params,
+							"email-recordatorio-cita-sin-nota");
+						
+					}
+
 				}
 
 			}
-
 		}
 
 	}
