@@ -47,3 +47,4 @@ spring-boot-devtools/
 # Archivos de configuración de base de datos
 *.db
 *.sql
+.factorypath
