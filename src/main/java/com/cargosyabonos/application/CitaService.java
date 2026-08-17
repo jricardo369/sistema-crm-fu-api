@@ -31,6 +31,8 @@ import com.cargosyabonos.domain.EventoSolicitudEntity;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
 
+import ch.qos.logback.classic.pattern.Util;
+
 @Service
 @PropertySource(ignoreResourceNotFound = true, value = "classpath:configuraciones-global.properties")
 public class CitaService implements CitaUseCase {
@@ -224,6 +226,16 @@ public class CitaService implements CitaUseCase {
 		
 		SolicitudVocEntity v = solPort.obtenerSolicitud(a.getIdSolicitud());
 
+		UtilidadesAdapter.pintarLog("Solicitud voc: " + v.getIdSolicitud() + " | Documento 1: " + v.isDocumento1() + " | Documento 2: " + v.isDocumento2());
+		
+		if(!v.isDocumento1() && !v.isDocumento2()){
+			//Obtener cuantas citas lleva para validar si no tiene doc1 y 2 no dejar segunda cita
+			int ncitas = citaPort.obtenerCitasPorSolicitud(a.getIdSolicitud()).size();
+			if(ncitas >= 2){
+				throw new IllegalArgumentException("It is necessary to have the treatment plan documents and the MH billing intake form in order to schedule more appointments.");
+			}
+		}
+
 		UsuarioEntity u = usPort.buscarPorId(a.getIdUsuario());
 		if (!u.getRol().equals("10")) {
 			
@@ -244,7 +256,7 @@ public class CitaService implements CitaUseCase {
 			}
 		}
 
-		BigDecimal amount = BigDecimal.ZERO;
+		/*BigDecimal amount = BigDecimal.ZERO;
 		String rate = u.getRate() == null ? "" : u.getRate();
 		if ("".equals(rate)) {
 			ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("THER-AMOUNT-DEF");
@@ -253,9 +265,13 @@ public class CitaService implements CitaUseCase {
 		} else {
 			amount = new BigDecimal(u.getRate());
 		}
+
+		a.setAmount(amount);*/
+		a.setAmount(new BigDecimal("0.00"));
 		
 		SolicitudVocEntity s = solPort.obtenerSolicitud(a.getIdSolicitud());
-		int nsesions = 0;
+		//Est codigo se comento por que ya se calcula el numero de sesiones en el momento
+		/*int nsesions = 0;
 		if (a.isDosCitas()) {
 			a.setAmount(amount.multiply(new BigDecimal(2.0)));
 			nsesions = s.getNumSchedules() + 2;
@@ -267,7 +283,9 @@ public class CitaService implements CitaUseCase {
 		int spend = s.getNumSesiones() - nsesions;
 		logger.info("nsesions:" + nsesions + "|spend:" + spend);
 
-		solPort.actualizarNumSesiones(nsesions, spend, a.getIdSolicitud());
+		solPort.actualizarNumSesiones(nsesions, spend, a.getIdSolicitud());*/
+
+		
 		
 		CitaEntity ce = convertirACitaEntity(a);
 
@@ -437,11 +455,11 @@ public class CitaService implements CitaUseCase {
 
 	public List<String> obtenerFechasMismoDiaSemana(String fechaBase, int numeroSemanas) {
 		if (fechaBase == null || "".equals(fechaBase.trim())) {
-			throw new IllegalArgumentException("La fecha base es obligatoria");
+			throw new IllegalArgumentException("The base date is mandatory.");
 		}
 
 		if (numeroSemanas < 0) {
-			throw new IllegalArgumentException("El numero de semanas no puede ser negativo");
+			throw new IllegalArgumentException("The number of weeks cannot be negative.");
 		}
 
 		LocalDate fecha = LocalDate.parse(fechaBase, DateTimeFormatter.ISO_LOCAL_DATE);

@@ -77,11 +77,11 @@ public class ExcelSolicitudesVOC {
                 cell4.setCellStyle(csn);
                 
                 Cell cell5 = row.createCell(5);
-                cell5.setCellValue(s.getNumSchedules());
+                cell5.setCellValue(s.getNumSchedules().doubleValue());
                 cell5.setCellStyle(csn);
                 
                 Cell cell6 = row.createCell(6);
-                cell6.setCellValue(s.getSesionesPendientes());
+                cell6.setCellValue(s.getSesionesPendientes().doubleValue());
                 cell6.setCellStyle(csn);
                 
                 

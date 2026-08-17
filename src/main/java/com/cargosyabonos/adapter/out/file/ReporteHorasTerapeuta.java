@@ -3,6 +3,7 @@ package com.cargosyabonos.adapter.out.file;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -203,11 +204,18 @@ public class ReporteHorasTerapeuta {
 		table.addCell(PdfUtilidad.cell("Total hours left for this client", pdfUtil.obtenerFont(getColores(), "negrita"), 5,
 				"izquierda", "gris", "negro"));
 
+		BigDecimal totalHorasMes = BigDecimal.ZERO;
+
 		if (reporte != null) {
 
 			if (!reporte.isEmpty()) {
 
 				for (ReporteHorasMesTerapeuta r : reporte) {
+
+					BigDecimal horasDelMes = r.getHorasDelMes() == null ? BigDecimal.ZERO : r.getHorasDelMes();
+					BigDecimal totalHorasSolicitud = r.getTotalHorasSolicitud() == null ? BigDecimal.ZERO : r.getTotalHorasSolicitud();
+					BigDecimal horasRestantes = r.getHorasRestantes() == null ? BigDecimal.ZERO : r.getHorasRestantes();
+					totalHorasMes = totalHorasMes.add(horasDelMes);
 
 					table.addCell(PdfUtilidad.cell(r.getCliente() != null ? r.getCliente() : "",
 							pdfUtil.obtenerFont(getColores(), "normal"), 5, "izquierda", "", "negro"));
@@ -217,11 +225,11 @@ public class ReporteHorasTerapeuta {
 							pdfUtil.obtenerFont(getColores(), "normal"), 5, "izquierda", "", "negro"));
 					table.addCell(PdfUtilidad.cell(r.getHorasAprobadas(), pdfUtil.obtenerFont(getColores(), "normal"), 5,
 							"izquierda", "", "negro"));
-					table.addCell(PdfUtilidad.cellBigDecimalNoEsDinero(r.getHorasDelMes(), pdfUtil.obtenerFont(getColores(), "normal"), 5,
+					table.addCell(PdfUtilidad.cell(formatearHoras(horasDelMes), pdfUtil.obtenerFont(getColores(), "normal"), 5,
 							"izquierda", "", "negro"));
-					table.addCell(PdfUtilidad.cellBigDecimalNoEsDinero(r.getTotalHorasSolicitud(),
+					table.addCell(PdfUtilidad.cell(formatearHoras(totalHorasSolicitud),
 							pdfUtil.obtenerFont(getColores(), "normal"), 5, "izquierda", "", "negro"));
-					table.addCell(PdfUtilidad.cellBigDecimalNoEsDinero(r.getHorasRestantes(), pdfUtil.obtenerFont(getColores(), "normal"),
+					table.addCell(PdfUtilidad.cell(formatearHoras(horasRestantes), pdfUtil.obtenerFont(getColores(), "normal"),
 							5, "izquierda", "", "negro"));
 
 				}
@@ -229,6 +237,32 @@ public class ReporteHorasTerapeuta {
 		}
 
 		document.add(table);
+
+		PdfPTable tableTotal = new PdfPTable(7);
+		tableTotal.setWidthPercentage(90);
+		tableTotal.setWidths(new int[] { 3, 2, 1, 1, 1, 1, 1 });
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("Total: " + formatearHoras(totalHorasMes) + " hours",
+				pdfUtil.obtenerFont(getColores(), "negrita"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		tableTotal.addCell(PdfUtilidad.cell("", pdfUtil.obtenerFont(getColores(), "normal"), 0, "izquierda", "", "negro"));
+		document.add(tableTotal);
+	}
+
+	private String formatearHoras(BigDecimal valor) {
+		if (valor == null) {
+			return "0";
+		}
+
+		BigDecimal normalizado = valor.stripTrailingZeros();
+		if (normalizado.scale() <= 0) {
+			return normalizado.toBigInteger().toString();
+		}
+
+		return normalizado.toPlainString();
 	}
 
 	public void titulo(Document document, int tamaño,int anio, int mes, UsuarioEntity us) throws DocumentException {

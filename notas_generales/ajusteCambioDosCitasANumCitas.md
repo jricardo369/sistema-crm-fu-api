@@ -31,12 +31,11 @@ LEFT JOIN (
     SELECT
         c.id_solicitud,
         SUM(
-            CASE
-                WHEN nc.tiempo_sesion BETWEEN 0 AND 44 THEN 0.5
-                WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1
-                WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 3
-                WHEN nc.tiempo_sesion >= 105 THEN 4
-                ELSE 0
+            CASE 
+                    WHEN nc.tiempo_sesion <= 44 THEN '0.5'
+                    WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN '1'
+                    WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN '1.5'
+                    WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN '2'
             END
         ) AS sesiones_contadas
     FROM cita c

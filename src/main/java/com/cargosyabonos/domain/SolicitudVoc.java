@@ -48,8 +48,8 @@ public class SolicitudVoc {
 	private String paralegalTelefonos;
 	
 	private int numSesiones;
-	private int numSchedules;
-	private int sesionesPendientes;
+	private BigDecimal numSchedules;
+	private BigDecimal sesionesPendientes;
 	private boolean  documento1;
 	private String fechaDoc1;
 	private boolean documento2;
@@ -273,16 +273,16 @@ public class SolicitudVoc {
 	public void setNumSesiones(int numSesiones) {
 		this.numSesiones = numSesiones;
 	}
-	public int getNumSchedules() {
+	public BigDecimal getNumSchedules() {
 		return numSchedules;
 	}
-	public void setNumSchedules(int numSchedules) {
+	public void setNumSchedules(BigDecimal numSchedules) {
 		this.numSchedules = numSchedules;
 	}
-	public int getSesionesPendientes() {
+	public BigDecimal getSesionesPendientes() {
 		return sesionesPendientes;
 	}
-	public void setSesionesPendientes(int sesionesPendientes) {
+	public void setSesionesPendientes(BigDecimal sesionesPendientes) {
 		this.sesionesPendientes = sesionesPendientes;
 	}
 	public boolean isDocumento1() {

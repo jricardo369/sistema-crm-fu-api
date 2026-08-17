@@ -137,6 +137,8 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 
 				if (ambiente.equals(amb)) {
 
+					ConfiguracionEntity phoneContact = confPort.obtenerConfiguracionPorCodigo("CONTACT-PHONE");
+
 					boolean enviarMail = true;
 					List<AdeudoSolicitudes> ds = movPort.obtenerDeudasSolicitudes(fechai, fechaf, tipoPayment);
 
@@ -163,6 +165,7 @@ public class TareaProgramadaService implements TareaProgramadaUseCase {
 											monto = UtilidadesAdapter.currencyFormat(a.getdeuda());
 											params.put("${monto}", monto);
 											params.put("${tipo-servicio}", a.gettipo());
+											params.put("${phone}",phoneContact.getValor());
 											correosPort.enviarCorreoSaldoVencido(a.getemail(), params);
 										}
 									}

@@ -1,0 +1,129 @@
+SELECT 
+    s.id_solicitud,
+    s.fecha_inicio,
+    s.cliente,
+    s.telefono,
+    s.email,
+    s.docusign,
+    s.abogado,
+    s.email_abogado,
+    s.firma_de_abogados,
+    s.numero_de_caso,
+    s.id_tipo_solicitud,
+    s.id_estatus_solicitud,
+    s.id_estatus_pago,
+    s.fecha_nacimiento,
+    s.adicional,
+    s.idioma,
+    s.direccion,
+    s.estado,
+    s.apellidos,
+    s.parelegal_name,
+    s.parelegal_emails,
+    s.parelegal_telefonos,
+    (SELECT 
+            GROUP_CONCAT(descripcion
+                    SEPARATOR ', ')
+        FROM
+            evento_solicitud_voc
+        WHERE
+            tipo IN ('Important' , 'Suicide')
+                AND id_solicitud = s.id_solicitud) AS importantNotes,
+    s.num_sesiones,
+    
+    -- AQUÍ VIENEN LAS COLUMNAS DEL QUERY 2:
+    COALESCE(t.sesiones_contadas, 0) AS num_schedules,
+    CAST(s.num_sesiones - COALESCE(t.sesiones_contadas, 0) AS DECIMAL(10, 2)) AS sesiones_pendientes,
+    
+    s.documento_1,
+    s.fecha_doc_1,
+    s.documento_2,
+    s.fecha_doc_2,
+    s.terapeuta,
+    s.usuario_revisando,
+    s.code,
+    ts.nombre tsNombre,
+    ep.descripcion AS esDesc,
+    es.descripcion AS esolDesc,
+    ut.nombre,
+    s.sexo,
+    s.purpose_treatament,
+    s.participation,
+    s.recommendations,
+    nombre_del_padre,
+    consejera,
+    nombre_escuela,
+    lenguaje_preferente,
+    (SELECT 
+            SUM(CASE
+                    WHEN c.dos_citas = 1 THEN 2
+                    ELSE 1
+                END) AS total_contado
+        FROM
+            nota_cita nc
+                INNER JOIN
+            cita c ON nc.id_cita = c.id_cita
+        WHERE
+            c.id_solicitud = s.id_solicitud
+                AND c.no_show = 0) AS total_contado,
+    (SELECT 
+            SUM(CASE
+                    WHEN c.dos_citas = 1 THEN 2
+                    ELSE 1
+                END) AS citassinnota
+        FROM
+            cita c
+                LEFT JOIN
+            nota_cita nc ON c.id_cita = nc.id_cita
+        WHERE
+            c.id_solicitud = s.id_solicitud
+                AND nc.id_cita IS NULL
+                AND c.no_show = 0
+                AND c.fecha < CURDATE()) AS citassinnota,
+    (SELECT 
+            COUNT(*) AS noShow
+        FROM
+            cita c
+        WHERE
+            c.no_show = 1
+                AND c.id_solicitud = s.id_solicitud) AS noshows
+FROM
+    request_evaluation.solicitud_voc s
+LEFT JOIN
+    tipo_solicitud ts ON ts.id_tipo_solicitud = s.id_tipo_solicitud
+LEFT JOIN
+    estatus_pago ep ON ep.id_estatus_pago = s.id_estatus_pago
+LEFT JOIN
+    estatus_solicitud es ON es.id_estatus_solicitud = s.id_estatus_solicitud
+LEFT JOIN
+    usuario ut ON ut.id_usuario = s.terapeuta
+-- SE AGREGA EL LEFT JOIN DEL QUERY 2 PARA CALCULAR LAS SESIONES CONTADAS
+LEFT JOIN (
+    SELECT
+        c.id_solicitud,
+        CAST(
+            SUM(
+                CASE 
+                    -- Regla antigua: Hasta el 31 de mayo de 2026 inclusive
+                    WHEN DATE(nc.fecha_creacion) <= '2026-07-15' 
+                    THEN IF(c.dos_citas = 1, 2, 1)
+
+                    -- Regla nueva: A partir del 1 de junio de 2026 en adelante
+                    ELSE 
+                        (CASE 
+                            WHEN nc.tiempo_sesion <= 44 THEN 0.5
+                            WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+                            WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN 1.5
+                            WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN 2.0
+                        END) * IF(c.dos_citas = 1, 2, 1)
+                END
+            ) AS DECIMAL(10, 2)
+        ) AS sesiones_contadas
+    FROM cita c
+    INNER JOIN nota_cita nc
+        ON nc.id_cita = c.id_cita
+    WHERE c.no_show = 0
+    GROUP BY c.id_solicitud
+) t ON t.id_solicitud = s.id_solicitud
+
+-- AQUÍ SE APLICAN TUS FILTROS:

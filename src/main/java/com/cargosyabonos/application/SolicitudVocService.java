@@ -179,7 +179,8 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		UtilidadesAdapter.pintarLog("r:" + r.getIdSolicitud());
 		r.setTelefono(r.getTelefono().replaceAll("\\D+", ""));
 
-		SolicitudVocEntity s = reqPort.obtenerSolicitud(r.getIdSolicitud());
+		// Se comento este codigo por que no veo necesario que se actulice esto simpre, mejor se calcula en elistante al visualizar
+		/*SolicitudVocEntity s = reqPort.obtenerSolicitud(r.getIdSolicitud());
 		if (s.getNumSesiones() == 0) {
 			r.setSesionesPendientes(r.getNumSesiones());
 		} else {
@@ -187,7 +188,7 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 			UtilidadesAdapter.pintarLog("spend:" + spend);
 			reqPort.actualizarNumSesiones(s.getNumSchedules(), spend, r.getIdSolicitud());
 			r.setSesionesPendientes(spend);
-		}
+		}*/
 
 		reqPort.actualizarSolicitud(convertirARequestEntity(r));
 	}
@@ -228,8 +229,8 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setParalegalEmails(r.getParalegalEmails());
 		s.setParalegalTelefonos(r.getParalegalTelefonos());
 		s.setNumSesiones(r.getNumSesiones());
-		s.setNumSchedules(r.getNumSchedules());
-		s.setSesionesPendientes(r.getSesionesPendientes());
+		//s.setNumSchedules(r.getNumSchedules());
+		//s.setSesionesPendientes(r.getSesionesPendientes());
 		s.setDocumento1(r.isDocumento1());
 		s.setFechaDoc1(r.getFechaDoc1());
 		s.setDocumento2(r.isDocumento2());
@@ -348,8 +349,8 @@ public class SolicitudVocService implements SolicitudVocUseCase {
 		s.setParalegalEmails(r.getParalegalEmails());
 		s.setParalegalTelefonos(r.getParalegalTelefonos());
 		s.setNumSesiones(r.getNumSesiones());
-		s.setNumSchedules(r.getNumSchedules());
-		s.setSesionesPendientes(r.getSesionesPendientes());
+		//s.setNumSchedules(r.getNumSchedules());
+		//s.setSesionesPendientes(r.getSesionesPendientes());
 		s.setDocumento1(r.isDocumento1());
 		s.setFechaDoc1(r.getFechaDoc1());
 		s.setDocumento2(r.isDocumento2());

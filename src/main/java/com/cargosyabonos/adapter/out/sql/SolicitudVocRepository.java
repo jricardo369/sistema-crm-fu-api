@@ -55,6 +55,9 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	
 	@Value("classpath:/querys/queryVOC.txt")
     private Resource queryVOC;
+
+	@Value("classpath:/querys/queryVOCFiltros.txt")
+    private Resource queryVOCFiltros;
 	
 	@Value("classpath:/querys/queryVOCEndingSessions.txt")
     private Resource queryVOCEndingSessions;
@@ -306,11 +309,18 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 		
 		String queryS = "";
 
-		try (Scanner scanner = new Scanner(queryVOC.getInputStream(), StandardCharsets.UTF_8.name())) {
+		/*try (Scanner scanner = new Scanner(queryVOC.getInputStream(), StandardCharsets.UTF_8.name())) {
+			queryS = scanner.useDelimiter("\\A").next();
+		} catch (Exception e) {
+			throw new RuntimeException("Error al leer el archivo", e);
+		}*/
+
+		try (Scanner scanner = new Scanner(queryVOCFiltros.getInputStream(), StandardCharsets.UTF_8.name())) {
 			queryS = scanner.useDelimiter("\\A").next();
 		} catch (Exception e) {
 			throw new RuntimeException("Error al leer el archivo", e);
 		}
+
 
 		sb.append(queryS);
 		
@@ -642,8 +652,8 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 			s.setParalegalTelefonos((String)row[21]);
 			s.setImportantNotes((String) row[22] == null ? "" : (String) row[22]);
 			s.setNumSesiones((Integer)row[23]);
-			s.setNumSchedules((Integer)row[24]);
-			s.setSesionesPendientes((Integer)row[25]);
+			s.setNumSchedules((BigDecimal)row[24]);
+			s.setSesionesPendientes((BigDecimal)row[25]);
 			s.setDocumento1(Integer.valueOf(row[26].toString())==0?false:true);
 			s.setFechaDoc1((String)row[27]);
 			s.setDocumento2(Integer.valueOf(row[28].toString())==0?false:true);
@@ -679,8 +689,10 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 	        	//UtilidadesAdapter.pintarLog("Nuevo calculo");
 				//Apartir de nov 2025
 				BigDecimal ns = (BigDecimal)row[45];
-				s.setNumSchedules(ns == null ? 0 : ns.intValue());
-				s.setSesionesPendientes(s.getNumSesiones()-s.getNumSchedules());
+				s.setNumSchedules(ns == null ? BigDecimal.ZERO : ns);
+				BigDecimal numSesiones = new BigDecimal(s.getNumSesiones());
+				BigDecimal sesionesPendientes = numSesiones.subtract(s.getNumSchedules());
+				s.setSesionesPendientes(sesionesPendientes);
 				BigDecimal ssn = (BigDecimal)row[46];
 				s.setNumSesionesSinNota(ssn == null ? 0 : ssn.intValue());
 				BigInteger nos = (BigInteger)row[47];
@@ -721,13 +733,13 @@ public class SolicitudVocRepository implements SolicitudVocPort{
 				
 			}
 			
-			if(s.getNumSchedules() >= 2){
+			if(s.getNumSchedules() != null && s.getNumSchedules().compareTo(BigDecimal.valueOf(2)) >= 0){
 				if(!s.isDocumento2()){
 					sb.append("You have two sessions and document 2 has not been loaded");
 				}
 			}
 			
-			if(s.getSesionesPendientes() < 10){
+			if(s.getSesionesPendientes() != null && s.getSesionesPendientes().compareTo(BigDecimal.TEN) < 0){
 				if (sb.length() != 0){
 					sb.append(", there are "+s.getSesionesPendientes()+" sessions left to use");
 				}else{

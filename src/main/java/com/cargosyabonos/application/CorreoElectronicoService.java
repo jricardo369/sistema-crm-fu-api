@@ -355,6 +355,7 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 	public void enviarCorreoSaldoVencido(SolicitudEntity solicitud,boolean isMensaje,boolean isMail) {
 
 		AdeudoSolicitudes a = movPort.obtenerDeudasSolicitud(solicitud.getIdSolicitud());
+		ConfiguracionEntity phoneContact = confPort.obtenerConfiguracionPorCodigo("CONTACT-PHONE");
 		if(a != null){
 
 			System.out.println("Idsol:" + a.getid_solicitud() + "|email:" + a.getemail() + "|deuda:" + a.getdeuda()+ "|amount:" + a.getamount());
@@ -374,6 +375,7 @@ public class CorreoElectronicoService implements CorreoElectronicoUseCase {
 						paramsP.put("${monto}", a.getdeuda());
 						paramsP.put("${tipo-servicio}", solicitud.getTipoSolicitud().getNombre());
 						paramsP.put("${solicitud}", solicitud.getIdSolicitud());
+						paramsP.put("${phone}", phoneContact.getValor());
 
 						if(isMail){
 							correosPort.enviarCorreoSaldoVencido(a.getemail(), paramsP);

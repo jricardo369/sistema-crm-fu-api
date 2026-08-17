@@ -1,5 +1,6 @@
 package com.cargosyabonos.application;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,11 +14,13 @@ import org.springframework.web.server.ResponseStatusException;
 import com.cargosyabonos.UtilidadesAdapter;
 import com.cargosyabonos.application.port.in.NotaCitaUseCase;
 import com.cargosyabonos.application.port.out.CitaPort;
+import com.cargosyabonos.application.port.out.ConfiguracionPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudVocPort;
 import com.cargosyabonos.application.port.out.NotaCitaPort;
 import com.cargosyabonos.application.port.out.SolicitudVocPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
 import com.cargosyabonos.domain.CitaEntity;
+import com.cargosyabonos.domain.ConfiguracionEntity;
 import com.cargosyabonos.domain.NotaCitaEntity;
 import com.cargosyabonos.domain.SolicitudVocEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
@@ -42,6 +45,9 @@ public class NotaCitaService implements NotaCitaUseCase {
 
 	@Autowired
 	private CitaPort citaPort;
+
+	@Autowired
+	private ConfiguracionPort confPort;
 
 	@Override
 	public List<NotaCitaEntity> obtenerNotasCitas(int idCita) {
@@ -70,19 +76,21 @@ public class NotaCitaService implements NotaCitaUseCase {
 		NotaCitaEntity nc = ncPort.obtenerNotaDeCita(a.getIdCita());
 		UtilidadesAdapter.pintarLog("nc:"+nc);
 
-		int numeroSesiones = 0;
+		BigDecimal numeroSesiones = BigDecimal.ZERO;
 		String tiempoSesion = a.getTiempoSesion() == null ? "" : a.getTiempoSesion();
 		if(tiempoSesion.contains("44")){
-			numeroSesiones = 1;
+			numeroSesiones = new BigDecimal("0.5");
 		}else if(tiempoSesion.contains("45")){
-			numeroSesiones = 2;
+			numeroSesiones = new BigDecimal("1");
 		}else if(tiempoSesion.contains("75")){
-			numeroSesiones = 3;
+			numeroSesiones = new BigDecimal("1.5");
 		}else if(tiempoSesion.contains("105")){
-			numeroSesiones = 4;
+			numeroSesiones = new BigDecimal("2");
 		}
 		
 		logger.info("numeroSesiones:"+numeroSesiones);
+
+
 
 		a.setHora(UtilidadesAdapter.obtenerHoraActualPST());
 		
@@ -93,8 +101,22 @@ public class NotaCitaService implements NotaCitaUseCase {
 			ncPort.crearNotaCita(a);
 		}
 
-		CitaEntity s = citaPort.obtenerCita(a.getIdCita());
-		s.setDosCitas(false);
+		CitaEntity c = citaPort.obtenerCita(a.getIdCita());
+		UsuarioEntity u = usPort.buscarPorId(c.getIdUsuario());
+		c.setDosCitas(false);
+
+		BigDecimal amount = BigDecimal.ZERO;
+		String rate = u.getRate() == null ? "" : u.getRate();
+		if ("".equals(rate)) {
+			ConfiguracionEntity confj = confPort.obtenerConfiguracionPorCodigo("THER-AMOUNT-DEF");
+			logger.info("amount default terapeuta" + confj.getValor());
+			amount = new BigDecimal(confj.getValor()).multiply(numeroSesiones);
+		} else {
+			amount = new BigDecimal(u.getRate()).multiply(numeroSesiones);
+		}
+
+		c.setAmount(amount);
+		citaPort.actualizarCita(c);
 		
 	}
 	

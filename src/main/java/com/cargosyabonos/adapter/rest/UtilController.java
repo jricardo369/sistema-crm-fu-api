@@ -48,6 +48,9 @@ public class UtilController {
 	@Autowired
 	private TextosPort txtsPort;
 
+	@Autowired
+	private TextosPort textosPort;
+
 	@GetMapping("envio-correo/{email}")
 	public void envioCorreTest(@PathVariable("email") String email) {
 		Map<String, Object> params = new HashMap<>();
@@ -60,6 +63,33 @@ public class UtilController {
 	@GetMapping("envio-correo-cita-cancelacion/{email}")
 	public void envioCorreoCitaCancelacion(@PathVariable("email") String email) {
 		ceUc.enviarCorreoCitaCancelacion("Jose Vazquez", "2026-02-18", "09:00", "AM", email, "FL", 123, "US", "","Entrevistador",null,false);
+	}
+
+	@GetMapping("envio-correo-saldo-vencido/{email}")
+	public void envioCorreoSaldoVencido(@PathVariable("email") String email, @RequestParam("telefono") String telefono) {
+	
+		Map<String, Object> paramsP = new HashMap<>();
+		paramsP.put("${cliente}", "Test");
+
+		String monto = "4000";
+		String tipoServicio = "Visa U";
+		String solicitud = "7697";
+		String phone = "3341236781";
+
+		paramsP.put("${monto}", monto);
+		paramsP.put("${tipo-servicio}", tipoServicio);
+		paramsP.put("${solicitud}", solicitud);
+		paramsP.put("${phone}", phone);
+	
+		correosPort.enviarCorreoSaldoVencido(email, paramsP);
+
+		SolicitudEntity s = solPort.obtenerSolicitud(Integer.parseInt(solicitud));
+
+		msgPort.envioMensaje(telefono,textosPort.textoEnvioPayment(null, new BigDecimal(monto), tipoServicio, "US"),
+				s, false);
+		msgPort.envioMensaje(telefono,textosPort.textoEnvioPayment(null, new BigDecimal(monto), tipoServicio, "ES"),
+				s, false);
+
 	}
 
 	@GetMapping("envio-correo-pdf/{idSolicitud}/{email}")

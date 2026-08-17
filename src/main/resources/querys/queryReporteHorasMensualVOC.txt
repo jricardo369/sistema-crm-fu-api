@@ -22,12 +22,12 @@ SELECT
     -- Tipos de duración de sesión en el mes (ej: "1 & 2")
     GROUP_CONCAT(
         DISTINCT CASE 
-            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes THEN
-                CASE 
+            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes  THEN
+               CASE 
                     WHEN nc.tiempo_sesion <= 44 THEN '0.5'
                     WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN '1'
-                    WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN '2'
-                    WHEN nc.tiempo_sesion >= 105 THEN '3'
+                    WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN '1.5'
+                    WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN '2'
                 END
             ELSE NULL
         END
@@ -38,72 +38,74 @@ SELECT
     -- Cantidad de sesiones/citas del mes específico
     SUM(
         CASE 
-            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes THEN
+            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes  THEN
                 IF(c.dos_citas = 1, 2, 1)
             ELSE 0 
         END
     ) AS num_sesiones_mes,
 
     -- Total de horas del mes específico (según minutos * c.dos_citas)
-    SUM(
-        CASE 
-            WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes THEN
-                (CASE 
-                    WHEN nc.tiempo_sesion <= 44 THEN 0.5
-                    WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
-                    WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
-                    WHEN nc.tiempo_sesion >= 105 THEN 3.0
-                    ELSE 0
-                END) * IF(c.dos_citas = 1, 2, 1)
-            ELSE 0 
-        END
+    CAST(
+        SUM(
+            CASE 
+                WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes  THEN
+                    (CASE 
+                        WHEN nc.tiempo_sesion <= 44 THEN 0.5
+                        WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+                        WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN 1.5
+                        WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN 2.0
+                    END) * IF(c.dos_citas = 1, 2, 1)
+                ELSE 0 
+            END
+        ) AS DECIMAL(10, 2)
     ) AS horas_del_mes,
     
-    -- Total de horas consumidas en toda la solicitud (Histórico Mixto)
-    SUM(
-        CASE 
-            -- Regla antigua: Hasta Mayo 2026 inclusive (Año < 2026 O (Año = 2026 y Mes <= 5))
-            WHEN YEAR(nc.fecha_creacion) < 2026 
-              OR (YEAR(nc.fecha_creacion) = 2026 AND MONTH(nc.fecha_creacion) <= 5) 
-            THEN IF(c.dos_citas = 1, 2, 1)
-
-            -- Regla nueva: A partir de Junio 2026 en adelante
-            ELSE 
-                (CASE 
-                    WHEN nc.tiempo_sesion <= 44 THEN 0.5
-                    WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
-                    WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
-                    WHEN nc.tiempo_sesion >= 105 THEN 3.0
-                    ELSE 0
-                END) * IF(c.dos_citas = 1, 2, 1)
-        END
-    ) AS total_horas_solicitud,
-    
-    -- Horas restantes del cliente (num_sesiones - total histórico mixto)
-    (
-        s.num_sesiones - SUM(
+   -- Total de horas consumidas en toda la solicitud (Histórico Mixto)
+    CAST(
+        SUM(
             CASE 
-                -- Regla antigua: Hasta Mayo 2026 inclusive
-                WHEN YEAR(nc.fecha_creacion) < 2026 
-                  OR (YEAR(nc.fecha_creacion) = 2026 AND MONTH(nc.fecha_creacion) <= 5) 
+                -- Regla antigua: Hasta el 31 de mayo de 2026 inclusive
+                WHEN DATE(nc.fecha_creacion) <= '2026-07-15' 
                 THEN IF(c.dos_citas = 1, 2, 1)
 
-                -- Regla nueva: A partir de Junio 2026 en adelante
+                -- Regla nueva: A partir del 1 de junio de 2026 en adelante
                 ELSE 
                     (CASE 
                         WHEN nc.tiempo_sesion <= 44 THEN 0.5
                         WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
-                        WHEN nc.tiempo_sesion BETWEEN 75 AND 104 THEN 2.0
-                        WHEN nc.tiempo_sesion >= 105 THEN 3.0
-                        ELSE 0
+                        WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN 1.5
+                        WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN 2.0
                     END) * IF(c.dos_citas = 1, 2, 1)
             END
-        )
+        ) AS DECIMAL(10, 2)
+    ) AS total_horas_solicitud,
+    
+    -- Horas restantes del cliente (num_sesiones - total histórico mixto)
+    CAST(
+        (
+            s.num_sesiones - SUM(
+                CASE 
+                    -- Regla antigua: Hasta el 31 de mayo de 2026 inclusive
+                    WHEN DATE(nc.fecha_creacion) <= '2026-07-15' 
+                    THEN IF(c.dos_citas = 1, 2, 1)
+
+                    -- Regla nueva: A partir del 1 de junio de 2026 en adelante
+                    ELSE 
+                        (CASE 
+                            WHEN nc.tiempo_sesion <= 44 THEN 0.5
+                            WHEN nc.tiempo_sesion BETWEEN 45 AND 74 THEN 1.0
+                            WHEN nc.tiempo_sesion BETWEEN 75 AND 89 THEN 1.5
+                            WHEN nc.tiempo_sesion BETWEEN 90 AND 120 THEN 2.0
+                        END) * IF(c.dos_citas = 1, 2, 1)
+                END
+            )
+        ) AS DECIMAL(10, 2)
     ) AS horas_restantes,
+    
     CASE s.sexo
         WHEN 'F' THEN 'Female'
         WHEN 'M' THEN 'Male'
-        ELSE s.sexo -- Opcional: por si hay valores nulos o diferentes
+        ELSE s.sexo 
     END AS sexo
 
 FROM solicitud_voc s
@@ -125,7 +127,6 @@ GROUP BY
     s.id_solicitud, 
     s.num_sesiones
 
--- FILTRO POR CITAS DEL MES PARAMETRIZADO:
 HAVING COUNT(
     CASE 
         WHEN YEAR(nc.fecha_creacion) = :anio AND MONTH(nc.fecha_creacion) = :mes 
