@@ -2112,6 +2112,11 @@ public class SolicitudRepository implements SolicitudPort {
 	public int esFinEntrevistasWithoutClinician(int idSolicitud) {
 		return reqJpa.esFinEntrevistasWithoutClinician(idSolicitud);	
 	}
+
+	@Override
+	public int obtenerNumeroCitasEntrevistaDeSolicitud(int idSolicitud){
+		return reqJpa.obtenerNumeroCitasEntrevistaDeSolicitud(idSolicitud);
+	}
 	
 
 }

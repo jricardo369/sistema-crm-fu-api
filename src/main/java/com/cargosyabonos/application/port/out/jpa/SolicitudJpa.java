@@ -208,6 +208,10 @@ public List<ReporteSolsDeUsuario> obtenerSolicitudesDeUsuarioTemplate(Date fecha
 				"WHERE id_solicitud in (?1) ", nativeQuery = true)
 	public int esFinEntrevistasWithoutClinician(int idSolicitud);
 
+	@Query(value = "SELECT (usuario_interview > 0) + (usuario_int_sc > 0) + (assigned_clinician > 0) AS totalCitas FROM " + 
+				"solicitud where id_solicitud = ?1 ", nativeQuery = true)
+	public int obtenerNumeroCitasEntrevistaDeSolicitud(int idSolicitud);
+
 	@Transactional
 	@Query(value = "UPDATE solicitud SET asignacion_template = ?1,usuario_template = ?2 WHERE id_solicitud = ?3", nativeQuery = true)
 	@Modifying

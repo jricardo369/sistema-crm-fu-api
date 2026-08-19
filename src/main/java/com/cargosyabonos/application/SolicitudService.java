@@ -1647,7 +1647,7 @@ public class SolicitudService implements SolicitudUseCase {
 		String rol = usEnvio.getRol();
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 
-		// Otbener traductor en caso que exista
+		// Obtener traductor en caso que exista
 		int idTraductor = 0;
 		boolean conTraductor = false;
 		if(s.getUsuarioTraductor() != 0){
@@ -1776,24 +1776,11 @@ public class SolicitudService implements SolicitudUseCase {
 
 		}
 
-		//Cambiar estatus solicitud dependiendo en que rol y estatus esta
-		if (!usEnvio.getRol().equals("8")) {
-
-			if (s.getEstatusSolicitud().getIdEstatusSolicitud() == 2) {
-				// Actualizar estatus a Reviewing
-				reqPort.actualizarEstatusSolicitud(idSolicitud, 2);
-			} else {
-				// Actualizar estatus a Received
-				reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
-			}
-
-		}
-
-		if(idTraductor != 0){
+		if (idTraductor != 0) {
 
 			logger.info("Solicitud tiene asignado traductor, actualizar evento y enviar correo no show a traductor");
 
-			if(idTraductor != usEnvio.getIdUsuario()){
+			if (idTraductor != usEnvio.getIdUsuario()) {
 
 				if (evSol != null) {
 
@@ -1801,13 +1788,14 @@ public class SolicitudService implements SolicitudUseCase {
 
 					String fechaEvT = UtilidadesAdapter.formatearFecha(evSol.getFechaSchedule());
 
-					logger.info("Solicitud:" + s.getIdSolicitud()+"|traductor:" + idTraductor + "|fecha:" + fechaEvT);
-					EventoSolicitudEntity evTraductor = evPort.obtenerScheduleTraductor(s.getIdSolicitud(), "1", idTraductor, fechaEvT);
+					logger.info("Solicitud:" + s.getIdSolicitud() + "|traductor:" + idTraductor + "|fecha:" + fechaEvT);
+					EventoSolicitudEntity evTraductor = evPort.obtenerScheduleTraductor(s.getIdSolicitud(), "1",
+							idTraductor, fechaEvT);
 					UsuarioEntity usTraductor = usPort.buscarPorId(idTraductor);
 
 					// Correo reject entrevista a traductor
 					correoUs.enviarCorreoReject(usRevisor.getCorreoElectronico(), usTraductor.getCorreoElectronico(),
-						usRevisor.getNombre(), usTraductor.getNombre(), s, evSol, motivoTrim);
+							usRevisor.getNombre(), usTraductor.getNombre(), s, evSol, motivoTrim);
 
 					reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
 					evTraductor.setEstatusSchedule("0");
@@ -1815,7 +1803,7 @@ public class SolicitudService implements SolicitudUseCase {
 
 				}
 
-			}else{
+			} else {
 
 				logger.info("El mismo usuario que rechazo es el traductor");
 				reqPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
@@ -1823,6 +1811,18 @@ public class SolicitudService implements SolicitudUseCase {
 			}
 
 		}
+
+		//Cambiar estatus solicitud 
+		if (!usEnvio.getRol().equals("8")) {
+
+			int numCitas = reqPort.obtenerNumeroCitasEntrevistaDeSolicitud(idSolicitud);
+			if(numCitas == 0){
+				// Actualizar estatus a Received
+				reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
+			}
+
+		}
+
 
 	}
 
@@ -1893,7 +1893,6 @@ public class SolicitudService implements SolicitudUseCase {
 		String rol = u.getRol();
 		boolean actualizarUsuarioRevisando = true;
 		boolean esClinicianComoCaseManager = false;
-
 		
 		UsuarioEntity rolInt = usPort.buscarPorId(s.getUsuarioInterview());
 		String rolUsCasManager = rolInt == null ? "" : rolInt.getRol();
@@ -1942,21 +1941,9 @@ public class SolicitudService implements SolicitudUseCase {
 					evSol.getTipoSchedule(), s.getEmail(), s.getEstado(),
 					s.getIdSolicitud(), "US", evSol.getTimeZoneSchedule(), evSol.getUsuarioSchedule(),
 					UtilidadesAdapter.formarUidEvento(evSol), true);
-
-			
-			
-
-		}
-
-		actualizarUsuarioRevisando = !"8".equals(rol);
-
-		if (actualizarUsuarioRevisando) {
-			s.setUsuarioRevisando(s.getUsuarioRevisor());
-			reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
 		}
 		
 		reqPort.actualizarSolicitud(s);
-
 
 		if (rol.equals("11")) {
 			if(esClinicianComoCaseManager){
@@ -1997,6 +1984,16 @@ public class SolicitudService implements SolicitudUseCase {
 
 			}
 
+		}
+
+		actualizarUsuarioRevisando = !"8".equals(rol);
+
+		if (actualizarUsuarioRevisando) {
+			int numCitas = reqPort.obtenerNumeroCitasEntrevistaDeSolicitud(idSolicitud);
+			if(numCitas == 0){
+				s.setUsuarioRevisando(s.getUsuarioRevisor());
+				reqPort.actualizarEstatusSolicitud(idSolicitud, 1);
+			}			
 		}
 
 	}

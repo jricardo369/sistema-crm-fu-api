@@ -80,5 +80,6 @@ public interface SolicitudPort {
 	public void actualizarEmailAbo(String emailsAbogado,int idSolicitud);
 	public int esFinEntrevistas(int idSolicitud);
 	public int esFinEntrevistasWithoutClinician(int idSolicitud);
+	public int obtenerNumeroCitasEntrevistaDeSolicitud(int idSolicitud);
 
 }

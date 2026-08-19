@@ -292,8 +292,7 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 
 		// Correo cancelacion entrevista a cliente
 		correoUs.enviarCorreoCitaCancelacion(s.getNombreClienteCompleto(), fecha, e.getHoraSchedule(), e.getTipoSchedule(), s.getEmail(),s.getEstado(), 
-		s.getIdSolicitud(), "US", e.getTimeZoneSchedule(),e.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),true);
-		
+		s.getIdSolicitud(), "US", e.getTimeZoneSchedule(),e.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),true);	
 
 		if(s.getUsuarioTraductor() != 0){
 
@@ -307,9 +306,9 @@ public class EventoSolicitudService implements EventoSolicitudUseCase {
 			correoUs.enviarCorreoCitaCancelacion(usTraductor.getNombre(), fecha, evTraductor.getHoraSchedule(), evTraductor.getTipoSchedule(), usTraductor.getCorreoElectronico(),s.getEstado(), 
 			s.getIdSolicitud(), "US", evTraductor.getTimeZoneSchedule(),evTraductor.getUsuarioSchedule(),UtilidadesAdapter.formarUidEvento(e),false);
 
-			solPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
 			evTraductor.setEstatusSchedule("0");
 			esPort.actualizarEventoSolicitud(evTraductor);
+			solPort.actualizarUsuarioTraductor(0, s.getIdSolicitud());
 
 		}
 
