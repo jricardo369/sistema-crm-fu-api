@@ -8,7 +8,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.cargosyabonos.domain.DatosDisponibilidad;
-import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 
 @Repository
@@ -30,14 +29,6 @@ public interface DisponibilidadUsuarioJpa extends CrudRepository<DisponibilidadU
 	
 	@Query(value = "SELECT fecha,hora,tipo,nombre,resumen FROM disponibilidad_usuario d JOIN usuario u on u.id_usuario = d.id_usuario WHERE fecha = ?1 ", nativeQuery = true)
 	public List<DatosDisponibilidad> obtenerDisponibilidadFecha(String fecha);
-	
-	/*@Query(value = "SELECT d.fecha, d.hora,d.tipo,CONCAT(d.fecha,' ',d.hora,' ',d.tipo) AS fechaConcatenada, "
-				 +"(SELECT id_solicitud FROM evento_solicitud "
-				 +"WHERE usuario_schedule = d.id_usuario and fecha_schedule = d.fecha AND hora_schedule = d.hora AND tipo_schedule = d.tipo AND estatus_schedule = 1) AS solicitud "
-				 +"FROM disponibilidad_usuario d "
-				 +"WHERE d.id_usuario = ?1 AND d.fecha >= curdate() "
-				 +"GROUP BY d.fecha,d.hora,d.tipo "
-				 +"ORDER BY d.fecha asc, d.tipo asc, d.hora ASC;  ", nativeQuery = true)
-	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario);*/
+
 	
 }

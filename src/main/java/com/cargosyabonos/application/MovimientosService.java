@@ -127,7 +127,7 @@ public class MovimientosService implements MovimientosUseCase{
 	public void crearMovimiento(Movimiento mov, boolean envioNotificacion,int idUsuario) {
 		
 		BigDecimal amount = BigDecimal.ZERO;
-		envioNotificacion = true;
+		//envioNotificacion = true;
 
 		mov.setFecha(UtilidadesAdapter.fechaActualDate());
 		MovimientoEntity me = convertirAMovimientoEntity(mov);
@@ -171,10 +171,12 @@ public class MovimientosService implements MovimientosUseCase{
 				UtilidadesAdapter.pintarLog("No enviara notificacion de movimiento");
 				envioNotificacion = false;
 			}
+
+			log.info("envioNotificacion:"+envioNotificacion);
 			
 			if (envioNotificacion) {
 				
-				UtilidadesAdapter.pintarLog("Envio mail pago");
+				log.info("Envio mail pago");
 				Map<String, Object> params = new HashMap<>();
 
 				params.put("${usuario}", me.getSolicitud().obtenerClienteParaMail());

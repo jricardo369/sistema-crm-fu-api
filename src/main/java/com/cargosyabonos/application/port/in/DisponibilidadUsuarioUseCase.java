@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 
@@ -16,7 +15,6 @@ public interface DisponibilidadUsuarioUseCase {
 	public void actualizarDisponibilidadUsuario(DisponibilidadUsuarioEntity es);
 	public void eliminarDisponibilidadUsuario(int idDisponibilidad);
 	public String cargarExcel(MultipartFile archivo,int idUsuario);
-	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario);
 	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioVocPorFecha(String fecha,int idUsuario);
 	
 }

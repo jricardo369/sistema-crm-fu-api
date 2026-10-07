@@ -375,6 +375,13 @@ public class SolicitudService implements SolicitudUseCase {
 		return s;
 	}
 
+	private void validarCorreo(String correo) {
+		if (correo != null && !correo.trim().isEmpty() && !UtilidadesAdapter.isCorreosValido(correo)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"The email address ("+correo+") has an invalid format.");
+		}
+	}
+
 	@Override
 	public int obtenerRevisorConMenorSolicitudes() {
 		return reqPort.obtenerRevisorConMenorSolicitudes(0);
@@ -477,6 +484,10 @@ public class SolicitudService implements SolicitudUseCase {
 					"This file already have interview for user: "+tinenInt);
 		}
 
+		if(s.getEmail() != null && !s.getEmail().isEmpty()){
+			validarCorreo(s.getEmail());
+		}
+
 		if (disp != null) {
 			
 			idUsuarioRevisando = disp.getUsuario().getIdUsuario();
@@ -570,14 +581,35 @@ public class SolicitudService implements SolicitudUseCase {
 
 				// Enviar notificacion a entrevisador
 				if (us != null) {
-					
-					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
-					
-					// Enviar correo Amanda por cita
-					UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
-					if (usAmanda != null) {
-						correoUs.enviarCorreoPrimeraCita(us.getNombre(), fecha, hora + " " + tipo,usAmanda.getCorreoElectronico(), s);
+
+					if (horaConvertidaFlag) {
+
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, horaConvertida, tipoConvertido, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
+
+						// Enviar correo Amanda por cita
+						UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
+						if (usAmanda != null) {
+							correoUs.enviarCorreoPrimeraCita(us.getNombre(), fecha, horaConvertida + " " + tipoConvertido,
+									usAmanda.getCorreoElectronico(), s);
+						}
+
+					} else {
+
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoFirstSchedule));
+
+						// Enviar correo Amanda por cita
+						UsuarioEntity usAmanda = usPort.buscarPorUsuario("amanda");
+						if (usAmanda != null) {
+							correoUs.enviarCorreoPrimeraCita(us.getNombre(), fecha, hora + " " + tipo,
+									usAmanda.getCorreoElectronico(), s);
+						}
+
 					}
+
 				}
 
 				// Enviar mensaje a cliente
@@ -658,6 +690,10 @@ public class SolicitudService implements SolicitudUseCase {
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
 		EventoSolicitudEntity eventoScalesSchedule = null;
 
+		if(s.getEmail() != null && !s.getEmail().isEmpty()){
+			validarCorreo(s.getEmail());
+		}
+
 		if (disp != null) {
 			
 			idUsuarioRevisando = disp.getUsuario().getIdUsuario();
@@ -726,14 +762,20 @@ public class SolicitudService implements SolicitudUseCase {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida, tipoConvertido,
 								s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
 
+						// Enviar notificacion a entrevisador
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, horaConvertida, tipoConvertido, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
+
 					} else {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo, s.getEmail(),
 								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
+
+						// Enviar notificacion a entrevisador
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
 					}
 
-					// Enviar notificacion a entrevisador
-					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
-							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoScalesSchedule));
+					
 				}
 				// Enviar mensaje a cliente
 				if (horaConvertidaFlag) {
@@ -800,6 +842,10 @@ public class SolicitudService implements SolicitudUseCase {
 		SolicitudEntity s = reqPort.obtenerSolicitud(idSolicitud);
 		DisponibilidadUsuarioEntity disp = dispPort.obtenerDisponibilidadPorId(idDisponibilidad);
 		EventoSolicitudEntity eventoClncSchedule = null;
+
+		if(s.getEmail() != null && !s.getEmail().isEmpty()){
+			validarCorreo(s.getEmail());
+		}
 
 		if (disp != null) {
 			
@@ -869,17 +915,29 @@ public class SolicitudService implements SolicitudUseCase {
 					if (horaConvertidaFlag) {
 
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, horaConvertida, tipoConvertido,
-								s.getEmail(), s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+								s.getEmail(), s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+
+						// Enviar notificacion a entrevisador
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, horaConvertida, tipoConvertido,
+								us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 
 					} else {
 						correoUs.enviarCorreoCita(s.getNombreClienteCompleto(), fecha, hora, tipo, s.getEmail(),
-								s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+
+						// Enviar notificacion a entrevisador
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+
 					}
 
-					// Enviar notificacion a entrevisador
-					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
-							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 				}
+
 				// Enviar mensaje a cliente
 				if (horaConvertidaFlag) {
 
@@ -987,10 +1045,21 @@ public class SolicitudService implements SolicitudUseCase {
 
 				if (s.getEmail() != null) {
 
-					// Enviar notificacion a traductor
-					correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
-							s.getIdSolicitud(), "US",us.getNombre(),UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+					if (horaConvertidaFlag) {
+						// Enviar notificacion a traductor
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, horaConvertida, tipoConvertido,
+								us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
 
+					} else {
+						// Enviar notificacion a traductor
+						correoUs.enviarCorreoCita(us.getNombre(), fecha, hora, tipo, us.getCorreoElectronico(),
+								s.getIdSolicitud(), "US", us.getNombre(),
+								UtilidadesAdapter.formarUidEvento(eventoClncSchedule));
+					}
+
+					
 				}
 
 			} else {

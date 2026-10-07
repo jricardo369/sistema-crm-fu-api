@@ -29,7 +29,6 @@ import com.cargosyabonos.application.port.in.DisponibilidadUsuarioUseCase;
 import com.cargosyabonos.application.port.out.DisponibilidadUsuarioPort;
 import com.cargosyabonos.application.port.out.EventoSolicitudPort;
 import com.cargosyabonos.application.port.out.UsuariosPort;
-import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 import com.cargosyabonos.domain.UsuarioEntity;
@@ -394,11 +393,6 @@ public class DisponibilidadUsuarioService implements DisponibilidadUsuarioUseCas
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"The date format is incorrect, it must be YYYY-MM-DD, date: " + fechaCandidata);
 		}
-	}
-
-	@Override
-	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario) {
-		return duPort.obtenerDisponibilidadTodoDeUsuario(idUsuario);
 	}
 	
 	

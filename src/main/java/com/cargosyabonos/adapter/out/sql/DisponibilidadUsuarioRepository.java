@@ -25,7 +25,6 @@ import com.cargosyabonos.application.port.out.jpa.DisponibilidadUsuarioJpa;
 import com.cargosyabonos.application.port.out.jpa.SolicitudJpa;
 import com.cargosyabonos.application.port.out.jpa.UsuarioJpa;
 import com.cargosyabonos.domain.Cita;
-import com.cargosyabonos.domain.DisponibilidadTodoDeUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuario;
 import com.cargosyabonos.domain.DisponibilidadUsuarioEntity;
 import com.cargosyabonos.domain.SolicitudEntity;
@@ -134,8 +133,12 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 									du.getTipo(), du.getZonaHoraria(), zonaHoraria);
 
 							logger.info("hora convertida de traductor:" + horaConvertida);
+							String tipoConv = extractAmPm(horaConvertida);
+							logger.info("hora convertida de traductor:" + tipoConv);
 							du.setHora(horaConvertida.substring(0,5));
 							du.setZonaHoraria(zonaHoraria);
+							du.setTipo(extractAmPm(horaConvertida));
+							logger.info("tipo convertida de traductor:" + du.getTipo());
 
 							logger.info("Se convertira fecha");
 
@@ -159,7 +162,6 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 				}
 
 			}
-		
 
 		List<DisponibilidadUsuario> result = new ArrayList<>(rows.size());
 		boolean hfc = false;
@@ -239,6 +241,16 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 		return filtrados;
 	}
 
+	public static String extractAmPm(String timeString) {
+        if (timeString == null || timeString.trim().isEmpty()) {
+            return "";
+        }
+	String horaS  = timeString.substring(5).replaceAll("[\\s\\u00A0]+", "").replace(".", "").toUpperCase().trim();
+        logger.info("Extracted AM/PM:" + horaS);
+        
+        return horaS; 
+    }
+
 	@Override
 	public List<DisponibilidadUsuario> obtenerDisponibilidadUsuarioVocPorFecha(String fecha,int idUsuario) {
 		
@@ -264,12 +276,6 @@ public class DisponibilidadUsuarioRepository implements DisponibilidadUsuarioPor
 	@Override
 	public int obtenerDisponibilidadPorTodo(String fecha, String hora, String tipo, int idUsuario) {
 		return dispUsJpa.obtenerDisponibilidadPorTodo(fecha, hora, tipo, idUsuario);
-	}
-	
-	@Override
-	public List<DisponibilidadTodoDeUsuario> obtenerDisponibilidadTodoDeUsuario(int idUsuario){
-		return null;
-		//return dispUsJpa.obtenerDisponibilidadTodoDeUsuario(idUsuario);
 	}
 
 	

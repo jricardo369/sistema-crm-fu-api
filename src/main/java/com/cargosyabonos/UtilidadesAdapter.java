@@ -671,15 +671,26 @@ public class UtilidadesAdapter {
 	}
 
 	public static boolean isCorreoValido(String correo) {
-		boolean p = false;
-		if (correo != null) {
-			String emailAddress = correo;
-			String regexPattern = "^(.+)@(\\S+)$";
-			p = Pattern.compile(regexPattern)
-					.matcher(emailAddress)
-					.matches();
+		if (correo == null || correo.trim().isEmpty()) {
+			return false;
 		}
-		return p;
+
+		String regexPattern = "^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$";
+		return Pattern.compile(regexPattern).matcher(correo.trim()).matches();
+	}
+
+	public static boolean isCorreosValido(String correo) {
+		if (correo == null || correo.trim().isEmpty()) {
+			return false;
+		}
+
+		String[] correos = correo.split(",", -1);
+		for (String correoIndividual : correos) {
+			if (!isCorreoValido(correoIndividual)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static int calcularAge(String fechaScale, String fechaInterview, int dias) {
